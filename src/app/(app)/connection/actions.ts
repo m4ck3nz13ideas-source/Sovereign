@@ -330,6 +330,57 @@ export async function runReview(proposalId: string) {
   }
 }
 
+/**
+ * Withdraw your own proposal.
+ *
+ * The author's escape hatch, and the only edit they get: a proposal cannot be
+ * changed after submission, so the honest move when it was wrong is to pull it
+ * and write a better one. It stays on the record as withdrawn rather than
+ * disappearing — the review, the deliberation and any answered flags remain
+ * readable, because the group spent time on them.
+ *
+ * Only available while nobody has recorded resonance yet. Once people have
+ * responded, pulling it would discard their answers, and the proposal should
+ * be closed properly instead.
+ */
+export async function withdrawProposal(proposalId: string) {
+  const { userId, group } = await requireGroup();
+  const supabase = await createClient();
+
+  const { count } = await supabase
+    .from("resonance_votes")
+    .select("profile_id", { count: "exact", head: true })
+    .eq("proposal_id", proposalId);
+
+  if (count && count > 0) {
+    return {
+      ok: false as const,
+      error:
+        "People have already responded. Close it instead, so their answers stay on the record.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("proposals")
+    .update({ status: "withdrawn", closed_at: new Date().toISOString() })
+    .eq("id", proposalId)
+    .eq("author_id", userId);
+
+  if (error) return { ok: false as const, error: error.message };
+
+  await ledger().record({
+    groupId: group.id,
+    kind: "proposal.decided",
+    subjectType: "proposal",
+    subjectId: proposalId,
+    payload: { outcome: "withdrawn", by: "author" },
+  });
+
+  revalidatePath(`/connection/proposals/${proposalId}`);
+  revalidatePath("/connection/proposals");
+  return { ok: true as const };
+}
+
 /** Mark the review read. The resonance sliders stay inert until this happens. */
 export async function markRead(proposalId: string) {
   const supabase = await createClient();

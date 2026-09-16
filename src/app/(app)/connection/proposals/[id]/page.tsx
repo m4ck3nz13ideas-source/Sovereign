@@ -22,6 +22,7 @@ import { FlagList } from "./FlagList";
 import { Outcome } from "./Outcome";
 import { RunReview } from "./RunReview";
 import { ResonancePanel } from "./ResonancePanel";
+import { WithdrawButton } from "./WithdrawButton";
 
 /**
  * The Review page — one screen, five layers, in this order:
@@ -297,6 +298,25 @@ export default async function ProposalPage({
               }}
             />
           </div>
+        ) : null}
+
+        {/* in_review counts too: a proposal whose review failed to run is
+            exactly the one an author may want to pull. The RLS policy allows
+            an author's update in in_review and in_deliberation, and a zero
+            voter count guarantees the status is one of those two. */}
+        {(open || proposal.status === "in_review") &&
+        proposal.author_id === userId &&
+        (summary?.voter_count ?? 0) === 0 ? (
+          <div className="mt-6">
+            <WithdrawButton proposalId={id} />
+          </div>
+        ) : null}
+
+        {proposal.status === "withdrawn" ? (
+          <p className="mt-4 text-sm leading-relaxed text-paper-faint">
+            The author withdrew this before anyone responded. The review and the
+            deliberation are left here on purpose — the group spent time on them.
+          </p>
         ) : null}
 
         {proposal.closed_at ? (
