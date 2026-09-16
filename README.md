@@ -1,36 +1,210 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sovereign
 
-## Getting Started
+A quiet place to think, and a way for a group to decide together.
 
-First, run the development server:
+Two halves, one app. The **individual space** is yours alone: what you write,
+what you are working out, what you believe, and how that has changed. The
+**collective space** is shared with a group of people who know each other, and
+is where proposals are examined, responded to, decided, carried out, and
+honestly reflected on.
+
+The first half never becomes the second unless you send it there.
+
+---
+
+## What it actually does
+
+**Launch** is the intake point for everything — one screen, four modes. What
+you write files itself: a journal entry to Reflection, a prayer or question to
+Profile, an idea to Pipeline, something worth sharing to Connection. Nothing is
+sorted, tagged or triaged at the moment of writing.
+
+**Reflection** is where entries are sat with rather than processed. Unexamined
+entries appear as banners that read *"From three days ago: '…'. Ready to sit
+with this?"* — a pull, not a task. A thirty-day rhythm display shows the shape
+of your attention. One question at a time can be drawn from recent entries, if
+you ask for it.
+
+**Pipeline** triages ideas into concepts. Markdown in, markdown out, with paths
+preserved so a re-import updates rather than duplicates.
+
+**Profile** is the living record: values with your own definitions, a statement
+of faith, a purpose, and what you keep returning to. Faith and purpose are
+revisable and never overwritten — the history stays, and stays private even
+when the current statement is shared.
+
+**Connection** is the collective, and the chain runs left to right:
+
+```
+Feed → Proposals → Decisions → Projects → Impact
+```
+
+A proposal is submitted, read by the review layer against the group's own
+values, deliberated on, responded to with resonance rather than a yes or a no,
+decided by a rule the group set and can read, carried out as a project, and
+closed with a written account of what actually happened — which the review
+layer then reads when the next proposal arrives.
+
+---
+
+## The decisions that make it this and not something else
+
+**Resonance is three sliders, not a vote.** Alignment, confidence and urgency,
+each 0–1. A yes/no collapses "I think this is wrong", "I have no idea" and "not
+now" into the same mark.
+
+**The averages stay hidden until a proposal closes.** Members see how many have
+responded and their own numbers, never a running average. A visible average
+changes what people report, which is the entire thing resonance exists to
+avoid. This is enforced in the database, not in the interface.
+
+**Understanding before action.** The sliders do not work until a review exists
+*and* you have said you read it. That is recorded — not to police anyone, but
+so the group can tell a proposal three people considered from one three people
+scrolled past.
+
+**A critical flag is answered, never dismissed.** Anything the review scores
+below the group's values floor, or flags as a high-severity risk, needs a
+written answer naming what changed or why the risk is acceptable — attributed
+and timestamped. This is the mechanism that lets a weak proposal be retired
+early without anyone having to be the person who objected.
+
+**A project cannot be completed without a reflection.** The database refuses.
+A group that closes projects without recording what happened has a memory that
+cannot teach it anything, and the retrieval step on the next proposal has
+nothing to retrieve.
+
+**Prompts are versioned configuration, readable by every member.** Every score
+records the prompt id and version that produced it. Changing a rubric means
+bumping the version, never editing in place. A group being scored by a rubric
+can read the rubric, at `/settings/prompts`.
+
+**No chain, no token, no ZK.** What the whitepaper puts on-chain, this puts
+behind interfaces in `src/lib/ledger` — with an append-only, hash-chained
+Postgres table underneath. Tamper-evident, not trustless, and the app says so
+in those words rather than implying more. See `docs/architecture.md`.
+
+---
+
+## Running it
+
+You need Node 20+ and a Supabase project. The free tier is enough for a group
+of fifty.
+
+```bash
+git clone <this repo>
+cd sovereign
+npm install
+```
+
+**1. Make a Supabase project** at [supabase.com](https://supabase.com).
+
+**2. Run the migrations** in order — paste each into the SQL editor:
+
+```
+supabase/migrations/0001_schema.sql      tables, enums, triggers
+supabase/migrations/0002_rls.sql         row-level security
+supabase/migrations/0003_functions.sql   the decision rule, the ledger, retrieval
+```
+
+Or with the CLI: `supabase db push`.
+
+**3. Configure it.**
+
+```bash
+cp .env.example .env.local
+```
+
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` come from
+Project Settings → API.
+
+`ANTHROPIC_API_KEY` is optional. Without it, the whole loop still works on an
+offline reviewer — scores come from structural signals in the text, and every
+review it writes says plainly that no model read it. Add a key when you want a
+real reading.
+
+**4. Set the redirect URL** in Supabase under Authentication → URL
+Configuration: add `http://localhost:3000/auth/callback`, and your production
+URL when you have one. Magic links fail silently without this.
+
+**5. Run it.**
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sign in with your email, name three values you actually hold, and start a
+group.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Optional: the worked example
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`supabase/seed.sql` contains one complete loop — a proposal with a real review,
+a values flag answered by halving the term, a three-comment deliberation, three
+resonance votes, a decision, a project with a budget, and a reflection in which
+the group's core assumption turned out to be wrong. It exists to make the shape
+legible on first open and to give the retrieval step something to retrieve.
+Instructions are in the file's header. It is safe to skip, and everything in it
+is removable.
 
-## Learn More
+### Deploying
 
-To learn more about Next.js, take a look at the following resources:
+Vercel, with the same environment variables. Add the deployed URL to Supabase's
+redirect list. There is nothing else.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Checks
 
-## Deploy on Vercel
+```bash
+npm run check     # typecheck, lint, test, build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The build passes with no environment variables set — configuration is read
+through getters so a missing key produces a readable message at request time
+rather than a failed build.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The rules that define this product live in Postgres, so that is where they are
+tested. `supabase/tests/` runs against any local Postgres as a non-superuser,
+so row-level security actually applies, and checks twenty-four things — that a
+member cannot read another member's journal, that resonance is refused before
+the review is read, that two unanswered flags fail a proposal whatever the
+numbers say, that a project cannot complete without a reflection, that an
+edited ledger row is detected. See `supabase/tests/README.md` for how to run
+it.
+
+```bash
+createdb sovereign_test
+psql -d sovereign_test -v ON_ERROR_STOP=1 \
+  -f supabase/tests/00_supabase_shim.sql \
+  -f supabase/migrations/0001_schema.sql \
+  -f supabase/migrations/0002_rls.sql \
+  -f supabase/migrations/0003_functions.sql \
+  -f supabase/tests/01_rules.sql
+```
+
+---
+
+## What is deliberately not here
+
+No blockchain, tokens, SOV, wallets, zero-knowledge proofs, DIDs or verifiable
+credentials. No liquid democracy or delegation. No tiered transparency. No
+public feeds, public profiles or cross-group discovery. No national or global
+scope in practice — the enum allows it, one group in one place is what this is.
+No screen-time features, no streaks, no notifications.
+
+Most of these are in the whitepaper, and several are good ideas. None of them
+help a group of eight decide something on a Thursday, which is the thing that
+has to work before any of the rest is worth building. `docs/roadmap.md` says
+what would earn a place next, and what would have to be true first.
+
+---
+
+## Documentation
+
+| | |
+|---|---|
+| `docs/architecture.md` | How it fits together, and the ledger seam |
+| `docs/data-model.md` | Every table, and why the constraints are where they are |
+| `docs/design-system.md` | Tokens, type, and the rules for new screens |
+| `docs/roadmap.md` | What V1 is for, how to tell if it worked, what comes next |
+| `CLAUDE.md` | Conventions for anyone — or anything — editing this repo |

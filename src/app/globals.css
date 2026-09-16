@@ -1,26 +1,122 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Sovereign design tokens
+   Source: life_OS.pdf — "Visual identity to establish once and carry throughout"
+   Dark background, off-white text, one warm gold accent, muted slate surfaces.
+   Contemplative and serious, not productivity-tool clinical.
+--------------------------------------------------------------------------- */
+
+@theme {
+  --color-ink: #0d0d0f;
+  --color-ink-raised: #141418;
+  --color-surface: #2a2a30;
+  --color-surface-soft: #1e1e23;
+  --color-line: #33333b;
+  --color-paper: #f0ede8;
+  --color-paper-dim: #a7a49f;
+  --color-paper-faint: #6f6d69;
+  --color-gold: #c9a84c;
+  --color-gold-dim: #8d7534;
+  --color-gold-wash: #c9a84c1a;
+  --color-alarm: #c4664e;
+  --color-calm: #7d9b8a;
+
+  --font-serif: "Playfair Display Variable", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --radius-card: 0.625rem;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  /* Room for the fixed bottom nav on every scrollable page. */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Minimal animation, high intentionality. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::selection {
+  background: var(--color-gold);
+  color: var(--color-ink);
+}
+
+/* Focus is always visible — accessibility-first UX (whitepaper §6.4). */
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* The "text lifts and dissolves upward" confirmation after sending from Launch. */
+@keyframes lift-away {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-2rem);
+  }
+}
+
+.animate-lift-away {
+  animation: lift-away 900ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+@keyframes settle-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-settle-in {
+  animation: settle-in 320ms ease-out both;
+}
+
+/* Small-caps labelling used across nav and section headers. */
+.smallcaps {
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.09em;
+}
+
+/* Quiet scrollbars — the aesthetic is spare. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

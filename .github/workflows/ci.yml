@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  app:
+    name: Typecheck, lint, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test
+      # No environment variables here on purpose. Configuration is read through
+      # getters, so a missing key must produce a readable message at request
+      # time rather than a failed build — this step is what proves that.
+      - run: npm run build
+
+  rules:
+    name: Database rules
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports: ["5432:5432"]
+    env:
+      PGPASSWORD: postgres
+      PGHOST: localhost
+      PGUSER: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply migrations and run the rules suite
+        # 01_rules.sql raises if any check fails, so a non-zero exit is the
+        # whole assertion — no output parsing.
+        run: |
+          psql -c "create database sovereign_test"
+          psql -d sovereign_test -v ON_ERROR_STOP=1 \
+            -f supabase/tests/00_supabase_shim.sql \
+            -f supabase/migrations/0001_schema.sql \
+            -f supabase/migrations/0002_rls.sql \
+            -f supabase/migrations/0003_functions.sql \
+            -f supabase/tests/01_rules.sql
+
+      - name: The worked example must apply to a fresh database
+        run: |
+          psql -c "create database sovereign_seed"
+          psql -d sovereign_seed -v ON_ERROR_STOP=1 \
+            -f supabase/tests/00_supabase_shim.sql \
+            -f supabase/migrations/0001_schema.sql \
+            -f supabase/migrations/0002_rls.sql \
+            -f supabase/migrations/0003_functions.sql
+          psql -d sovereign_seed -v ON_ERROR_STOP=1 \
+            -c "insert into auth.users (id, email) values (gen_random_uuid(), 'ci@example.com')" \
+            -f supabase/seed.sql
