@@ -89,13 +89,20 @@ in those words rather than implying more. See `docs/architecture.md`.
 ## Running it
 
 You need Node 20+ and a Supabase project. The free tier is enough for a group
-of fifty.
+of fifty. Runs on macOS, Linux and Windows — nothing here is platform-specific.
 
 ```bash
 git clone <this repo>
 cd sovereign
-npm install
+./scripts/setup.sh
 ```
+
+That installs dependencies, writes `.env.local`, applies the migrations if you
+give it a database URL, and tells you the one thing it cannot do for you. It is
+safe to run twice — it will not overwrite an existing `.env.local`.
+
+The rest of this section is what that script does, if you would rather do it by
+hand or it does not fit your setup.
 
 **1. Make a Supabase project** at [supabase.com](https://supabase.com).
 
