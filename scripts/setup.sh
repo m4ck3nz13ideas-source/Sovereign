@@ -91,7 +91,10 @@ NEXT_PUBLIC_SUPABASE_URL=$supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=$supabase_key
 
 ANTHROPIC_API_KEY=$anthropic_key
-ANTHROPIC_MODEL=claude-sonnet-4-5
+# Model IDs get retired. If reviews fail with model-not-found, change this.
+#   claude-sonnet-5  balanced, the default
+#   claude-opus-5    deeper reviews, more expensive
+ANTHROPIC_MODEL=claude-sonnet-5
 
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 EOF

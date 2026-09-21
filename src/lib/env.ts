@@ -33,8 +33,13 @@ export const env = {
   get anthropicKey(): string | null {
     return process.env.ANTHROPIC_API_KEY?.trim() || null;
   },
+  /**
+   * Model IDs are retired over time, so this is configuration rather than a
+   * constant. If a review starts failing with a model-not-found error, the
+   * default below has aged out — set ANTHROPIC_MODEL and carry on.
+   */
   get anthropicModel(): string {
-    return process.env.ANTHROPIC_MODEL?.trim() || "claude-sonnet-4-5";
+    return process.env.ANTHROPIC_MODEL?.trim() || "claude-sonnet-5";
   },
   get siteUrl(): string {
     return (
