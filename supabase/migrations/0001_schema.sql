@@ -478,7 +478,7 @@ create trigger resonance_touch before update on resonance_votes
 
 -- A new auth user gets a profile automatically.
 create or replace function handle_new_user()
-returns trigger language plpgsql security definer set search_path = public as $$
+returns trigger language plpgsql security definer set search_path = public, extensions as $$
 begin
   insert into public.profiles (id, display_name)
   values (

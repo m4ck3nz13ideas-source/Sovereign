@@ -19,7 +19,7 @@ create or replace function record_ledger_event(
   p_subject_id   uuid,
   p_payload      jsonb default '{}'::jsonb
 ) returns uuid
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_prev  text;
   v_hash  text;
@@ -61,7 +61,7 @@ $$;
 -- Replay the chain and report the first point at which it breaks.
 create or replace function verify_ledger(p_group_id uuid)
 returns table (ok boolean, checked integer, broken_at bigint)
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   r      record;
   v_prev text := null;
@@ -104,7 +104,7 @@ $$;
 -- -----------------------------------------------------------------------------
 
 create or replace function create_group(p_name text, p_purpose text, p_scope group_scope default 'local')
-returns uuid language plpgsql security definer set search_path = public as $$
+returns uuid language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_id   uuid;
   v_slug text;
@@ -134,7 +134,7 @@ end;
 $$;
 
 create or replace function create_invite(p_group_id uuid, p_max_uses integer default 1, p_days integer default 14)
-returns text language plpgsql security definer set search_path = public as $$
+returns text language plpgsql security definer set search_path = public, extensions as $$
 declare v_code text;
 begin
   if not is_group_steward(p_group_id) then
@@ -157,7 +157,7 @@ end;
 $$;
 
 create or replace function redeem_invite(p_code text)
-returns uuid language plpgsql security definer set search_path = public as $$
+returns uuid language plpgsql security definer set search_path = public, extensions as $$
 declare v_invite group_invites;
 begin
   if auth.uid() is null then
@@ -208,7 +208,7 @@ returns table (
   avg_urgency    numeric,
   revealed       boolean
 )
-language plpgsql security definer stable set search_path = public as $$
+language plpgsql security definer stable set search_path = public, extensions as $$
 declare
   v_group uuid;
   v_status proposal_status;
@@ -245,7 +245,7 @@ create or replace function cast_resonance(
   p_confidence  numeric,
   p_urgency     numeric,
   p_note        text default null
-) returns void language plpgsql security definer set search_path = public as $$
+) returns void language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_group  uuid;
   v_status proposal_status;
@@ -297,7 +297,7 @@ $$;
 -- -----------------------------------------------------------------------------
 
 create or replace function resolve_flag(p_flag_id uuid, p_resolution text)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 declare v_proposal uuid; v_group uuid;
 begin
   select proposal_id into v_proposal from proposal_flags where id = p_flag_id;
@@ -332,7 +332,7 @@ $$;
 -- -----------------------------------------------------------------------------
 
 create or replace function close_proposal(p_proposal_id uuid)
-returns decision_outcome language plpgsql security definer set search_path = public as $$
+returns decision_outcome language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_group        uuid;
   v_status       proposal_status;
@@ -419,7 +419,7 @@ $$;
 -- -----------------------------------------------------------------------------
 
 create or replace function complete_project(p_project_id uuid)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, extensions as $$
 declare v_group uuid;
 begin
   v_group := project_group(p_project_id);
@@ -461,7 +461,7 @@ returns table (
   actual_outcome   text,
   lesson           text
 )
-language sql security definer stable set search_path = public as $$
+language sql security definer stable set search_path = public, extensions as $$
   select
     d.id, p.id, p.title, d.outcome, d.decided_at, d.values_invoked,
     cardinality(array(select unnest(d.values_invoked) intersect select unnest(p_values))) as overlap,
@@ -494,7 +494,7 @@ returns table (
   budget_spent       numeric,
   reflections_written integer
 )
-language sql security definer stable set search_path = public as $$
+language sql security definer stable set search_path = public, extensions as $$
   select
     (select count(*)::int from proposals where author_id = p_profile_id and group_id = p_group_id),
     (select count(*)::int from proposals p join decisions d on d.proposal_id = p.id

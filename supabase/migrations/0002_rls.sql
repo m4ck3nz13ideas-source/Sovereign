@@ -16,7 +16,7 @@
 -- -----------------------------------------------------------------------------
 
 create or replace function is_group_member(gid uuid)
-returns boolean language sql security definer stable set search_path = public as $$
+returns boolean language sql security definer stable set search_path = public, extensions as $$
   select exists (
     select 1 from group_members
     where group_id = gid and profile_id = auth.uid()
@@ -24,7 +24,7 @@ returns boolean language sql security definer stable set search_path = public as
 $$;
 
 create or replace function is_group_steward(gid uuid)
-returns boolean language sql security definer stable set search_path = public as $$
+returns boolean language sql security definer stable set search_path = public, extensions as $$
   select exists (
     select 1 from group_members
     where group_id = gid and profile_id = auth.uid()
@@ -33,7 +33,7 @@ returns boolean language sql security definer stable set search_path = public as
 $$;
 
 create or replace function shares_group_with(pid uuid)
-returns boolean language sql security definer stable set search_path = public as $$
+returns boolean language sql security definer stable set search_path = public, extensions as $$
   select exists (
     select 1
     from group_members mine
@@ -43,12 +43,12 @@ returns boolean language sql security definer stable set search_path = public as
 $$;
 
 create or replace function proposal_group(pid uuid)
-returns uuid language sql security definer stable set search_path = public as $$
+returns uuid language sql security definer stable set search_path = public, extensions as $$
   select group_id from proposals where id = pid;
 $$;
 
 create or replace function project_group(pid uuid)
-returns uuid language sql security definer stable set search_path = public as $$
+returns uuid language sql security definer stable set search_path = public, extensions as $$
   select group_id from projects where id = pid;
 $$;
 
