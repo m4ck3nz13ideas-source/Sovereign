@@ -59,8 +59,13 @@ if [ -f .env.local ]; then
   say "   .env.local already exists — leaving it alone."
   note "   Delete it and run this again if you want to start over."
 else
-  say "   Two values from your Supabase project, under Settings → API."
+  say "   Two values from your Supabase project. The Connect button at the top"
+  say "   of the dashboard shows both, ready to paste; otherwise they are under"
+  say "   Settings → API Keys."
   note "   If you have not made a project yet: supabase.com → New project."
+  note "   Either key type works — a legacy 'anon' key or the newer"
+  note "   sb_publishable_... one. Both are meant to be public; the row-level"
+  note "   security policies are what protect the data, not the key."
   say ""
 
   read -r -p "   Project URL (https://xxxx.supabase.co): " supabase_url
@@ -101,9 +106,14 @@ step "4. Database"
 
 if command -v psql >/dev/null 2>&1; then
   say "   psql is available, so this can apply the migrations for you."
-  note "   The connection string is under Settings → Database → Connection string"
-  note "   (URI). It contains your database password, so it is used once here and"
-  note "   never written to disk."
+  note "   Settings → Database → Connection string, as a URI. It contains your"
+  note "   database password, so it is used once here and never written to disk."
+  say ""
+  warn "   Use the DIRECT CONNECTION or SESSION POOLER string (port 5432)."
+  note "   The transaction pooler on 6543 cannot run these migrations — it does"
+  note "   not support the session-level features that create type, create"
+  note "   function and the policy statements need. If you see errors about"
+  note "   prepared statements or unsupported syntax, that is the wrong string."
   say ""
   read -r -p "   Database URL (press enter to do it by hand instead): " db_url || db_url=""
 
@@ -116,6 +126,22 @@ if command -v psql >/dev/null 2>&1; then
       warn "   That does not look like a Postgres URL — it should start with"
       warn "   postgresql://. Skipping, so you can do this by hand."
       db_url=""
+      ;;
+  esac
+
+  # Catching this here beats letting psql fail three statements into 0001 with
+  # an error that does not name the real cause.
+  case "${db_url:-}" in
+    *:6543/*|*:6543\?*|*:6543)
+      warn "   That is the transaction pooler (port 6543). It cannot run these"
+      warn "   migrations. Go back to Settings → Database → Connection string"
+      warn "   and take the direct connection or session pooler URI (port 5432)."
+      say ""
+      read -r -p "   Paste that one instead (or enter to skip): " db_url || db_url=""
+      case "${db_url:-}" in
+        postgres://*|postgresql://*) ;;
+        *) db_url="" ;;
+      esac
       ;;
   esac
 
