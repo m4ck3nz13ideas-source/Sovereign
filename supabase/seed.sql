@@ -35,6 +35,11 @@
 -- Everything else cascades.
 -- =============================================================================
 
+-- pgcrypto lives in the extensions schema on Supabase, and the ledger block
+-- below calls digest(). Without this the seed fails two thirds of the way in,
+-- after it has already written the group and the proposal.
+set search_path = public, extensions;
+
 do $$
 declare
   v_owner    uuid := nullif(current_setting('sovereign.owner', true), '')::uuid;
