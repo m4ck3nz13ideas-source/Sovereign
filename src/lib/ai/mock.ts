@@ -25,6 +25,8 @@ export class MockProvider implements AiProvider {
     const text = input.toLowerCase();
 
     switch (schemaName) {
+      case "record_sharpening":
+        return { data: this.sharpen(input), model: "mock" };
       case "record_law_audit":
         return { data: this.lawAudit(input), model: "mock" };
       case "record_review":
@@ -41,6 +43,141 @@ export class MockProvider implements AiProvider {
   }
 
   /* ----------------------------------------------------------------------- */
+
+  /**
+   * The offline sharpening pass.
+   *
+   * Unlike the law audit, this one does judge — and it should. The law audit
+   * abstains because a guessed violation is unrecoverable; a draft sent back
+   * for more work costs the author ten minutes. So the offline reader is
+   * deliberately demanding, and it says plainly which of its objections come
+   * from actually reading and which come from counting.
+   *
+   * What it can see: whether a section exists, whether it is more than a
+   * gesture, whether the constraints carry a number, whether the risks name
+   * something that could go wrong rather than performing caution, and whether
+   * the alternatives consider doing nothing. That is a real filter — it is
+   * most of what a weak draft is missing — and it is the honest limit of what
+   * a reader without a model can tell you.
+   */
+  private sharpen(input: string) {
+    const section = (name: string): string => {
+      const m = input.match(
+        new RegExp(`^${name}:\\n([\\s\\S]*?)(?=\\n\\n[a-z]+:|\\n\\nReturn exactly)`, "m"),
+      );
+      const body = (m?.[1] ?? "").trim();
+      return body === "(empty)" || body.startsWith("(none given") ? "" : body;
+    };
+
+    const intent = section("intent");
+    const change = section("change");
+    const constraints = section("constraints");
+    const risks = section("risks");
+    const alternatives = section("alternatives");
+    const evidence = section("evidence");
+
+    const vague =
+      /\b(improve|explore|look into|support|enhance|optimi[sz]e|better|more effective|as needed|etc\.?)\b/i;
+    const hasNumber = /[£$€]\s?\d|\b\d+\s*(hours?|days?|weeks?|months?|people|%)/i;
+    const namesNothing = /\b(nothing|no risks?|none|n\/a)\b/i;
+    const considersDoingNothing = /\b(do nothing|doing nothing|leave it|status quo|as (we|things) are)\b/i;
+
+    const readings = [
+      {
+        section: "intent" as const,
+        ready: intent.length >= 100 && !vague.test(intent),
+        note: !intent
+          ? "There is no intent here at all. Name the problem, not the solution — what is going wrong now, and for whom?"
+          : intent.length < 100
+            ? "Too short to be a problem statement. Someone reading this cold should be able to tell what is currently going wrong."
+            : vague.test(intent)
+              ? "This describes wanting things to be better rather than what is wrong. Vague verbs are where proposals go to die."
+              : "A problem is named. No model read it, so whether it is the real problem is not something this reader can tell you.",
+        questions: intent && intent.length >= 100 ? [] : ["What is happening now that should not be?", "Who is affected by it?"],
+      },
+      {
+        section: "change" as const,
+        ready: change.length >= 100 && !vague.test(change),
+        note: !change
+          ? "Nothing here. What would be different the day after this happened?"
+          : vague.test(change)
+            ? "Improve, explore, support — these are not changes anyone can picture, agree to, or later check against what happened."
+            : change.length < 100
+              ? "Say it concretely enough that somebody who was not in the room could carry it out."
+              : "Concrete enough to picture.",
+        questions:
+          change.length >= 100 && !vague.test(change)
+            ? []
+            : ["What exactly would be different afterwards?", "Who does the first thing, and when?"],
+      },
+      {
+        section: "constraints" as const,
+        ready: constraints.length >= 80 && hasNumber.test(constraints),
+        note: !constraints
+          ? "Nothing about what this takes. Money, time, people, and anything it depends on that is not in your gift."
+          : !hasNumber.test(constraints)
+            ? "No numbers. An unnumbered budget is not a constraint — it is a hope."
+            : "Costs are stated with figures.",
+        questions:
+          constraints.length >= 80 && hasNumber.test(constraints)
+            ? []
+            : ["How much money, and how many hours of whose time?", "What does this depend on that you cannot decide yourself?"],
+      },
+      {
+        section: "risks" as const,
+        ready: risks.length >= 100 && !namesNothing.test(risks),
+        note: !risks
+          ? "No risks given. Every proposal has at least one, and 'none' usually means it has not been looked for."
+          : namesNothing.test(risks)
+            ? "This says there are no risks, which is the one answer that is never true. A risks section with no risk in it performs having thought about it."
+            : risks.length < 100
+              ? "Thin. What would you take as evidence, three months in, that this was not working?"
+              : "A real risk is named.",
+        questions:
+          risks.length >= 100 && !namesNothing.test(risks)
+            ? []
+            : ["What is most likely to go wrong?", "What would tell you it was not working?"],
+      },
+      {
+        section: "alternatives" as const,
+        ready: alternatives.length >= 80,
+        note: !alternatives
+          ? "No alternatives considered. Somebody who has weighed no other option has not made a choice, they have had an idea."
+          : !considersDoingNothing.test(alternatives)
+            ? "Doing nothing is not among these, and it is a real option — often the right one. Say why it is not, here."
+            : alternatives.length < 80
+              ? "Say what else you looked at and why not that."
+              : "Alternatives were weighed, including leaving things alone.",
+        questions: alternatives.length >= 80 ? [] : ["What else did you consider?", "Why not simply leave things as they are?"],
+      },
+      {
+        section: "evidence" as const,
+        ready: true,
+        note: evidence
+          ? "Evidence given. This reader cannot check whether it supports the claim."
+          : "Optional, and not given. That is allowed — but any claim doing real work here rests on your word.",
+        questions: [],
+      },
+    ];
+
+    const readyCount = readings.filter((r) => r.ready).length;
+    // Six of six is 0.72, just over the bar. Five is 0.60, under it. That is
+    // deliberate: offline, every section has to be there.
+    const readiness = round(clamp(readyCount / 6 - 0.2 + (evidence ? 0.06 : 0)));
+
+    return {
+      sections: readings,
+      readiness,
+      verdict:
+        `No model read this draft — ANTHROPIC_API_KEY is not set, so the offline reader answered. ` +
+        `It judged structure: whether each section is there, whether the costs carry numbers, whether the ` +
+        `risks name something real. It cannot tell you whether the idea is any good, whether the problem ` +
+        `is the real problem, or whether your plan would work. ` +
+        (readiness >= 0.7
+          ? `On structure this is complete enough to put to people. Set a key if you want it actually read before you do.`
+          : `On structure it is not ready yet: ${readings.filter((r) => !r.ready).map((r) => r.section).join(", ")}.`),
+    };
+  }
 
   /**
    * The offline Universal Law audit.

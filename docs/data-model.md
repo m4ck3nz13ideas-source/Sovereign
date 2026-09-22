@@ -85,6 +85,12 @@ through a decision on day one. It is the first number to raise.
 ### `proposals`
 Only submitted proposals exist here.
 
+**Six sections.** `intent`, `change`, `constraints`, `risks`, `alternatives`
+and the optional `evidence`, with minimum lengths on the first five in
+`proposals_sections`. `body` is these concatenated, built in exactly one place
+so the hash below cannot drift from what was read. `readiness` and
+`body_sha256` are stamped by the trigger, not supplied by the client.
+
 **Addressed to a group or to a place.** `group_id` is nullable; when it is
 null the proposal is addressed to `place` at `scope`, and `proposals_addressed`
 checks that one of the two is present (global needs no place). `closes_at` is
@@ -155,6 +161,20 @@ There is no `resonance_summary` *view*, deliberately. A `security_invoker` view
 would inherit the policy and count only the caller's own vote; a
 `security_definer` view would leak live averages to anyone who queried it. The
 function checks membership itself and withholds the numbers.
+
+### `proposal_readiness`
+The sharpening a draft had to clear. Written before the proposal exists, so
+`proposal_id` is null until submission binds it — and while it is null the row
+is readable only by its author, which is the private-first rule holding for
+things derived from a draft as well as the draft itself.
+
+`body_sha256` binds a reading to one exact text. No update policy and no
+delete policy: a sharpening is not revised, a rewritten draft gets a new one,
+and the old reading stays.
+
+`bind_proposal_readiness()` takes `min(readiness)` across the author's
+unattached readings of this text, not the most recent. Asking again about the
+same words can only lower where they stand.
 
 ### `law_assessments`, `law_challenges`
 One row per law per audit, so an audit always covers all ten — a missing row
@@ -261,6 +281,8 @@ There is no repost, no follower graph, and no engagement count on the card.
 | `related_decisions` | Retrieval by value overlap, with outcomes |
 | `contribution_record` | A derived record — no score, no token |
 | `record_ledger_event`, `verify_ledger` | The chain, and its replay. `verify_ledger(null)` is the public one |
+| `readiness_threshold`, `proposal_body_hash` | The bar, and the hash that binds a reading to a text |
+| `bind_proposal_readiness` | No submission without a sharpening of this exact draft |
 | `place_key` | One normalised form, so a place matches however it is typed |
 | `in_scope` | Whether a person is in a place at a scale |
 | `can_reach_proposal`, `can_reach_project` | The single eligibility question |

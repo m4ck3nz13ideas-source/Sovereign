@@ -42,9 +42,8 @@ begin
   perform set_config('test.uid', ann::text, true);
 
   -- A proposal that gets all the way through the vote.
-  insert into proposals (group_id, author_id, title, summary, body, budget_amount)
-  values (gid, ann, 'Rent the room', 'Six weeks.', 'A body long enough for the group to evaluate it properly.', 240)
-  returning id into pid;
+  pid := test_propose(ann, gid, 'local', null, 'Rent the room', 'Six weeks.',
+                      'The hall is double-booked most Thursdays.', 240);
 
   insert into proposal_reviews (proposal_id, prompt_id, prompt_version, model, summary)
   values (pid, 'proposal.review', '1.2.0', 'test', 'A reading.') returning id into rid;
@@ -153,9 +152,8 @@ begin
     raise warning 'FAIL: committed budget is % rather than the 240 pledged', n; end if;
 
   ----------------------------------------- withdrawing takes it below ready
-  insert into proposals (group_id, author_id, title, summary, body)
-  values (gid, ann, 'Second', 'x', 'A second body long enough for the group to evaluate it.')
-  returning id into pid;
+  pid := test_propose(ann, gid, 'local', null, 'Second', 'x',
+                      'There is one socket and four things to plug in.');
   insert into proposal_needs (proposal_id, kind, description, quantity, unit, created_by)
   values (pid, 'skill', 'Someone who can wire a socket', 1, 'person', ann)
   returning id into people_need;
@@ -173,9 +171,8 @@ begin
     raise warning 'FAIL: still ready after the only pledge was withdrawn'; end if;
 
   ------------------------------- a proposal needing nothing is ready at once
-  insert into proposals (group_id, author_id, title, summary, body)
-  values (gid, ann, 'Third', 'x', 'A third body, long enough for the group to evaluate it.')
-  returning id into pid;
+  pid := test_propose(ann, gid, 'local', null, 'Third', 'x',
+                      'The noticeboard has last winter''s dates on it.');
 
   select ready into ok_flag from activation_standing(pid);
   if ok_flag then passes := passes + 1; else fails := fails + 1;

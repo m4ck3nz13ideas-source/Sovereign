@@ -9,6 +9,7 @@ import {
   DECISION_RATIONALE,
   LAW_AUDIT,
   PROPOSAL_REVIEW,
+  PROPOSAL_SHARPEN,
   REFLECTION_PROMPT,
   SYNTHESIS_PROMPT,
 } from "./prompts";
@@ -22,11 +23,15 @@ import {
   reflectionSchema,
   reviewJsonSchema,
   reviewSchema,
+  sharpenJsonSchema,
+  sharpenSchema,
+  SHARPEN_SECTIONS,
   synthesisJsonSchema,
   synthesisSchema,
   type LawAuditOutput,
   type ReflectionOutput,
   type ReviewOutput,
+  type SharpenOutput,
   type SynthesisOutput,
 } from "./schemas";
 
@@ -144,6 +149,114 @@ ${ctx.proposal.body}`;
  * memory of something similar. A challenge from a member is passed in and
  * must be considered; it does not oblige a different answer.
  */
+/**
+ * A draft, as the six sections the author fills in.
+ *
+ * This is the only shape in this file that describes something not yet in the
+ * database — a sharpening runs on a draft that exists in one browser.
+ */
+export interface Draft {
+  title: string;
+  summary: string;
+  intent: string;
+  change: string;
+  constraints: string;
+  risks: string;
+  alternatives: string;
+  evidence: string;
+  scope: string;
+  place: string | null;
+  budget: string | null;
+  termDays: string | null;
+}
+
+/** The whole draft as one block, and the exact text the readiness is bound to. */
+export function draftBody(d: Draft): string {
+  return [
+    `## What this is solving
+${d.intent.trim()}`,
+    `## What would change
+${d.change.trim()}`,
+    `## What it takes
+${d.constraints.trim()}`,
+    `## What could go wrong
+${d.risks.trim()}`,
+    `## What else was considered
+${d.alternatives.trim()}`,
+    d.evidence.trim() ? `## Evidence
+${d.evidence.trim()}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/**
+ * Sharpen a draft.
+ *
+ * Runs before anything reaches the shared store, and its verdict is what
+ * decides whether the author may submit at all. See PROPOSAL_SHARPEN.
+ */
+export async function sharpenDraft(
+  draft: Draft,
+): Promise<{ sharpen: SharpenOutput; model: string; prompt: typeof PROPOSAL_SHARPEN }> {
+  const input = `WHO THIS WOULD BE PUT TO
+scale: ${draft.scope}${draft.place ? ` — ${draft.place}` : ""}
+
+Judge the rigour against what is being asked of whom. A street deciding where
+to meet is not a country committing money.
+
+THE DRAFT
+title: ${draft.title}
+in one line: ${draft.summary}
+budget: ${draft.budget?.trim() ? draft.budget : "none stated"}
+term: ${draft.termDays?.trim() ? `${draft.termDays} days` : "none stated"}
+
+intent:
+${draft.intent.trim() || "(empty)"}
+
+change:
+${draft.change.trim() || "(empty)"}
+
+constraints:
+${draft.constraints.trim() || "(empty)"}
+
+risks:
+${draft.risks.trim() || "(empty)"}
+
+alternatives:
+${draft.alternatives.trim() || "(empty)"}
+
+evidence:
+${draft.evidence.trim() || "(none given — this section is optional)"}
+
+Return exactly six section readings, using the section names given above.`;
+
+  const { data, model } = await provider().complete({
+    prompt: PROPOSAL_SHARPEN,
+    input,
+    schema: sharpenJsonSchema as unknown as Record<string, unknown>,
+    schemaName: "record_sharpening",
+    maxTokens: 3000,
+  });
+
+  const parsed = sharpenSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new AiError(
+      `The sharpening did not match the expected shape: ${parsed.error.message}`,
+    );
+  }
+
+  // All six, exactly once. A reading that silently skipped "risks" would let a
+  // draft through on five sections while looking complete.
+  const seen = new Set(parsed.data.sections.map((r) => r.section));
+  const missing = SHARPEN_SECTIONS.filter((x) => !seen.has(x));
+  if (missing.length) {
+    throw new AiError(`The sharpening did not cover: ${missing.join(", ")}.`);
+  }
+
+  return { sharpen: parsed.data, model, prompt: PROPOSAL_SHARPEN };
+}
+
 export async function auditAgainstLaw(ctx: {
   proposal: { title: string; summary: string; body: string; scope: string; budget: string | null };
   groupName: string;

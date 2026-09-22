@@ -51,6 +51,12 @@ declare
   v_review   uuid;
   v_project  uuid;
   v_flag     uuid;
+  v_intent   text;
+  v_change   text;
+  v_costs    text;
+  v_risks    text;
+  v_alts     text;
+  v_body     text;
 begin
   -- Fall back to the first real profile if no owner was supplied.
   if v_owner is null then
@@ -115,20 +121,64 @@ begin
     (v_group, v_ruth,  'member');
 
   -- -------------------------------------------------------------- proposal
+  --
+  -- Written as the six sections, so the body below is what the compose screen
+  -- would have produced and what the sharpening was bound to.
+  v_intent := E'The church hall has been double-booked three times since March and we have lost two sessions entirely. People stop coming when they cannot rely on it being there.';
+  v_change := E'Thursdays move to the room above the Kings Arms for twelve weeks. It holds fourteen comfortably and has a lockable cupboard for the tools. They will hold the slot if we commit to a term.';
+  v_costs  := E'£40 a week, £480 over twelve weeks. Split eleven ways that is about £44 each, or it comes out of what is left of the workshop fund. It depends on the pub honouring the hold.';
+  v_risks  := E'Whether people will actually pay, and whether a pub room feels like the same thing. The hall is free and it is ours in a way a rented room will not be. If attendance is down by week six, this has not worked.';
+  v_alts   := E'Staying in the hall was considered: it is free, but it is the thing that keeps failing. A shorter trial was considered and rejected because the pub will not hold Thursdays without a term.';
+
+  v_body :=
+    '## What this is solving'     || chr(10) || v_intent || chr(10) || chr(10) ||
+    '## What would change'        || chr(10) || v_change || chr(10) || chr(10) ||
+    '## What it takes'            || chr(10) || v_costs  || chr(10) || chr(10) ||
+    '## What could go wrong'      || chr(10) || v_risks  || chr(10) || chr(10) ||
+    '## What else was considered' || chr(10) || v_alts;
+
+  -- The sharpening, recorded before submission the way the app records it.
+  insert into proposal_readiness (
+    author_id, body_sha256, readiness, verdict, sections,
+    prompt_id, prompt_version, model, created_at
+  ) values (
+    v_nadia, proposal_body_hash(v_body), 0.780,
+    'Ready. The problem is real and dated, the costs are numbered, and doing nothing was weighed against the thing that keeps failing. The weakest part is the risks section: "whether people will pay" is the right worry but there is no plan for what happens if half of them do not.',
+    jsonb_build_array(
+      jsonb_build_object('section','intent','ready',true,'note','A dated, specific failure. This is what an intent should look like.','questions', jsonb_build_array()),
+      jsonb_build_object('section','change','ready',true,'note','Concrete enough to picture.','questions', jsonb_build_array()),
+      jsonb_build_object('section','constraints','ready',true,'note','Numbered, and the dependency on the pub is stated.','questions', jsonb_build_array()),
+      jsonb_build_object('section','risks','ready',false,'note','The right worry, with nothing behind it.','questions', jsonb_build_array('What happens if only six of the eleven pay?','Who decides at week six whether to stop?')),
+      jsonb_build_object('section','alternatives','ready',true,'note','Doing nothing was weighed.','questions', jsonb_build_array()),
+      jsonb_build_object('section','evidence','ready',true,'note','None given. The three double-bookings are the load-bearing claim and rest on your word.','questions', jsonb_build_array())
+    ),
+    'proposal.sharpen', '1.0.0', 'example',
+    now()
+  );
+
   insert into proposals (
-    group_id, author_id, title, summary, body, category, scope,
+    group_id, author_id, title, summary, body,
+    intent, change, constraints, risks, alternatives,
+    category, scope,
     budget_amount, budget_currency, term_days, status,
     created_at, submitted_at, closed_at
   ) values (
     v_group, v_nadia,
     'Move the Thursday session to a paid room',
     'Rent the room above the Kings Arms for Thursdays, 12 weeks, £480 total.',
-    E'The church hall has been double-booked three times since March and we have lost two sessions entirely. People stop coming when they cannot rely on it being there.\n\nThe room above the Kings Arms is £40 a week, holds fourteen comfortably, and has a lockable cupboard we could keep tools in. I have asked and they will hold Thursdays for us if we commit to a term.\n\nI am proposing twelve weeks at £480 total. Split across the eleven of us that is about £44 each, or we could take it from what is left of the workshop fund.\n\nWhat I am unsure about: whether people will actually pay, and whether a pub room feels like the same thing. The hall is free and it is ours in a way a rented room will not be.',
+    v_body,
+    v_intent, v_change, v_costs, v_risks, v_alts,
     'Space', 'local',
     480.00, 'GBP', 84, 'completed',
     now() - interval '94 days', now() - interval '94 days', now() - interval '88 days'
   )
   returning id into v_proposal;
+
+  -- Dated back only after the insert: the gate wants a reading from the last
+  -- twenty-four hours, and this example is three months old.
+  update proposal_readiness
+     set created_at = now() - interval '94 days'
+   where proposal_id = v_proposal;
 
   -- ------------------------------------------------------------- the review
   insert into proposal_reviews (

@@ -16,10 +16,13 @@ import type {
   NeedStanding,
   Proposal,
   ProposalFlag,
+  ProposalReadiness,
   ResonanceSummary,
   ResonanceVote,
   ScopeRule,
 } from "@/lib/types";
+
+import { READINESS_THRESHOLD, SECTION_LABELS } from "@/lib/readiness";
 
 import { AiLayer } from "./AiLayer";
 import { CloseButton } from "./CloseButton";
@@ -29,6 +32,7 @@ import { LawLayer } from "./LawLayer";
 import { FlagList } from "./FlagList";
 import { Outcome } from "./Outcome";
 import { RunReview } from "./RunReview";
+import { Sharpening } from "./Sharpening";
 import { ResonancePanel } from "./ResonancePanel";
 import { WithdrawButton } from "./WithdrawButton";
 
@@ -120,6 +124,7 @@ export default async function ProposalPage({
     { data: needRows },
     { data: activationRows },
     { data: commitmentRows },
+    { data: readinessRow },
   ] = await Promise.all([
     supabase
       .from("proposal_reviews")
@@ -168,6 +173,11 @@ export default async function ProposalPage({
       .select("*, profiles(display_name)")
       .eq("proposal_id", id)
       .in("status", ["pledged", "honoured"]),
+    supabase
+      .from("proposal_readiness")
+      .select("*")
+      .eq("proposal_id", id)
+      .maybeSingle(),
   ]);
 
   const review = reviewRows?.[0] ? asReview(reviewRows[0]) : null;
@@ -198,6 +208,14 @@ export default async function ProposalPage({
   const commitments = (commitmentRows ?? []) as unknown as (Commitment & {
     profiles: { display_name: string } | null;
   })[];
+
+  const readiness = readinessRow
+    ? ({
+        ...(readinessRow as unknown as ProposalReadiness),
+        sections: ((readinessRow as { sections?: unknown }).sections ??
+          []) as ProposalReadiness["sections"],
+      } satisfies ProposalReadiness)
+    : null;
 
   // Grouped for the panel: my own pledge per need, and everyone's per need.
   const myPledges: Record<string, { id: string; quantity: number }> = {};
@@ -288,9 +306,46 @@ export default async function ProposalPage({
       </header>
 
       {/* --------------------------------------------------------- CONTEXT */}
+      <section className="mb-10 space-y-7">
+        {(
+          [
+            ["intent", proposal.intent],
+            ["change", proposal.change],
+            ["constraints", proposal.constraints],
+            ["risks", proposal.risks],
+            ["alternatives", proposal.alternatives],
+            ["evidence", proposal.evidence],
+          ] as const
+        ).map(([key, text]) =>
+          text && text.trim() ? (
+            <div key={key}>
+              <SectionLabel>{SECTION_LABELS[key]}</SectionLabel>
+              <Prose>{text}</Prose>
+            </div>
+          ) : null,
+        )}
+
+        {/* Proposals written before the sections existed kept their prose. */}
+        {!proposal.intent.trim() ? (
+          <div>
+            <SectionLabel>Context</SectionLabel>
+            <Prose>{proposal.body}</Prose>
+          </div>
+        ) : null}
+      </section>
+
+      {/* ------------------------------------------------------- SHARPENING */}
       <section className="mb-10">
-        <SectionLabel>Context</SectionLabel>
-        <Prose>{proposal.body}</Prose>
+        <SectionLabel
+          right={
+            proposal.readiness !== null
+              ? `${Number(proposal.readiness).toFixed(2)}`
+              : undefined
+          }
+        >
+          How it was sharpened
+        </SectionLabel>
+        <Sharpening readiness={readiness} threshold={READINESS_THRESHOLD} />
       </section>
 
       {/* ------------------------------------------------------ UNIVERSAL LAW */}

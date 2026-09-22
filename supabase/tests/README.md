@@ -6,7 +6,7 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Four suites, seventy-three checks. Every one of them runs as a non-superuser,
+Five suites, eighty-nine checks. Every one of them runs as a non-superuser,
 so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
@@ -68,6 +68,21 @@ nothing about what a member can see.
 - Retrieval follows the address: Totnes does not learn from Hackney.
 - The public ledger chain verifies.
 
+### `05_readiness.sql` — sixteen checks
+
+- An unsharpened draft is refused outright.
+- A draft scoring 0.55 is refused, and the error says both numbers.
+- A sharpening of a different text does not count.
+- **Somebody else's sharpening does not count**, and nobody can record one in
+  another member's name.
+- A missing section is refused by the check constraint.
+- **Asking again about the same words cannot talk past an earlier low score.**
+- A sharpening is spent: one reading submits one proposal.
+- The text and the score are fixed after submission — but withdrawal still
+  works, which is why the text is frozen and the status is not.
+- An unattached reading is private to its author; an attached one is part of
+  the record.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -82,11 +97,20 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0004_universal_law.sql \
   -f supabase/migrations/0005_activation.sql \
   -f supabase/migrations/0006_scope.sql \
+  -f supabase/migrations/0007_readiness.sql \
+  -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
   -f supabase/tests/03_activation.sql \
-  -f supabase/tests/04_scope.sql
+  -f supabase/tests/04_scope.sql \
+  -f supabase/tests/05_readiness.sql
 ```
+
+`00b_support.sql` is test scaffolding: `test_propose()` does what the server
+action does — records a sharpening, then submits — so the other suites stay
+about the rules they are testing. It is deliberately not `security definer`,
+because a helper that bypassed row-level security would quietly disarm every
+test that uses it.
 
 It prints `N passed, 0 failed` and raises if anything failed, so it is usable
 as a CI step without parsing output.

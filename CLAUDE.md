@@ -34,7 +34,11 @@ on purpose, in a commit that says so.
 10. **Eligibility is one question.** `can_reach_proposal()` — membership for a
     group proposal, `in_scope()` for a place one. If you find yourself writing
     a policy that asks about groups directly, you are forking the loop.
-11. **A place has no register and no steward.** So there is no participation
+11. **A proposal is six sections and a sharpening.** The sections have length
+    constraints; `bind_proposal_readiness()` refuses a submission without a
+    reading of that exact body above 0.70. `body` is composed in exactly one
+    place — `draftBody()` — because the hash is taken over it.
+12. **A place has no register and no steward.** So there is no participation
     share (a `min_voices` floor instead, and `participation` stays null) and
     nobody picks the closing moment (`closes_at` does). Do not fill either gap
     with a plausible-looking number.
@@ -48,6 +52,8 @@ on purpose, in a commit that says so.
 - `src/lib/collective.ts` — pure helpers for the collective screens. A
   `"use server"` file may only export async functions, so anything synchronous
   belongs here rather than in `actions.ts`.
+- `src/lib/readiness.ts` — the bar and the hash, mirroring Postgres. The
+  database's copies are the ones that decide.
 - `src/lib/address.ts` — the address the collective screens are looking at: a
   group, or a place at one of five scales. Server-only; the cookie lives here.
 - `supabase/migrations/` — schema, then policies, then functions. Applied in

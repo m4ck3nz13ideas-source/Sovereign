@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { MockProvider } from "./mock";
-import { reviewSchema } from "./schemas";
+import { reviewSchema, sharpenSchema } from "./schemas";
 
 /**
  * The offline reviewer is what runs when no API key is set, which means it is
@@ -107,5 +107,93 @@ describe("the offline reviewer", () => {
     await expect(
       provider.complete({ input: "x", schemaName: "record_nonsense" }),
     ).rejects.toThrow(/no response/);
+  });
+});
+
+/* ---------------------------------------------------------------------------
+   The offline sharpener — the one gate that actually stops a submission.
+--------------------------------------------------------------------------- */
+
+function sharpenInput(sections: Record<string, string>): string {
+  const order = ["intent", "change", "constraints", "risks", "alternatives", "evidence"];
+  return (
+    `WHO THIS WOULD BE PUT TO\nscale: local — Hackney\n\nTHE DRAFT\ntitle: A thing\nin one line: One line.\nbudget: none stated\nterm: none stated\n\n` +
+    order
+      .map((k) => `${k}:\n${sections[k]?.trim() || (k === "evidence" ? "(none given — this section is optional)" : "(empty)")}`)
+      .join("\n\n") +
+    `\n\nReturn exactly six section readings, using the section names given above.`
+  );
+}
+
+async function sharpen(sections: Record<string, string>) {
+  const { data, model } = await provider.complete({
+    input: sharpenInput(sections),
+    schemaName: "record_sharpening",
+  });
+  return { parsed: sharpenSchema.parse(data), model };
+}
+
+const THOUGHT_THROUGH = {
+  intent:
+    "The alley behind the terrace is used as a cut-through and somebody is nearly hit most weeks. It is worst at school run.",
+  change:
+    "Two bollards at the north end, so it stays walkable and stops being a road. Fitted before the end of March by the person named below.",
+  constraints:
+    "About £240 for the bollards and 6 hours of fitting time. It depends on the council not objecting.",
+  risks:
+    "The council may refuse, and the cut-through may simply move to the next street. If either happens by June, this has not worked.",
+  alternatives:
+    "Doing nothing was considered: the problem recurs weekly, so it was rejected. Signage alone is ignored elsewhere on the estate.",
+  evidence: "Three near-misses logged by the school crossing patrol since January.",
+};
+
+describe("the offline sharpener", () => {
+  it("passes a draft that answers all six sections", async () => {
+    const { parsed } = await sharpen(THOUGHT_THROUGH);
+    expect(parsed.sections).toHaveLength(6);
+    expect(parsed.readiness).toBeGreaterThanOrEqual(0.7);
+  });
+
+  it("refuses an empty draft outright", async () => {
+    const { parsed } = await sharpen({});
+    expect(parsed.readiness).toBeLessThan(0.7);
+    expect(parsed.sections.filter((s) => s.ready)).toHaveLength(1); // evidence only
+  });
+
+  it("refuses a draft with no risks, and names why", async () => {
+    const { parsed } = await sharpen({ ...THOUGHT_THROUGH, risks: "None." });
+    expect(parsed.readiness).toBeLessThan(0.7);
+    const risks = parsed.sections.find((s) => s.section === "risks");
+    expect(risks?.ready).toBe(false);
+    expect(risks?.questions.length).toBeGreaterThan(0);
+  });
+
+  it("refuses costs with no numbers in them", async () => {
+    const { parsed } = await sharpen({
+      ...THOUGHT_THROUGH,
+      constraints: "It would not cost very much, and somebody could probably fit them.",
+    });
+    expect(parsed.sections.find((s) => s.section === "constraints")?.ready).toBe(false);
+    expect(parsed.readiness).toBeLessThan(0.7);
+  });
+
+  it("refuses a change written in vague verbs", async () => {
+    const { parsed } = await sharpen({
+      ...THOUGHT_THROUGH,
+      change: "We would improve the situation in the alley and explore what else could support residents there.",
+    });
+    expect(parsed.sections.find((s) => s.section === "change")?.ready).toBe(false);
+  });
+
+  it("says plainly that no model read it", async () => {
+    const { parsed, model } = await sharpen(THOUGHT_THROUGH);
+    expect(model).toBe("mock");
+    expect(parsed.verdict).toMatch(/no model read/i);
+  });
+
+  it("reads the same draft the same way twice", async () => {
+    const a = await sharpen(THOUGHT_THROUGH);
+    const b = await sharpen(THOUGHT_THROUGH);
+    expect(a.parsed).toEqual(b.parsed);
   });
 });

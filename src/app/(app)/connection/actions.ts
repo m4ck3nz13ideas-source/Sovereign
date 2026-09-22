@@ -3,7 +3,15 @@
 import { revalidatePath } from "next/cache";
 
 import { setAddress } from "@/lib/address";
-import { auditAgainstLaw, reviewProposal, writeRationale } from "@/lib/ai";
+import {
+  auditAgainstLaw,
+  draftBody,
+  reviewProposal,
+  sharpenDraft,
+  writeRationale,
+  type Draft,
+} from "@/lib/ai";
+import { READINESS_THRESHOLD, sha256 } from "@/lib/readiness";
 import { placeAt } from "@/lib/collective";
 import { ledger } from "@/lib/ledger";
 import { requireSession } from "@/lib/session";
@@ -91,13 +99,114 @@ export async function toggleReaction(postId: string) {
 export interface ProposalInput {
   title: string;
   summary: string;
-  body: string;
+  /** The six sections. `body` is derived from them, never typed separately. */
+  intent: string;
+  change: string;
+  constraints: string;
+  risks: string;
+  alternatives: string;
+  evidence: string;
   category: string;
-  scope: GroupScope;
   budget: string;
   termDays: string;
   /** "group:<id>" or "scope:<scale>" — where this proposal is addressed. */
   address: string;
+}
+
+/** Where a draft is addressed, resolved once and used by both actions below. */
+function resolveAddress(
+  address: string,
+  profile: Parameters<typeof placeAt>[0],
+  groups: { id: string }[],
+):
+  | { ok: true; groupId: string | null; scope: GroupScope; place: string | null }
+  | { ok: false; error: string } {
+  if (address.startsWith("group:")) {
+    const g = groups.find((x) => x.id === address.slice(6));
+    if (!g) return { ok: false, error: "You are not in that group." };
+    return { ok: true, groupId: g.id, scope: "local", place: null };
+  }
+
+  const scope = address.slice(6) as GroupScope;
+  const place = scope === "global" ? null : placeAt(profile, scope);
+  if (scope !== "global" && !place?.trim()) {
+    return {
+      ok: false,
+      error: "Say where you are at that scale before proposing to it.",
+    };
+  }
+  return { ok: true, groupId: null, scope, place };
+}
+
+/**
+ * Sharpen a draft.
+ *
+ * Runs on text that exists only in the author's browser — nothing of the draft
+ * is written here. What is written is the reading: a score, a verdict, what is
+ * still unanswered, and a hash of the exact words it was made about. That row
+ * is private to its author until a proposal attaches it, and the database will
+ * not accept a proposal without one.
+ *
+ * The reading is produced outside Postgres, so this is attributable rather
+ * than unforgeable — see docs/architecture.md. What it is not is advisory: the
+ * trigger refuses the insert.
+ */
+export async function assessDraft(input: ProposalInput) {
+  const { userId, profile, groups } = await requireSession();
+  const supabase = await createClient();
+
+  const where = resolveAddress(input.address, profile, groups);
+  if (!where.ok) return { ok: false as const, error: where.error };
+
+  if (!input.title.trim()) return { ok: false as const, error: "A proposal needs a title." };
+  if (!input.summary.trim()) {
+    return { ok: false as const, error: "A proposal needs a one-line summary." };
+  }
+
+  const draft: Draft = {
+    title: input.title.trim(),
+    summary: input.summary.trim(),
+    intent: input.intent,
+    change: input.change,
+    constraints: input.constraints,
+    risks: input.risks,
+    alternatives: input.alternatives,
+    evidence: input.evidence,
+    scope: where.scope,
+    place: where.place,
+    budget: input.budget.trim() || null,
+    termDays: input.termDays.trim() || null,
+  };
+
+  try {
+    const { sharpen, model, prompt } = await sharpenDraft(draft);
+
+    const { error } = await supabase.from("proposal_readiness").insert({
+      author_id: userId,
+      body_sha256: await sha256(draftBody(draft)),
+      readiness: sharpen.readiness,
+      verdict: sharpen.verdict,
+      sections: sharpen.sections,
+      prompt_id: prompt.id,
+      prompt_version: prompt.version,
+      model,
+    });
+
+    if (error) return { ok: false as const, error: error.message };
+
+    return {
+      ok: true as const,
+      sharpen,
+      model,
+      version: prompt.version,
+      threshold: READINESS_THRESHOLD,
+    };
+  } catch (e) {
+    return {
+      ok: false as const,
+      error: e instanceof Error ? e.message : "The draft could not be read.",
+    };
+  }
 }
 
 /**
@@ -112,35 +221,12 @@ export async function submitProposal(input: ProposalInput) {
   const { userId, profile, groups } = await requireSession();
   const supabase = await createClient();
 
-  // Where it is addressed. A group you are in, or a place you are in — the
-  // policy refuses anything else, and this is the readable version of that.
-  let groupId: string | null = null;
-  let scope: GroupScope = input.scope;
-  let place: string | null = null;
-
-  if (input.address.startsWith("group:")) {
-    const g = groups.find((x) => x.id === input.address.slice(6));
-    if (!g) return { ok: false as const, error: "You are not in that group." };
-    groupId = g.id;
-  } else {
-    scope = input.address.slice(6) as GroupScope;
-    place = scope === "global" ? null : placeAt(profile, scope);
-    if (scope !== "global" && !place?.trim()) {
-      return {
-        ok: false as const,
-        error: "Say where you are before proposing at that scale.",
-      };
-    }
-  }
+  const where = resolveAddress(input.address, profile, groups);
+  if (!where.ok) return { ok: false as const, error: where.error };
+  const { groupId, scope, place } = where;
 
   if (!input.title.trim()) return { ok: false as const, error: "A proposal needs a title." };
   if (!input.summary.trim()) return { ok: false as const, error: "A proposal needs a one-line summary." };
-  if (input.body.trim().length < 80) {
-    return {
-      ok: false as const,
-      error: "Say more. A proposal the group cannot evaluate is not ready to submit.",
-    };
-  }
 
   const budget = input.budget.trim() ? Number(input.budget) : null;
   if (budget !== null && Number.isNaN(budget)) {
@@ -149,14 +235,38 @@ export async function submitProposal(input: ProposalInput) {
 
   const term = input.termDays.trim() ? Number(input.termDays) : null;
 
+  // The body is derived from the sections, which is what was sharpened and
+  // what the readiness row is bound to. Composing it anywhere else would let
+  // the two drift apart and the gate would stop meaning anything.
+  const draft: Draft = {
+    title: input.title.trim(),
+    summary: input.summary.trim(),
+    intent: input.intent,
+    change: input.change,
+    constraints: input.constraints,
+    risks: input.risks,
+    alternatives: input.alternatives,
+    evidence: input.evidence,
+    scope,
+    place,
+    budget: input.budget.trim() || null,
+    termDays: input.termDays.trim() || null,
+  };
+
   const { data: proposal, error } = await supabase
     .from("proposals")
     .insert({
       group_id: groupId,
       author_id: userId,
-      title: input.title.trim(),
-      summary: input.summary.trim(),
-      body: input.body.trim(),
+      title: draft.title,
+      summary: draft.summary,
+      body: draftBody(draft),
+      intent: draft.intent.trim(),
+      change: draft.change.trim(),
+      constraints: draft.constraints.trim(),
+      risks: draft.risks.trim(),
+      alternatives: draft.alternatives.trim(),
+      evidence: draft.evidence.trim() || null,
       category: input.category.trim() || null,
       scope,
       place,

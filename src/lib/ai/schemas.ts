@@ -53,6 +53,41 @@ export const lawAuditSchema = z.object({
 
 export type LawAuditOutput = z.infer<typeof lawAuditSchema>;
 
+/**
+ * The sharpening pass.
+ *
+ * One reading per section, all six, enforced here for the same reason the law
+ * audit enforces ten: a five-section reading would leave a section unexamined
+ * while looking complete.
+ */
+export const SHARPEN_SECTIONS = [
+  "intent",
+  "change",
+  "constraints",
+  "risks",
+  "alternatives",
+  "evidence",
+] as const;
+
+export type SharpenSection = (typeof SHARPEN_SECTIONS)[number];
+
+export const sharpenSchema = z.object({
+  sections: z
+    .array(
+      z.object({
+        section: z.enum(SHARPEN_SECTIONS),
+        ready: z.boolean(),
+        note: z.string().min(1),
+        questions: z.array(z.string()).max(4),
+      }),
+    )
+    .length(6),
+  readiness: score,
+  verdict: z.string().min(1),
+});
+
+export type SharpenOutput = z.infer<typeof sharpenSchema>;
+
 export const rationaleSchema = z.object({
   rationale: z.string().min(1),
 });
@@ -158,6 +193,43 @@ export const lawAuditJsonSchema = {
         },
       },
     },
+  },
+} as const;
+
+export const sharpenJsonSchema = {
+  type: "object",
+  required: ["sections", "readiness", "verdict"],
+  properties: {
+    sections: {
+      type: "array",
+      minItems: 6,
+      maxItems: 6,
+      description: "One reading per section, all six, in the order given.",
+      items: {
+        type: "object",
+        required: ["section", "ready", "note", "questions"],
+        properties: {
+          section: {
+            type: "string",
+            enum: [...SHARPEN_SECTIONS],
+          },
+          ready: { type: "boolean" },
+          note: {
+            type: "string",
+            description: "One or two sentences to the author about this section.",
+          },
+          questions: {
+            type: "array",
+            maxItems: 4,
+            description:
+              "The specific questions still unanswered. Empty when the section is ready.",
+            items: { type: "string" },
+          },
+        },
+      },
+    },
+    readiness: scoreSchema,
+    verdict: { type: "string" },
   },
 } as const;
 

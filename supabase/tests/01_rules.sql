@@ -113,10 +113,10 @@ begin
 
   ------------------------------------------------------------------ proposal
   perform set_config('test.uid', ann::text, true);
-  insert into proposals (group_id, author_id, title, summary, body, budget_amount, term_days)
-  values (gid, ann, 'Rent the room above the pub', 'Twelve weeks at 480.',
-          'The hall keeps being double-booked and people stop coming.', 480, 84)
-  returning id into pid;
+  pid := test_propose(ann, gid, 'local', null, 'Rent the room above the pub',
+                      'Twelve weeks at 480.',
+                      'The hall keeps being double-booked and people stop coming.',
+                      480, 84);
 
   ------------------------------------------- gate 1: no resonance, no review
   begin
@@ -216,10 +216,10 @@ begin
     raise warning 'FAIL: proposal passed with two unanswered critical flags'; end if;
 
   ---------------------------------------------- now the same again, answered
-  insert into proposals (group_id, author_id, title, summary, body, budget_amount, term_days)
-  values (gid, ann, 'Rent the room, six weeks', 'Six weeks at 240.',
-          'Halved after the review. Two places from the fund.', 240, 42)
-  returning id into pid;
+  pid := test_propose(ann, gid, 'local', null, 'Rent the room, six weeks',
+                      'Six weeks at 240.',
+                      'Halved after the review. Two places from the fund.',
+                      240, 42);
 
   insert into proposal_reviews (
     proposal_id, prompt_id, prompt_version, model,

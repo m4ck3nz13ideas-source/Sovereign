@@ -41,7 +41,7 @@ declare
     'stewardship_of_earth','harmony_of_diversity','right_use_of_power',
     'continuous_evolution'];
   l text;
-  body text := 'A body long enough to be a real proposal rather than a placeholder.';
+  seed text := 'The alley is used as a cut-through and it is not safe.';
 begin
   ------------------------------------------------------------------ where they are
   perform set_config('test.uid', eve::text, true);
@@ -66,10 +66,9 @@ begin
 
   ------------------------------------------------- a proposal with no group at all
   perform set_config('test.uid', eve::text, true);
-  insert into proposals (author_id, title, summary, body, scope, place)
-  values (eve, 'Close the alley to through traffic', 'Bollards at the north end.',
-          body, 'local', 'Hackney')
-  returning id into hackney_pid;
+  hackney_pid := test_propose(eve, null, 'local', 'Hackney',
+                              'Close the alley to through traffic',
+                              'Bollards at the north end.', seed);
 
   if hackney_pid is not null then passes := passes + 1; else fails := fails + 1;
     raise warning 'FAIL: could not propose without belonging to a group'; end if;
@@ -98,9 +97,25 @@ begin
   end;
 
   -------------------------------------- you cannot propose for somewhere you are not
+  -- Written out rather than going through test_propose(), because the point
+  -- is the refusal. The readiness row is real so that the gate it trips is the
+  -- place policy and not the sharpening one — the triggers run first.
   begin
-    insert into proposals (author_id, title, summary, body, scope, place)
-    values (gus, 'Something for Hackney', 'From Devon.', body, 'local', 'Hackney');
+    insert into proposal_readiness (author_id, body_sha256, readiness, verdict,
+                                    prompt_id, prompt_version, model)
+    values (gus, proposal_body_hash('From Devon, for Hackney.'), 0.900,
+            'Sharpened in a test.', 'proposal.sharpen', '1.0.0', 'test');
+
+    insert into proposals (author_id, title, summary, body,
+                           intent, change, constraints, risks, alternatives,
+                           scope, place)
+    values (gus, 'Something for Hackney', 'From Devon.', 'From Devon, for Hackney.',
+            'A problem stated at sufficient length to clear the section constraint here.',
+            'A change stated at sufficient length to clear the section constraint here.',
+            'It takes 4 hours and £40, and depends on nobody.',
+            'It might not work, and three months of nothing would say so clearly.',
+            'Doing nothing was considered and rejected.',
+            'local', 'Hackney');
     fails := fails + 1;
     raise warning 'FAIL: a proposal was addressed to a place the author is not in';
   exception when insufficient_privilege then
@@ -109,10 +124,9 @@ begin
 
   ------------------------------------------------------- global reaches everyone
   perform set_config('test.uid', eve::text, true);
-  insert into proposals (author_id, title, summary, body, scope)
-  values (eve, 'Publish the model card', 'For anything that scores a proposal.',
-          body, 'global')
-  returning id into global_pid;
+  global_pid := test_propose(eve, null, 'global', null,
+                             'Publish the model card',
+                             'For anything that scores a proposal.', seed);
 
   perform set_config('test.uid', gus::text, true);
   select count(*) into n from proposals where id = global_pid;
@@ -122,9 +136,8 @@ begin
   ------------------------------------------------ a group proposal stays the group's
   perform set_config('test.uid', eve::text, true);
   gid := create_group('The Thursday Session', 'x', 'local');
-  insert into proposals (group_id, author_id, title, summary, body, scope, place)
-  values (gid, eve, 'Buy a second urn', 'Sixty pounds.', body, 'local', 'Hackney')
-  returning id into group_pid;
+  group_pid := test_propose(eve, gid, 'local', 'Hackney', 'Buy a second urn',
+                            'Sixty pounds.', seed);
 
   perform set_config('test.uid', finn::text, true);
   select count(*) into n from proposals where id = group_pid;
@@ -197,10 +210,9 @@ begin
 
   ------------------------------------------ the window holds above local scale
   perform set_config('test.uid', eve::text, true);
-  insert into proposals (author_id, title, summary, body, scope, place)
-  values (eve, 'One transport card across London', 'Across all operators.',
-          body, 'regional', 'London')
-  returning id into regional_pid;
+  regional_pid := test_propose(eve, null, 'regional', 'London',
+                               'One transport card across London',
+                               'Across all operators.', seed);
 
   insert into proposal_reviews (proposal_id, prompt_id, prompt_version, model, summary)
   values (regional_pid, 'proposal.review', '1.2.0', 'test', 'A reading.') returning id into rid;
@@ -222,18 +234,16 @@ begin
   end;
 
   ----------------------------------------- retrieval follows the address, not the author
-  insert into proposals (author_id, title, summary, body, scope, place)
-  values (eve, 'Plant the verge', 'Along the same alley.', body, 'local', 'Hackney')
-  returning id into next_pid;
+  next_pid := test_propose(eve, null, 'local', 'Hackney', 'Plant the verge',
+                           'Along the same alley.', seed || ' verge');
 
   select count(*) into n from related_decisions_for(next_pid, array['x'], 6);
   if n = 1 then passes := passes + 1; else fails := fails + 1;
     raise warning 'FAIL: Hackney retrieval found % past decisions, expected 1', n; end if;
 
   perform set_config('test.uid', gus::text, true);
-  insert into proposals (author_id, title, summary, body, scope, place)
-  values (gus, 'Repaint the crossing', 'By the school.', body, 'local', 'Totnes')
-  returning id into totnes_pid;
+  totnes_pid := test_propose(gus, null, 'local', 'Totnes', 'Repaint the crossing',
+                             'By the school.', seed || ' crossing');
 
   select count(*) into n from related_decisions_for(totnes_pid, array['x'], 6);
   if n = 0 then passes := passes + 1; else fails := fails + 1;

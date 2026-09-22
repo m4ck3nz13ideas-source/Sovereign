@@ -42,9 +42,8 @@ begin
   perform redeem_invite(code);
   perform set_config('test.uid', ann::text, true);
 
-  insert into proposals (group_id, author_id, title, summary, body)
-  values (gid, ann, 'A proposal', 'Summary.', 'A body long enough to be evaluated by the group properly.')
-  returning id into pid;
+  pid := test_propose(ann, gid, 'local', null, 'A proposal', 'Summary.',
+                      'The room keeps being double-booked.');
 
   insert into proposal_reviews (proposal_id, prompt_id, prompt_version, model, summary)
   values (pid, 'proposal.review', '1.2.0', 'test', 'A reading.') returning id into rid;
@@ -104,9 +103,8 @@ begin
     raise warning 'FAIL: a proposal violating Universal Law passed'; end if;
 
   ------------------------------------------------------------ tensions now
-  insert into proposals (group_id, author_id, title, summary, body)
-  values (gid, ann, 'Second', 'Summary.', 'Another body long enough for the group to evaluate it.')
-  returning id into pid;
+  pid := test_propose(ann, gid, 'local', null, 'Second', 'Summary.',
+                      'The rota falls on the same four people.');
   insert into proposal_reviews (proposal_id, prompt_id, prompt_version, model, summary)
   values (pid, 'proposal.review', '1.2.0', 'test', 'A reading.') returning id into rid;
   update proposals set status = 'in_deliberation' where id = pid;
@@ -139,9 +137,8 @@ begin
     raise warning 'FAIL: passed with an unanswered tension at 0.95 resonance'; end if;
 
   ------------------------------------------- answering one, and passing
-  insert into proposals (group_id, author_id, title, summary, body)
-  values (gid, ann, 'Third', 'Summary.', 'A third body, long enough for the group to evaluate it.')
-  returning id into pid;
+  pid := test_propose(ann, gid, 'local', null, 'Third', 'Summary.',
+                      'The bins are left out all week.');
   insert into proposal_reviews (proposal_id, prompt_id, prompt_version, model, summary)
   values (pid, 'proposal.review', '1.2.0', 'test', 'A reading.') returning id into rid;
   update proposals set status = 'in_deliberation' where id = pid;
@@ -190,9 +187,8 @@ begin
     raise warning 'FAIL: threshold is not the golden ratio'; end if;
 
   --------------------------------- resonance below 0.618 fails a lawful one
-  insert into proposals (group_id, author_id, title, summary, body)
-  values (gid, ann, 'Fourth', 'Summary.', 'A fourth body, long enough for the group to evaluate it.')
-  returning id into pid;
+  pid := test_propose(ann, gid, 'local', null, 'Fourth', 'Summary.',
+                      'Nobody knows who holds the spare key.');
   insert into proposal_reviews (proposal_id, prompt_id, prompt_version, model, summary)
   values (pid, 'proposal.review', '1.2.0', 'test', 'A reading.') returning id into rid;
   update proposals set status = 'in_deliberation' where id = pid;

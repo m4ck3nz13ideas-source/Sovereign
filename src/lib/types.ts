@@ -141,6 +141,16 @@ export interface Proposal {
   body: string;
   category: string | null;
   scope: GroupScope;
+  /** The six sections. `body` is these concatenated, and what was sharpened. */
+  intent: string;
+  change: string;
+  constraints: string;
+  risks: string;
+  alternatives: string;
+  evidence: string | null;
+  /** The score the draft cleared before it could be submitted. */
+  readiness: number | null;
+  body_sha256: string | null;
   /** The place it is addressed to. Null for a group proposal and for a global one. */
   place: string | null;
   /** When deliberation ends for a place proposal. Nobody may close it sooner. */
@@ -152,6 +162,34 @@ export interface Proposal {
   created_at: string;
   submitted_at: string;
   closed_at: string | null;
+}
+
+/** One section's reading from the sharpening pass. */
+export interface ReadinessSection {
+  section: string;
+  ready: boolean;
+  note: string;
+  questions: string[];
+}
+
+/**
+ * The sharpening a draft had to clear before it could be submitted.
+ *
+ * Private to its author while `proposal_id` is null — a draft, and anything
+ * derived from a draft, is nobody else's business until it is sent.
+ */
+export interface ProposalReadiness {
+  id: string;
+  author_id: string;
+  proposal_id: string | null;
+  body_sha256: string;
+  readiness: number;
+  verdict: string;
+  sections: ReadinessSection[];
+  prompt_id: string;
+  prompt_version: string;
+  model: string;
+  created_at: string;
 }
 
 /** The decision rule at one scale, for proposals addressed to a place. */

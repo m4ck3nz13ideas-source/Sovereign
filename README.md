@@ -48,7 +48,8 @@ Propose → Align → Vote → Activate → Reflect
 ```
 
 **Propose** — anyone it concerns writes one, addressed to the lowest scale
-that can actually decide it.
+that can actually decide it, and it does not go anywhere until it has been
+thought through.
 **Align** — the Truth Engine reads it against the ten Universal Laws, and the
 review layer scores it against the group's own values.
 **Vote** — resonance, three sliders, ratified at ≥ 0.618.
@@ -60,6 +61,26 @@ next proposal arrives.
 ---
 
 ## The decisions that make it this and not something else
+
+**A proposal is not an idea.** Six sections — what this is solving, what would
+change, what it takes, what could go wrong, what else you considered, and
+optionally the evidence — and the first five have minimum lengths the database
+enforces. Then a **sharpening pass** reads the draft before anyone else can,
+scores it out of 1.00, and says per section what is still unanswered. Below
+0.70 the database refuses the submission. Nothing about the draft is stored:
+the reading records a score, the questions, and a hash of the exact words, and
+that row is private to its author until a proposal attaches it.
+
+Asking again about the same words can only lower where you stand — the lowest
+reading of a text governs. A judge that varies between runs is otherwise
+something to be asked repeatedly until it says yes. To score better, change
+the proposal.
+
+Without an API key the offline reader does this on structure: is each section
+there, do the costs carry numbers, do the risks name something that could
+actually go wrong, were alternatives weighed including doing nothing. It says
+plainly that no model read it. That is a real filter and it is the honest
+limit of a reader that cannot read.
 
 **Resonance is three sliders, not a vote.** Alignment, confidence and urgency,
 each 0–1. A yes/no collapses "I think this is wrong", "I have no idea" and "not
@@ -167,6 +188,7 @@ supabase/migrations/0003_functions.sql      the decision rule, the ledger, retri
 supabase/migrations/0004_universal_law.sql  the ten laws as a gate, and 0.618
 supabase/migrations/0005_activation.sql     needs, commitments, Activate
 supabase/migrations/0006_scope.sql          places, scales, the subsidiarity engine
+supabase/migrations/0007_readiness.sql      the six sections, and the gate on submitting
 ```
 
 `scope_rules` ships with local set to one voice and no waiting period, so a
@@ -239,14 +261,15 @@ rather than a failed build.
 
 The rules that define this product live in Postgres, so that is where they are
 tested. `supabase/tests/` runs against any local Postgres as a non-superuser,
-so row-level security actually applies, and checks seventy-three things across
-four suites — that a member cannot read another member's journal, that
+so row-level security actually applies, and checks eighty-nine things across
+five suites — that a member cannot read another member's journal, that
 resonance is refused before the review is read, that two unanswered flags fail
 a proposal whatever the numbers say, that a project cannot complete without a
 reflection, that an edited ledger row is detected, that someone in Totnes
 cannot read or answer a proposal addressed to Hackney, and that an author
-cannot re-aim a proposal once it is out. See `supabase/tests/README.md` for how
-to run it.
+cannot re-aim a proposal once it is out, that an unsharpened draft is refused
+and a sharpening of one text cannot be spent on another. See
+`supabase/tests/README.md` for how to run it.
 
 ```bash
 createdb sovereign_test
@@ -258,10 +281,13 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0004_universal_law.sql \
   -f supabase/migrations/0005_activation.sql \
   -f supabase/migrations/0006_scope.sql \
+  -f supabase/migrations/0007_readiness.sql \
+  -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
   -f supabase/tests/03_activation.sql \
-  -f supabase/tests/04_scope.sql
+  -f supabase/tests/04_scope.sql \
+  -f supabase/tests/05_readiness.sql
 ```
 
 ---

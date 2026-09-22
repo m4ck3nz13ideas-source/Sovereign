@@ -74,6 +74,18 @@ is immediately.
 want to influence, or anyone proposes taking a national result seriously. The
 `IdentityProver` interface is where this goes; nothing above it changes.
 
+### An unforgeable readiness score
+The sharpening is recorded by the author, so the database can check that a
+reading exists for this exact text and clears the bar, but not that the model
+produced it. The fix is small: write the row from `src/lib/ai` with the service
+role, drop the insert policy entirely, and the client can no longer write one
+at all. It costs one environment variable at setup.
+
+*Earns its place when:* somebody has an incentive to get a weak proposal in
+front of people — money attached, or a group large enough that the author is
+not someone everyone knows. Until then the deterrent is that a fabricated
+score sits on the proposal's page with a name against it.
+
 ### A gazetteer
 Places here are names with no containment relation, so someone in Hackney is
 not automatically in London — they state each scale themselves. A gazetteer

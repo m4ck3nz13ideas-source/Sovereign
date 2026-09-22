@@ -47,6 +47,11 @@ lives in a React component is a rule that a future refactor can quietly delete.
 | **You cannot propose for somewhere you are not** | `proposals_create` policy: `in_scope(auth.uid(), scope, place)` |
 | **A proposal's address cannot be re-aimed** | `freeze_proposal_address()` trigger |
 | **A place proposal cannot be closed early** | `close_proposal()` checks `closes_at` |
+| **A proposal has six sections** | `proposals_sections` check constraint |
+| **An unsharpened draft cannot be submitted** | `bind_proposal_readiness()` trigger |
+| **A sharpening is bound to one text** | `body_sha256`, checked by the same trigger |
+| **Asking again cannot raise your score** | the trigger takes `min(readiness)`, not the latest |
+| **A submitted proposal's text is fixed** | `freeze_proposal_text()` trigger |
 | No completion without reflection | `complete_project()` + a length check |
 | The ledger cannot be forged | No insert policy; `record_ledger_event()` only |
 
@@ -219,6 +224,72 @@ That is the intended answer rather than a leftover: a decision taken in the
 open should be auditable in the open. `verify_ledger()` with no argument
 replays it.
 
+## Readiness — the gate on submitting
+
+`Propose` used to mean eighty characters of prose. A proposal asks people for
+their attention, their money and their Saturdays, and the moment to find the
+hole in it is before it is put to them.
+
+Two mechanisms doing different work.
+
+**Structure**, in check constraints. Six sections — intent, change,
+constraints, risks, alternatives, evidence — with minimum lengths on the first
+five. `proposals.body` is derived from them, built in exactly one place
+(`draftBody()` in `src/lib/ai`), because the hash below is taken over it and
+two ways of composing it would drift.
+
+**A sharpening pass**, run on the draft before it reaches this database at all.
+`PROPOSAL_SHARPEN` reads the six sections, scores readiness 0–1, and says per
+section what is still unanswered. `bind_proposal_readiness()` refuses an insert
+unless the author holds a reading, of this exact body, above
+`readiness_threshold()` (0.70), made in the last twenty-four hours.
+
+Three details that are load-bearing:
+
+- **The lowest reading governs**, not the latest. A judge that varies between
+  runs is otherwise something to ask repeatedly until it says yes. Sharpening
+  the same words again can only lower where you stand; to score better, change
+  the proposal.
+- **The hash binds the reading to the text.** A draft cannot be sharpened and
+  then submitted rewritten.
+- **The reading is spent.** Attaching sets `proposal_id`, and the trigger only
+  looks at unattached rows, so one sharpening submits one proposal.
+
+### Where the privacy line sits
+
+A draft never reaches the shared store — that rule is unchanged. What the
+sharpening writes is a score, the questions, and a sha256 of the words, never
+the words. While `proposal_id` is null that row is readable only by its author;
+attaching it makes it part of the record, like the review.
+
+### What this is, and what it is not
+
+The reading is produced outside Postgres, so the database can check
+*consistency* — this score is for this text, by a known prompt version, above
+the bar — but not *authenticity*. Someone determined could call the RPC with a
+fabricated score.
+
+What stops that being worth doing is that the sharpening is then on the
+proposal's page, with their name on it, permanently, for everyone the proposal
+was addressed to: a claimed 0.99 with nothing behind it reads as exactly what
+it is. That is the same standard as an answered flag.
+
+Closing the gap properly means the reading has to be written by something the
+client cannot impersonate — the service role from `src/lib/ai`, which is
+server-only, with no insert policy on the table at all. That is one
+environment variable and a real improvement, and it is not here yet because it
+would have made first-run setup harder for a gain nobody at this scale has
+needed. `docs/roadmap.md` says when it earns its place.
+
+### Offline
+
+The mock sharpener judges, where the mock law audit abstains. The asymmetry is
+deliberate: a guessed law violation is unrecoverable, while a draft sent back
+for more work costs the author ten minutes. So it is demanding about structure
+— sections present, costs numbered, risks naming a real risk, alternatives
+weighing doing nothing — and says plainly which of its objections come from
+reading and which from counting. Six of six clears the bar; five does not.
+
 ## The AI layer
 
 `src/lib/ai/` is `server-only`. The key never reaches the browser, and the
@@ -238,8 +309,10 @@ signals (are costs given, are claims supported, is the commitment reversible),
 so the whole loop can be walked without a key. It records its model as `mock`,
 and the review UI renders a warning on any review that carries it.
 
-**Five prompts, versioned.** Law audit, proposal review, decision rationale,
-reflection prompt, synthesis prompt. Every artefact stores the id and version that made
+**Six prompts, versioned.** Proposal sharpening, law audit, proposal review,
+decision rationale, reflection prompt, synthesis prompt. Sharpening is the only
+one that runs before anything is stored, and the only one that can stop a
+member doing something. Every artefact stores the id and version that made
 it. Changing a rubric means bumping the version — editing in place silently
 changes what an old score meant.
 
@@ -266,6 +339,9 @@ starts thin and thickens.
 
 ```
 compose (localStorage)         nothing in the database yet
+   │ assessDraft()
+   │   └─ proposal_readiness    a score, the questions, a hash — never the text
+   │      private to its author; below 0.70 there is no submit
    │ submit
    ▼
 proposals (in_review) ─────────► ledger: proposal.submitted
