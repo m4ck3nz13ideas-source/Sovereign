@@ -124,14 +124,35 @@ would inherit the policy and count only the caller's own vote; a
 `security_definer` view would leak live averages to anyone who queried it. The
 function checks membership itself and withholds the numbers.
 
+### `law_assessments`, `law_challenges`
+One row per law per audit, so an audit always covers all ten — a missing row
+means the audit did not finish, rather than "nothing to report". There is no
+policy permitting `verdict` to change and none permitting a delete; a tension
+gains a `resolution`, and a violation gains nothing.
+
+`superseded_at` marks readings replaced by a later audit after a challenge.
+The old ones stay.
+
+### `proposal_needs`, `commitments`
+What a proposal would take, and who has actually said yes. Quantities rather
+than prose, so `activation_standing()` can answer the question mechanically.
+`commitments_own` restricts insert and update to `profile_id = auth.uid()`:
+nobody commits anyone else.
+
 ### `decisions`
-Written by `close_proposal()`, which applies the rule:
+Written by `close_proposal()`, which applies the rule — Universal Law first,
+and not as a threshold:
 
 ```
-passed  ⟺  no unresolved critical flag
+passed  ⟺  no Universal Law violation
+       ∧  no unanswered Universal Law tension
+       ∧  no unresolved critical flag
        ∧  participation ≥ threshold_participation
-       ∧  mean alignment ≥ threshold_alignment
+       ∧  mean alignment ≥ threshold_alignment   (0.618 by default)
 ```
+
+A proposal that passes stops at `passed`. `activate_proposal()` creates the
+project, and only once every need has a name against it.
 
 Stores the numbers as they were at the moment of closing, so changing a
 threshold later never reinterprets a past decision. `values_invoked` is the
@@ -187,7 +208,12 @@ There is no repost, no follower graph, and no engagement count on the card.
 | `resonance_summary` | Counts always, averages only once closed |
 | `cast_resonance` | A review exists, and this member has read it |
 | `resolve_flag` | Answered in writing, attributed, permanent |
-| `close_proposal` | The decision rule, and a project on a pass |
+| `law_standing` | Violations, unanswered tensions, and whether the audit ran at all |
+| `resolve_law_tension` | Answers a tension; refuses on a violation |
+| `close_proposal` | The decision rule, law first. Stops at `passed` |
+| `activation_standing`, `need_standing` | What a proposal still needs |
+| `activate_proposal` | Creates the project, only when nothing is short |
+| `honour_commitment` | Self-attested delivery of a pledge |
 | `complete_project` | No completion without a reflection |
 | `related_decisions` | Retrieval by value overlap, with outcomes |
 | `contribution_record` | A derived record — no score, no token |

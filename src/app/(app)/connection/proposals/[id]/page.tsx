@@ -7,10 +7,13 @@ import { asReview, isOpen } from "@/lib/collective";
 import { isSteward, requireGroup } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type {
+  ActivationStanding,
+  Commitment,
   Decision,
   DeliberationComment,
   LawAssessment,
   LawStanding,
+  NeedStanding,
   Proposal,
   ProposalFlag,
   ResonanceSummary,
@@ -20,6 +23,7 @@ import type {
 import { AiLayer } from "./AiLayer";
 import { CloseButton } from "./CloseButton";
 import { Deliberation } from "./Deliberation";
+import { Activation } from "./Activation";
 import { LawLayer } from "./LawLayer";
 import { FlagList } from "./FlagList";
 import { Outcome } from "./Outcome";
@@ -71,6 +75,9 @@ export default async function ProposalPage({
     { data: voteRows },
     { data: lawRows },
     { data: standingRows },
+    { data: needRows },
+    { data: activationRows },
+    { data: commitmentRows },
   ] = await Promise.all([
     supabase
       .from("proposal_reviews")
@@ -112,6 +119,13 @@ export default async function ProposalPage({
       .eq("proposal_id", id)
       .is("superseded_at", null),
     supabase.rpc("law_standing", { p_proposal_id: id }),
+    supabase.rpc("need_standing", { p_proposal_id: id }),
+    supabase.rpc("activation_standing", { p_proposal_id: id }),
+    supabase
+      .from("commitments")
+      .select("*, profiles(display_name)")
+      .eq("proposal_id", id)
+      .in("status", ["pledged", "honoured"]),
   ]);
 
   const review = reviewRows?.[0] ? asReview(reviewRows[0]) : null;
@@ -134,6 +148,30 @@ export default async function ProposalPage({
     | LawStanding
     | undefined;
   const unlawful = Boolean(standing && (standing.violations > 0 || !standing.audited));
+
+  const needs = (needRows ?? []) as NeedStanding[];
+  const activation = (Array.isArray(activationRows) ? activationRows[0] : activationRows) as
+    | ActivationStanding
+    | undefined;
+  const commitments = (commitmentRows ?? []) as unknown as (Commitment & {
+    profiles: { display_name: string } | null;
+  })[];
+
+  // Grouped for the panel: my own pledge per need, and everyone's per need.
+  const myPledges: Record<string, { id: string; quantity: number }> = {};
+  const pledgesByNeed: Record<
+    string,
+    { name: string; quantity: number; mine: boolean }[]
+  > = {};
+  for (const c of commitments) {
+    const mine = c.profile_id === userId;
+    if (mine) myPledges[c.need_id] = { id: c.id, quantity: Number(c.quantity) };
+    (pledgesByNeed[c.need_id] ??= []).push({
+      name: c.profiles?.display_name ?? "A member",
+      quantity: Number(c.quantity),
+      mine,
+    });
+  }
 
   const unanswered = flags.filter((f) => !f.resolved_at);
   const hasRead = Boolean(readRow);
@@ -303,6 +341,7 @@ export default async function ProposalPage({
         <SectionLabel>Outcome</SectionLabel>
         <Outcome
           decision={decision}
+          activated={["executing", "completed"].includes(proposal.status)}
           proposalId={id}
           thresholds={{
             alignment: Number(group.threshold_alignment),
@@ -322,6 +361,30 @@ export default async function ProposalPage({
               : []
           }
         />
+
+        {proposal.status === "passed" ? (
+          <div className="mt-6">
+            <SectionLabel
+              right={
+                activation?.needs_total
+                  ? `${activation.needs_met} of ${activation.needs_total} covered`
+                  : undefined
+              }
+            >
+              Activate
+            </SectionLabel>
+            <Activation
+              proposalId={id}
+              needs={needs}
+              ready={Boolean(activation?.ready)}
+              isAuthorOrSteward={
+                proposal.author_id === userId || isSteward(group.role)
+              }
+              myPledges={myPledges}
+              pledgesByNeed={pledgesByNeed}
+            />
+          </div>
+        ) : null}
 
         {open && isSteward(group.role) ? (
           <div className="mt-4">

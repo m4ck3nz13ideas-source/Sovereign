@@ -257,6 +257,55 @@ export interface LawStanding {
   lawful: boolean;
 }
 
+/* ---------------------------------------------------------------------------
+   Activate — "If supported, resources and people flow to make it real."
+--------------------------------------------------------------------------- */
+
+export type CommitmentKind = "money" | "time" | "skill" | "material";
+export type CommitmentStatus = "pledged" | "honoured" | "withdrawn";
+
+export interface ProposalNeed {
+  id: string;
+  proposal_id: string;
+  kind: CommitmentKind;
+  description: string;
+  quantity: number;
+  unit: string;
+  created_at: string;
+  created_by: string | null;
+}
+
+export interface Commitment {
+  id: string;
+  need_id: string;
+  proposal_id: string;
+  profile_id: string;
+  quantity: number;
+  note: string | null;
+  status: CommitmentStatus;
+  created_at: string;
+  honoured_at: string | null;
+  withdrawn_at: string | null;
+}
+
+/** One row per need, from need_standing(). */
+export interface NeedStanding {
+  need_id: string;
+  kind: CommitmentKind;
+  description: string;
+  unit: string;
+  required: number;
+  pledged: number;
+  met: boolean;
+}
+
+export interface ActivationStanding {
+  needs_total: number;
+  needs_met: number;
+  people_pledged: number;
+  ready: boolean;
+}
+
 export interface Decision {
   id: string;
   proposal_id: string;

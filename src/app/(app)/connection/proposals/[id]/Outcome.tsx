@@ -13,11 +13,14 @@ import type { Decision } from "@/lib/types";
  */
 export function Outcome({
   decision,
+  activated,
   proposalId,
   thresholds,
   votes,
 }: {
   decision: Decision | null;
+  /** Whether the proposal has moved past 'passed' into a live project. */
+  activated: boolean;
   proposalId: string;
   thresholds: { alignment: number; participation: number };
   votes: {
@@ -123,12 +126,20 @@ export function Outcome({
       ) : null}
 
       {passed ? (
-        <Link
-          href={`/connection/projects/${proposalId}`}
-          className="smallcaps inline-block text-[11px] text-gold hover:underline"
-        >
-          Go to the project →
-        </Link>
+        activated ? (
+          <Link
+            href={`/connection/projects/${proposalId}`}
+            className="smallcaps inline-block text-[11px] text-gold hover:underline"
+          >
+            Go to the project →
+          </Link>
+        ) : (
+          <p className="text-sm leading-relaxed text-paper-faint">
+            Ratified, but not yet under way. It becomes a project once the
+            resources and people it needs have been committed — see Activate
+            below.
+          </p>
+        )
       ) : (
         <p className="text-sm leading-relaxed text-paper-faint">
           A proposal that did not pass is not amended and resubmitted. If the

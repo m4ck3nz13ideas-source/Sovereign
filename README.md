@@ -39,11 +39,20 @@ when the current statement is shared.
 Feed → Proposals → Decisions → Projects → Impact
 ```
 
-A proposal is submitted, read by the review layer against the group's own
-values, deliberated on, responded to with resonance rather than a yes or a no,
-decided by a rule the group set and can read, carried out as a project, and
-closed with a written account of what actually happened — which the review
-layer then reads when the next proposal arrives.
+The governance cycle from the whitepaper, in full:
+
+```
+Propose → Align → Vote → Activate → Reflect
+```
+
+**Propose** — anyone in the group writes one.
+**Align** — the Truth Engine reads it against the ten Universal Laws, and the
+review layer scores it against the group's own values.
+**Vote** — resonance, three sliders, ratified at ≥ 0.618.
+**Activate** — it waits until named people have committed the money and the
+hands it needs. Agreement is not the same as resources.
+**Reflect** — what actually happened, which the review layer reads when the
+next proposal arrives.
 
 ---
 
@@ -74,10 +83,28 @@ A group that closes projects without recording what happened has a memory that
 cannot teach it anything, and the retrieval step on the next proposal has
 nothing to retrieve.
 
+**Universal Law sits above everything.** Ten laws, from the whitepaper, shipped
+as code and readable at `/settings/law`. Every proposal is read against all
+ten. A *tension* is answered in writing and the proposal proceeds. A
+*violation* ends it — it cannot be voted through, no steward can set it aside,
+and there is no policy in the schema that would let one be edited or deleted.
+Because an unoverridable verdict from a fallible model would otherwise be
+final, members can challenge a reading; the challenge goes back to the audit,
+which must address it and may well hold its position.
+
+**Ratification is not activation.** A proposal that passes is a proposal the
+group agreed to, and nothing more. It becomes a project when the money and the
+people it needs have actual names against them. A proposal that needs nothing
+activates immediately — "it can be done as it stands" is a real answer.
+
 **Prompts are versioned configuration, readable by every member.** Every score
 records the prompt id and version that produced it. Changing a rubric means
 bumping the version, never editing in place. A group being scored by a rubric
 can read the rubric, at `/settings/prompts`.
+
+**The threshold is the golden ratio.** 0.618, as the whitepaper specifies, "so
+that consensus comes through harmony rather than dominance" — not a number
+chosen here.
 
 **No chain, no token, no ZK.** What the whitepaper puts on-chain, this puts
 behind interfaces in `src/lib/ledger` — with an append-only, hash-chained
@@ -109,10 +136,16 @@ hand or it does not fit your setup.
 **2. Run the migrations** in order — paste each into the SQL editor:
 
 ```
-supabase/migrations/0001_schema.sql      tables, enums, triggers
-supabase/migrations/0002_rls.sql         row-level security
-supabase/migrations/0003_functions.sql   the decision rule, the ledger, retrieval
+supabase/migrations/0001_schema.sql         tables, enums, triggers
+supabase/migrations/0002_rls.sql            row-level security
+supabase/migrations/0003_functions.sql      the decision rule, the ledger, retrieval
+supabase/migrations/0004_universal_law.sql  the ten laws as a gate, and 0.618
+supabase/migrations/0005_activation.sql     needs, commitments, Activate
 ```
+
+`supabase/reset.sql` clears a half-applied install — a migration that fails
+partway leaves a database with no way forward, and the error it then gives
+says nothing about why.
 
 Or with the CLI: `supabase db push`.
 
@@ -194,10 +227,15 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
 ## What is deliberately not here
 
 No blockchain, tokens, SOV, wallets, zero-knowledge proofs, DIDs or verifiable
-credentials. No liquid democracy or delegation. No tiered transparency. No
-public feeds, public profiles or cross-group discovery. No national or global
-scope in practice — the enum allows it, one group in one place is what this is.
-No screen-time features, no streaks, no notifications.
+credentials. No Proof-of-Alignment consensus, no Spheres of Civilization DAO
+network, no liquid democracy or delegation, no tiered transparency. No public
+feeds, public profiles or cross-group discovery. No screen-time features, no
+streaks, no notifications.
+
+The scope model is the notable gap: the whitepaper routes proposals
+geospatially — Local → Regional → National → Continental → Global, with
+subsidiarity in the protocol — and this still requires group membership
+instead. The enum carries the scopes; nothing yet acts on them.
 
 Most of these are in the whitepaper, and several are good ideas. None of them
 help a group of eight decide something on a Thursday, which is the thing that

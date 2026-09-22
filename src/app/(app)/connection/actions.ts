@@ -6,7 +6,7 @@ import { auditAgainstLaw, reviewProposal, writeRationale } from "@/lib/ai";
 import { ledger } from "@/lib/ledger";
 import { requireGroup } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
-import type { GroupScope } from "@/lib/types";
+import type { CommitmentKind, GroupScope } from "@/lib/types";
 
 /* ---------------------------------------------------------------------------
    Connection — posting
@@ -730,3 +730,109 @@ function dedupeValues(
   return [...map.entries()].map(([name, definition]) => ({ name, definition }));
 }
 
+
+/* ---------------------------------------------------------------------------
+   Activate
+
+   "If supported, resources and people flow to make it real."
+
+   A ratified proposal waits here until named people have committed what it
+   needs. Nothing in this file lets one person commit another, and nothing
+   lets a proposal activate short of its stated needs — both are enforced in
+   the database as well.
+--------------------------------------------------------------------------- */
+
+export async function addNeed(
+  proposalId: string,
+  kind: CommitmentKind,
+  description: string,
+  quantity: string,
+  unit: string,
+) {
+  const { userId } = await requireGroup();
+  const supabase = await createClient();
+
+  const n = Number(quantity);
+  if (!Number.isFinite(n) || n <= 0) {
+    return { ok: false as const, error: "How much? A number greater than zero." };
+  }
+  if (!description.trim()) {
+    return { ok: false as const, error: "Say what is needed." };
+  }
+
+  const { error } = await supabase.from("proposal_needs").insert({
+    proposal_id: proposalId,
+    kind,
+    description: description.trim(),
+    quantity: n,
+    unit: unit.trim() || "units",
+    created_by: userId,
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/connection/proposals/${proposalId}`);
+  return { ok: true as const };
+}
+
+export async function pledge(
+  needId: string,
+  proposalId: string,
+  quantity: string,
+  note: string,
+) {
+  const { userId } = await requireGroup();
+  const supabase = await createClient();
+
+  const n = Number(quantity);
+  if (!Number.isFinite(n) || n <= 0) {
+    return { ok: false as const, error: "How much can you cover?" };
+  }
+
+  const { error } = await supabase.from("commitments").insert({
+    need_id: needId,
+    proposal_id: proposalId,
+    profile_id: userId,
+    quantity: n,
+    note: note.trim() || null,
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/connection/proposals/${proposalId}`);
+  return { ok: true as const };
+}
+
+/**
+ * Withdraw your own pledge.
+ *
+ * Deliberately possible while the proposal is still waiting. A commitment
+ * somebody cannot honour is worse than one they never made, and a system that
+ * traps people into pledges will get fewer of them.
+ */
+export async function withdrawPledge(commitmentId: string, proposalId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("commitments")
+    .update({ status: "withdrawn", withdrawn_at: new Date().toISOString() })
+    .eq("id", commitmentId);
+
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/connection/proposals/${proposalId}`);
+  return { ok: true as const };
+}
+
+/** Turn a fully-resourced, ratified proposal into a project. */
+export async function activateProposal(proposalId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("activate_proposal", {
+    p_proposal_id: proposalId,
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+
+  revalidatePath(`/connection/proposals/${proposalId}`);
+  revalidatePath("/connection/projects");
+  revalidatePath("/connection/proposals");
+  return { ok: true as const };
+}

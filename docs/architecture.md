@@ -37,7 +37,12 @@ lives in a React component is a rule that a future refactor can quietly delete.
 | Averages hidden until close | RLS on `resonance_votes` + `resonance_summary()` |
 | Understanding before action | `cast_resonance()` |
 | A flag is answered, not dismissed | `resolve_flag()` + the `flags_resolve` policy |
+| **A Universal Law violation is final** | `cast_resonance()`, `close_proposal()`, and no policy permitting a verdict to change |
+| **A tension is answered, not waived** | `resolve_law_tension()`, which refuses on a violation |
 | The decision rule | `close_proposal()` |
+| **Ratification is not activation** | `close_proposal()` stops at `passed`; only `activate_proposal()` creates a project |
+| **A proposal activates only when resourced** | `activate_proposal()` + `activation_standing()` |
+| **Nobody commits anyone else** | `commitments_own` policy: `profile_id = auth.uid()` |
 | No completion without reflection | `complete_project()` + a length check |
 | The ledger cannot be forged | No insert policy; `record_ledger_event()` only |
 
@@ -98,6 +103,57 @@ The Impact page says this, in those words. A verification badge that overstates
 what it proves is worse than no badge, because it converts a reasonable amount
 of trust into misplaced certainty.
 
+## Universal Law
+
+The ten laws are **constants in `src/lib/universal-law.ts`**, not rows.
+
+That is a deliberate representation choice. The paper says amending a law
+requires the agreement of every user — not a threshold, all of them. A table a
+steward could `UPDATE` would misrepresent what these are, so they ship with
+the build, are readable by every member at `/settings/law`, and change only by
+changing the build.
+
+Three verdicts, and only one is fatal:
+
+| | effect |
+|---|---|
+| `aligned` | none |
+| `tension` | blocks until answered in writing, attributed; then proceeds |
+| `violation` | the proposal is invalid — resonance closes, it cannot pass, and nothing overrides it |
+
+**The Citizen Challenge.** An unoverridable verdict from a fallible model would
+otherwise end a proposal with no recourse, so §6.4's challenge mechanism is
+implemented: a member's argument goes back to the Truth Engine, which must
+address it. It does not oblige a different answer. Superseded readings are kept
+rather than deleted, so an audit that changed its mind shows that it did.
+
+**The mock provider returns `aligned` for every law**, and says so in the text
+a member reads. Under-blocking is recoverable — set a key, run it again.
+Over-blocking is not, because the point of the layer is that its verdicts
+cannot be overridden. A violation guessed from a regular expression would be
+permanent.
+
+## Activate
+
+`Propose → Align → Vote → Activate → Reflect`. The fourth stage is the one
+most systems skip: agreeing to something and having the means to do it are
+different events, and collapsing them quietly assumes the money and the hands
+will appear.
+
+`proposal_needs` states what it would take, as quantities so it is checkable.
+`commitments` records who has actually said yes, and to how much. A pledge can
+be withdrawn while the proposal is still waiting — a commitment somebody
+cannot honour is worse than one they never made.
+
+A proposal with **no** needs is ready immediately. "It can be done as it
+stands" is a real answer, not a loophole.
+
+Note that `0005` adds no enum value. `ALTER TYPE ... ADD VALUE` cannot be used
+in the transaction that adds it, and the Supabase SQL editor wraps a pasted
+script in one — so a migration that needed a new status would work in psql and
+fail in the dashboard, for exactly the people following the README. `passed`
+already means "ratified, not yet under way".
+
 ## The AI layer
 
 `src/lib/ai/` is `server-only`. The key never reaches the browser, and the
@@ -141,6 +197,9 @@ compose (localStorage)         nothing in the database yet
    │ submit
    ▼
 proposals (in_review) ─────────► ledger: proposal.submitted
+   │ runLawAudit()              the ten laws, before anything else
+   │   └─ law_assessments       aligned / tension / violation
+   │      violation ────────────► resonance closed, cannot pass, no override
    │ runReview()
    │   ├─ related_decisions()   past decisions, by value overlap
    │   ├─ group values          the rubric, in members' own words
@@ -160,9 +219,14 @@ proposals (voting)
    │ close_proposal()           the rule, applied in the database
    ▼
 decisions ─────────────────────► ledger: proposal.decided
-   │ if passed
+   │ if passed — ratified, NOT yet real
    ▼
-projects (planning → executing)
+proposals (passed)
+   │ proposal_needs             what it would take
+   │ commitments                who has actually said yes
+   │ activate_proposal()        refuses while any need is short
+   ▼
+projects (executing) ──────────► ledger: project.started
    │ tasks, updates, spend ────► ledger: project.spend
    │ writeReflection()
    ▼
