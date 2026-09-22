@@ -6,8 +6,11 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-`01_rules.sql` runs as a non-superuser, so row-level security applies, and
-checks twenty-four things:
+Four suites, seventy-three checks. Every one of them runs as a non-superuser,
+so row-level security actually applies — a test that passes as the owner proves
+nothing about what a member can see.
+
+### `01_rules.sql` — twenty-five checks
 
 - The auth trigger creates a profile, and RLS then hides everyone else's.
 - Invite-only membership works, and nobody joins without a code.
@@ -23,7 +26,7 @@ checks twenty-four things:
 - **Two unanswered critical flags fail a proposal on their own**, whatever the
   numbers say.
 - The same proposal passes once the flags are answered and the rule is met.
-- Passing creates a project automatically.
+- Passing does **not** create a project; activation does.
 - After close, every vote and every average becomes visible.
 - A project cannot be completed without a reflection.
 - A thirteen-character reflection is rejected by the check constraint.
@@ -32,6 +35,38 @@ checks twenty-four things:
   what the reviewer is given.
 - The ledger chain verifies, and **an edited decision is detected** — run as
   superuser, because that is exactly the threat model.
+
+### `02_universal_law.sql` — twelve checks
+
+- An unaudited proposal cannot be closed at all.
+- A violation stops resonance, and stops the proposal, with no override.
+- A violation cannot be answered away — only challenged.
+- A tension blocks until it is answered in writing, attributed.
+- A challenge supersedes a reading rather than deleting it.
+
+### `03_activation.sql` — seventeen checks
+
+- A passed proposal is not a project.
+- A need that nobody has covered blocks activation.
+- Nobody can pledge on another person's behalf.
+- A pledge can be withdrawn while the proposal is still waiting.
+- A proposal with no needs activates immediately.
+
+### `04_scope.sql` — nineteen checks
+
+- Someone in no group at all can write a proposal for their own street.
+- A neighbour who spells the place differently still sees it.
+- Someone in another town cannot read it, and cannot respond to it.
+- **Nobody can propose for a place they are not in.**
+- A global proposal reaches everyone; a group proposal still reaches only the
+  group, even from the same street.
+- The author cannot re-aim a submitted proposal.
+- A place decision records no participation share, because there is no
+  register to be a share of.
+- One voice passes at local scale, where the rule says one voice is enough.
+- A regional proposal cannot be closed inside its deliberation window.
+- Retrieval follows the address: Totnes does not learn from Hackney.
+- The public ledger chain verifies.
 
 ## Running them
 
@@ -44,7 +79,13 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0001_schema.sql \
   -f supabase/migrations/0002_rls.sql \
   -f supabase/migrations/0003_functions.sql \
-  -f supabase/tests/01_rules.sql
+  -f supabase/migrations/0004_universal_law.sql \
+  -f supabase/migrations/0005_activation.sql \
+  -f supabase/migrations/0006_scope.sql \
+  -f supabase/tests/01_rules.sql \
+  -f supabase/tests/02_universal_law.sql \
+  -f supabase/tests/03_activation.sql \
+  -f supabase/tests/04_scope.sql
 ```
 
 It prints `N passed, 0 failed` and raises if anything failed, so it is usable
@@ -59,8 +100,8 @@ real one — Supabase provides all of this already.
 ## Running them against a real Supabase project
 
 Don't, on a project with data in it: the suite writes rows and leaves them.
-Use a branch or a throwaway project, skip the shim, and run `01_rules.sql`
-alone in the SQL editor.
+Use a branch or a throwaway project, skip the shim, and run the suites in the
+SQL editor.
 
 ## Adding a test
 

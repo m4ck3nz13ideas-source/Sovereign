@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { Card, Empty, Page, Prose, SectionLabel, Tag } from "@/components/ui";
 import { ago, money, shortDate, STATUS_LABEL } from "@/lib/format";
-import { requireGroup } from "@/lib/session";
+import { requireAddress } from "@/lib/address";
 import { createClient } from "@/lib/supabase/server";
 import type {
   Decision,
@@ -37,7 +37,7 @@ export default async function ProjectPage({
   params: Promise<{ proposalId: string }>;
 }) {
   const { proposalId } = await params;
-  const { userId, group } = await requireGroup();
+  const { userId, address } = await requireAddress();
   const supabase = await createClient();
 
   const { data: projectRow } = await supabase
@@ -201,7 +201,7 @@ export default async function ProjectPage({
                 <p className="text-sm leading-relaxed text-paper">{reflection.lesson}</p>
                 <p className="mt-2 text-xs leading-relaxed text-paper-faint">
                   This is read by the review layer when a proposal touching the
-                  same values arrives. It is the only way this group gets better
+                  same values arrives. It is the only way this gets better
                   at deciding.
                 </p>
               </div>
@@ -219,7 +219,9 @@ export default async function ProjectPage({
         )}
       </section>
 
-      <p className="smallcaps mt-10 text-[10px] text-paper-faint">{group.name}</p>
+      <p className="smallcaps mt-10 text-[10px] text-paper-faint">
+        {address.kind === "group" ? address.group.name : address.label}
+      </p>
     </Page>
   );
 }

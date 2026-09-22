@@ -64,12 +64,26 @@ import is the thing slowing them down.
 
 ### Real identity
 Invite-trust has no uniqueness guarantee: one person can hold two invited
-accounts. For a group who know each other that is the honest level of
-assurance. It stops being adequate the moment the outcome is worth gaming.
+accounts. Self-declared place has none either — anyone can type a street they
+have never been to. For a group who know each other, and for a street where
+the neighbours are the check, that is the honest level of assurance. It stops
+being adequate the moment the outcome is worth gaming, which at national scale
+is immediately.
 
-*Earns its place when:* a group's decisions allocate money that someone outside
-the group would want to influence. The `IdentityProver` interface is where this
-goes; nothing above it changes.
+*Earns its place when:* decisions allocate money that someone outside would
+want to influence, or anyone proposes taking a national result seriously. The
+`IdentityProver` interface is where this goes; nothing above it changes.
+
+### A gazetteer
+Places here are names with no containment relation, so someone in Hackney is
+not automatically in London — they state each scale themselves. A gazetteer
+would fix that and would also make this an application that holds real location
+data, which is a decision to make deliberately rather than by accident.
+
+*Earns its place when:* people in one region are demonstrably missing regional
+proposals because they never filled in the second line — and not before, since
+the failure mode of getting this wrong is an app that knows where everybody
+lives.
 
 ### Delegation
 Liquid democracy is in the whitepaper and it is a good idea at scale. At eight
@@ -96,17 +110,22 @@ that matter are already load-bearing here in the negative: no counters framed
 as debts, no algorithmic feed, no reason to open the app that isn't a reason
 you already had. Adding a streak would undo that.
 
-**Public profiles, cross-group discovery, a public feed.** Sovereign works
-because a group is small and its members know each other. A discovery surface
-turns it into a network, and a network has a moderation problem from the first
-day.
+**Public profiles, cross-group discovery, a global feed.** A post reaches your
+group or your street, and nothing wider. Sovereign works because the circle is
+small enough that people know each other. A discovery surface turns it into a
+network, and a network has a moderation problem from the first day — which also
+means the place feed above local is exactly where this will first need an
+answer.
 
 **Tiered transparency.** Three tiers of pseudonymity is a serious piece of
 cryptographic design in service of a problem this does not have. Everyone in
 the group already knows who everyone is.
 
-**National and global scope.** The enum allows it. Nothing else does, and
-nothing should until a single local group has been shown to work.
+**Taking a national or global result seriously.** The scales exist and the
+loop runs at all five, but with self-declared identity and self-declared place
+anything above regional is a straw poll. `min_voices` rises steeply to make
+that harder to forget, and the honest position is that these scales are there
+so the shape is right, not so the numbers are.
 
 ## If you only do one thing
 

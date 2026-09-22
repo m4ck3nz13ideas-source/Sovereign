@@ -20,6 +20,7 @@ export function CloseButton({
   unanswered,
   voters,
   members,
+  minVoices,
   thresholds,
 }: {
   proposalId: string;
@@ -29,18 +30,23 @@ export function CloseButton({
   lawTensions: number;
   unanswered: number;
   voters: number;
-  members: number;
+  /** Null at a place: no register, so no share. `minVoices` is the floor instead. */
+  members: number | null;
+  minVoices: number;
   thresholds: { alignment: number; participation: number };
 }) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
-  const participation = members > 0 ? voters / members : 0;
-  const participationShort = participation < thresholds.participation;
+  const hasRegister = members !== null;
+  const participation = hasRegister && members > 0 ? voters / members : 0;
+  const turnoutShort = hasRegister
+    ? participation < thresholds.participation
+    : voters < minVoices;
 
   const willFail =
-    lawViolations > 0 || lawTensions > 0 || unanswered > 0 || participationShort;
+    lawViolations > 0 || lawTensions > 0 || unanswered > 0 || turnoutShort;
 
   if (!confirming) {
     return (
@@ -65,10 +71,10 @@ export function CloseButton({
             ? "No unanswered tension with Universal Law"
             : `${lawTensions} unanswered tension${lawTensions === 1 ? "" : "s"} with Universal Law`}
         </li>
-        <li>
-          {voters} of {members} responded ({participation.toFixed(2)}), threshold{" "}
-          {thresholds.participation.toFixed(2)}
-          {participationShort ? " — short" : ""}
+        <li className={turnoutShort ? "text-alarm" : undefined}>
+          {hasRegister
+            ? `${voters} of ${members} responded (${participation.toFixed(2)}), threshold ${thresholds.participation.toFixed(2)}${turnoutShort ? " — short" : ""}`
+            : `${voters} ${voters === 1 ? "voice" : "voices"}, and this scale needs ${minVoices}${turnoutShort ? " — short" : ""}. There is no register of everyone here, so this is a count rather than a share.`}
         </li>
         <li>
           {unanswered === 0

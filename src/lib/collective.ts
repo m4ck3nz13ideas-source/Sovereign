@@ -1,4 +1,6 @@
 import type {
+  GroupScope,
+  Proposal,
   ProposalReview,
   ProposalStatus,
   ReviewRisk,
@@ -74,3 +76,45 @@ export const RESONANCE_DIMENSIONS = [
     high: "It is time-critical",
   },
 ];
+
+/**
+ * The five scales, in order, with the profile field that decides eligibility
+ * at each. Global has none, because global is everyone.
+ */
+export const SCOPES = [
+  { value: "local" as const,       label: "Local",       field: "place_local" as const,       hint: "Your street, estate, village or neighbourhood." },
+  { value: "regional" as const,    label: "Regional",    field: "place_regional" as const,    hint: "The city or county it sits in." },
+  { value: "national" as const,    label: "National",    field: "place_national" as const,    hint: "The country." },
+  { value: "continental" as const, label: "Continental", field: "place_continental" as const, hint: "The continent." },
+  { value: "global" as const,      label: "Global",      field: null,                         hint: "Everyone. No place to set." },
+];
+
+export type ScopeField = Exclude<(typeof SCOPES)[number]["field"], null>;
+
+/** Where this person is, at a given scale. Null at global, by definition. */
+export function placeAt(
+  profile: Partial<Record<ScopeField, string | null>>,
+  scope: GroupScope,
+): string | null {
+  const field = SCOPES.find((s) => s.value === scope)?.field;
+  return field ? (profile[field] ?? null) : null;
+}
+
+/** The scales this person has actually said where they are, plus global. */
+export function reachableScopes(
+  profile: Partial<Record<ScopeField, string | null>>,
+): GroupScope[] {
+  return SCOPES.filter(
+    (s) => s.field === null || (profile[s.field] ?? "").trim() !== "",
+  ).map((s) => s.value);
+}
+
+/** How a proposal is addressed, in the words the interface uses. */
+export function addressLabel(
+  proposal: Pick<Proposal, "scope" | "place" | "group_id">,
+  groupName?: string | null,
+): string {
+  if (proposal.group_id) return groupName ?? "a group";
+  if (proposal.scope === "global") return "Global";
+  return proposal.place ?? "somewhere";
+}

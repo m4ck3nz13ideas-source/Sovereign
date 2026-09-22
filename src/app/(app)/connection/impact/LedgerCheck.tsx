@@ -16,7 +16,7 @@ import { verifyRecord } from "./actions";
  * so, because a verification badge that overstates what it proves is worse
  * than no badge.
  */
-export function LedgerCheck({ groupId }: { groupId: string }) {
+export function LedgerCheck({ groupId }: { groupId: string | null }) {
   const [pending, start] = useTransition();
   const [result, setResult] = useState<
     { ok: boolean; checked: number; brokenAt: number | null } | null

@@ -48,6 +48,15 @@ export interface Profile {
   share_values: boolean;
   share_purpose: boolean;
   share_faith: boolean;
+  /**
+   * Where they are, at four scales, as they wrote it. Never a coordinate —
+   * these are claims, checkable by the people standing next to them.
+   */
+  place_local: string | null;
+  place_regional: string | null;
+  place_national: string | null;
+  place_continental: string | null;
+  place_set_at: string | null;
   onboarded_at: string | null;
   created_at: string;
   updated_at: string;
@@ -124,13 +133,18 @@ export interface GroupMember {
 
 export interface Proposal {
   id: string;
-  group_id: string;
+  /** Null when the proposal is addressed to a place rather than a group. */
+  group_id: string | null;
   author_id: string;
   title: string;
   summary: string;
   body: string;
   category: string | null;
   scope: GroupScope;
+  /** The place it is addressed to. Null for a group proposal and for a global one. */
+  place: string | null;
+  /** When deliberation ends for a place proposal. Nobody may close it sooner. */
+  closes_at: string | null;
   budget_amount: number | null;
   budget_currency: string;
   term_days: number | null;
@@ -139,6 +153,20 @@ export interface Proposal {
   submitted_at: string;
   closed_at: string | null;
 }
+
+/** The decision rule at one scale, for proposals addressed to a place. */
+export interface ScopeRule {
+  scope: GroupScope;
+  threshold_alignment: number;
+  min_voices: number;
+  deliberation_days: number;
+  note: string | null;
+}
+
+/** How a proposal is addressed: to a group, or to a place at a scale. */
+export type Address =
+  | { kind: "group"; groupId: string }
+  | { kind: "place"; scope: GroupScope; place: string | null };
 
 export interface ReviewRisk {
   title: string;
@@ -208,7 +236,8 @@ export interface ResonanceVote {
 
 export interface ResonanceSummary {
   voter_count: number;
-  member_count: number;
+  /** Null for a place proposal: there is no register to be a share of. */
+  member_count: number | null;
   avg_alignment: number | null;
   avg_confidence: number | null;
   avg_urgency: number | null;

@@ -1,24 +1,38 @@
 import Link from "next/link";
 
 import { CollectiveTabs } from "@/components/nav/CollectiveTabs";
+import { ScaleSelector } from "@/components/nav/ScaleSelector";
 import { Empty, LinkButton, Page, PageTitle, SectionLabel, Tag } from "@/components/ui";
+import { addressOptions, requireAddress } from "@/lib/address";
 import { ago, money, STATUS_LABEL } from "@/lib/format";
-import { requireGroup } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Proposal } from "@/lib/types";
 
 export const metadata = { title: "Proposals · Sovereign" };
 
 export default async function ProposalsPage() {
-  const { group } = await requireGroup();
+  const session = await requireAddress();
+  const { address } = session;
   const supabase = await createClient();
 
-  const { data } = await supabase
+  // At a place this filters on the scale only. Which place is decided by the
+  // row-level policy, so a query that forgot would still not return somebody
+  // else's street.
+  const base = supabase
     .from("proposals")
-    .select("*, profiles(display_name), proposal_flags(resolved_at)")
-    .eq("group_id", group.id)
-    .order("submitted_at", { ascending: false })
-    .limit(60);
+    .select("*, profiles(display_name), proposal_flags(resolved_at)");
+
+  const { data } =
+    address.kind === "group"
+      ? await base
+          .eq("group_id", address.group.id)
+          .order("submitted_at", { ascending: false })
+          .limit(60)
+      : await base
+          .is("group_id", null)
+          .eq("scope", address.scope)
+          .order("submitted_at", { ascending: false })
+          .limit(60);
 
   const proposals = (data ?? []) as unknown as (Proposal & {
     profiles: { display_name: string } | null;
@@ -30,10 +44,25 @@ export default async function ProposalsPage() {
   );
   const rest = proposals.filter((p) => !open.includes(p));
 
+  const here =
+    address.kind === "group"
+      ? address.group.name
+      : address.scope === "global"
+        ? "Everyone"
+        : (address.place ?? address.label);
+
   return (
     <Page>
-      <PageTitle sub={group.name}>Proposals</PageTitle>
+      <PageTitle sub={here}>Proposals</PageTitle>
       <CollectiveTabs />
+      <ScaleSelector
+        options={addressOptions(session)}
+        current={
+          address.kind === "group"
+            ? `group:${address.group.id}`
+            : `scope:${address.scope}`
+        }
+      />
 
       <div className="mb-8">
         <LinkButton href="/connection/proposals/new" tone="gold">
@@ -56,8 +85,9 @@ export default async function ProposalsPage() {
           </ul>
         ) : (
           <Empty>
-            Nothing open. A proposal here is a specific thing you want the group
-            to do, not a topic for discussion.
+            {address.kind === "group"
+              ? "Nothing open. A proposal here is a specific thing you want the group to do, not a topic for discussion."
+              : `Nothing open at this scale. A proposal here is a specific thing you want ${here} to do, not a topic for discussion.`}
           </Empty>
         )}
       </section>

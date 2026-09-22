@@ -16,6 +16,7 @@ export function Outcome({
   activated,
   proposalId,
   thresholds,
+  minVoices,
   votes,
 }: {
   decision: Decision | null;
@@ -23,6 +24,11 @@ export function Outcome({
   activated: boolean;
   proposalId: string;
   thresholds: { alignment: number; participation: number };
+  /**
+   * The floor this scale required, for a proposal addressed to a place. Null
+   * for a group proposal, which has a participation share instead.
+   */
+  minVoices: number | null;
   votes: {
     name: string;
     alignment: number;
@@ -75,15 +81,34 @@ export function Outcome({
             }
             hint={`threshold ${thresholds.alignment.toFixed(2)}`}
           />
-          <ScoreBar
-            label="Participation"
-            value={decision.participation === null ? null : Number(decision.participation)}
-            critical={
-              decision.participation !== null &&
-              Number(decision.participation) < thresholds.participation
-            }
-            hint={`${decision.voter_count} of ${decision.member_count} · threshold ${thresholds.participation.toFixed(2)}`}
-          />
+          {decision.participation === null ? (
+            // No register, so no share. The honest number is the count, and
+            // the floor it had to clear.
+            <div>
+              <p className="smallcaps text-[10px] text-paper-faint">Voices</p>
+              <p className="mt-1 text-[0.95rem] tabular-nums text-paper">
+                {decision.voter_count}
+                {minVoices ? (
+                  <span className="text-paper-faint">
+                    {" "}
+                    · this scale needs {minVoices}
+                  </span>
+                ) : null}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-paper-faint">
+                A count rather than a share — there is no register of everyone
+                here, and a percentage of a population nobody counted would be
+                a made-up number.
+              </p>
+            </div>
+          ) : (
+            <ScoreBar
+              label="Participation"
+              value={Number(decision.participation)}
+              critical={Number(decision.participation) < thresholds.participation}
+              hint={`${decision.voter_count} of ${decision.member_count} · threshold ${thresholds.participation.toFixed(2)}`}
+            />
+          )}
           <ScoreBar
             label="Confidence"
             value={decision.avg_confidence === null ? null : Number(decision.avg_confidence)}

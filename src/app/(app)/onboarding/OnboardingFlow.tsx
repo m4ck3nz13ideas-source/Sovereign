@@ -136,15 +136,24 @@ export function OnboardingFlow({ displayName }: { displayName: string }) {
         it files itself to the right place.
       </p>
       <p className="text-[0.95rem] leading-relaxed text-paper-dim">
-        The collective half needs a group. You can start one now, join one with
-        an invite code, or leave it — nothing else depends on it.
+        The collective half needs somewhere to be. Write down where you are —
+        a neighbourhood, a city, a country — and the proposals addressed to
+        those places are yours to read, answer and write. Nobody has to invite
+        you.
+      </p>
+      <p className="text-[0.95rem] leading-relaxed text-paper-dim">
+        A group is the other way in, for people who already know each other. It
+        is entirely optional, and you can set one up later.
       </p>
 
       <div className="flex flex-wrap gap-2">
-        <Button type="button" onClick={() => router.push("/onboarding/group")}>
-          Set up a group
+        <Button type="button" onClick={() => router.push("/settings/place")}>
+          Say where you are
         </Button>
-        <Button type="button" tone="quiet" onClick={() => router.push("/launch")}>
+        <Button type="button" tone="quiet" onClick={() => router.push("/onboarding/group")}>
+          Set up a group instead
+        </Button>
+        <Button type="button" tone="ghost" onClick={() => router.push("/launch")}>
           Later
         </Button>
       </div>

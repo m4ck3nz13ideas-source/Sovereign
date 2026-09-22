@@ -10,6 +10,12 @@ Four tables with owner-only policies and no group-visibility path anywhere.
 ### `profiles`
 One row per auth user, created automatically by a trigger on `auth.users`.
 
+`place_local`, `place_regional`, `place_national` and `place_continental` are
+where this person is, as they wrote it, with `place_set_at`. These decide
+eligibility for every place-addressed proposal. Never a coordinate — matching
+goes through `place_key()`, which lowercases and collapses whitespace so the
+stored text can stay exactly as typed.
+
 Holds the current `faith_statement` and `purpose` alongside their
 `*_updated_at`. Disclosure is three booleans — `share_values`, `share_purpose`,
 `share_faith` — all false by default. Column-level disclosure is handled by the
@@ -46,7 +52,7 @@ Every version of a faith or purpose statement, never overwritten.
 moved is a different thing from what it currently is, and the second being
 public should not make the first public.
 
-## Collective — visible to one group
+## Collective — visible to one group, or to one place
 
 ### `groups`
 Name, purpose, scope, and three thresholds:
@@ -65,8 +71,34 @@ be able to read the rule.
 Invite-only. `redeem_invite()` is `SECURITY DEFINER` and checks expiry and use
 count. There is no self-join path and no public directory.
 
+### `scope_rules`
+One row per scale, seeded by `0006`. `threshold_alignment` is 0.618 everywhere;
+`min_voices` and `deliberation_days` rise with the scale.
+
+Readable by everyone — `using (true)` — and there is no insert, update or
+delete policy at all, so an instance operator changes it in SQL, deliberately.
+A person governed by a rule can read the rule.
+
+Local ships at one voice and no waiting period so a new instance can get
+through a decision on day one. It is the first number to raise.
+
 ### `proposals`
-Only submitted proposals exist here. Drafts live in the author's browser — the
+Only submitted proposals exist here.
+
+**Addressed to a group or to a place.** `group_id` is nullable; when it is
+null the proposal is addressed to `place` at `scope`, and `proposals_addressed`
+checks that one of the two is present (global needs no place). `closes_at` is
+set by the `proposals_set_window` trigger at insert, from the scale's rule.
+
+`freeze_proposal_address()` refuses any update that changes `group_id`,
+`scope`, `place` or `closes_at`. The author-withdraw policy permits withdrawal,
+not re-aiming.
+
+Eligibility everywhere below is `can_reach_proposal()` — membership for a group
+proposal, `in_scope()` for a place one. The one exception is `proposals_read`
+itself, which is written against the row's own columns: a function that looks
+the proposal up cannot see the row an `INSERT ... RETURNING` is in the middle
+of writing. Drafts live in the author's browser — the
 private-first rule made structural rather than enforced by a status column.
 
 Not editable after submission. The RLS policy allows an author to update only
@@ -154,6 +186,11 @@ passed  ⟺  no Universal Law violation
 A proposal that passes stops at `passed`. `activate_proposal()` creates the
 project, and only once every need has a name against it.
 
+`participation` is **null** for a place decision, and `member_count` is zero.
+There is no register of everyone in a city, so there is no share to compute —
+`voter_count` against the scale's `min_voices` is what the rule actually
+applied, and that is what the interface shows.
+
 Stores the numbers as they were at the moment of closing, so changing a
 threshold later never reinterprets a past decision. `values_invoked` is the
 union of value names the review scored — this is the key retrieval runs on.
@@ -161,9 +198,10 @@ union of value names the review scored — this is the key retrieval runs on.
 ## Projects and Impact
 
 ### `projects`
-Created automatically when a proposal passes, keyed by `proposal_id`, which is
-also how the URL addresses it: the project is downstream of the decision, not a
-separate thing.
+Created by `activate_proposal()`, keyed by `proposal_id`, which is also how the
+URL addresses it: the project is downstream of the decision, not a separate
+thing. `group_id` is nullable and inherited, so a project inherits its
+proposal's address and `can_reach_project()` answers who can see it.
 
 `budget_committed` comes from the proposal. `budget_spent` accumulates from
 `project_updates.spend_delta` through the `Treasury` interface.
@@ -186,7 +224,9 @@ so a removed or altered row is detectable by replay.
 
 **No insert policy at all.** Writes go only through `record_ledger_event()`, so
 a client cannot forge, reorder or backdate an event. Read access follows group
-membership.
+membership — and events with a null `group_id`, which is every place-addressed
+governance act, are readable by anyone. That is deliberate: a decision taken in
+the open should be auditable in the open.
 
 `verify_ledger()` replays and returns the first `seq` at which the chain
 breaks. See `docs/architecture.md` for exactly what that does and does not
@@ -195,7 +235,10 @@ prove.
 ## Connection
 
 `posts`, `post_reactions`, `post_comments`. A post with a `group_id` is visible
-to that group; without one, to anyone sharing a group with the author.
+to that group; without one, to anyone sharing a group **or a local place** with
+the author. Local is the only scale used here — sharing a continent is not a
+relationship, and a feed that behaved as though it were would be the thing this
+product is not.
 
 There is no repost, no follower graph, and no engagement count on the card.
 
@@ -217,7 +260,13 @@ There is no repost, no follower graph, and no engagement count on the card.
 | `complete_project` | No completion without a reflection |
 | `related_decisions` | Retrieval by value overlap, with outcomes |
 | `contribution_record` | A derived record — no score, no token |
-| `record_ledger_event`, `verify_ledger` | The chain, and its replay |
+| `record_ledger_event`, `verify_ledger` | The chain, and its replay. `verify_ledger(null)` is the public one |
+| `place_key` | One normalised form, so a place matches however it is typed |
+| `in_scope` | Whether a person is in a place at a scale |
+| `can_reach_proposal`, `can_reach_project` | The single eligibility question |
+| `can_steward_proposal` | Author, or a steward of the group it belongs to |
+| `related_decisions_for` | Retrieval from the same address, not the same author |
+| `scope_counts` | What is open at each scale this person is in |
 
 ## Indexes
 
@@ -228,3 +277,5 @@ Every foreign key used in a list query is indexed. The two worth naming:
   and answered ones never need finding this way.
 - `entries (profile_id, state, created_at DESC)` — the banner queries on
   Reflection, Pipeline and Profile all have this shape.
+- `proposals (scope, status, submitted_at DESC) WHERE group_id IS NULL` — the
+  scale feed, which never wants the group-addressed rows.

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Empty, Page, Prose, SectionLabel, Tag } from "@/components/ui";
 import { ago, money, shortDate, STATUS_LABEL } from "@/lib/format";
 import { asReview, isOpen } from "@/lib/collective";
-import { isSteward, requireGroup } from "@/lib/session";
+import { isSteward, requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type {
   ActivationStanding,
@@ -18,6 +18,7 @@ import type {
   ProposalFlag,
   ResonanceSummary,
   ResonanceVote,
+  ScopeRule,
 } from "@/lib/types";
 
 import { AiLayer } from "./AiLayer";
@@ -49,12 +50,12 @@ export default async function ProposalPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { userId, group } = await requireGroup();
+  const { userId, groups } = await requireSession();
   const supabase = await createClient();
 
   const { data: raw } = await supabase
     .from("proposals")
-    .select("*, profiles(display_name)")
+    .select("*, profiles(display_name), groups(name, threshold_alignment, threshold_participation, threshold_values_floor)")
     .eq("id", id)
     .maybeSingle();
 
@@ -62,7 +63,48 @@ export default async function ProposalPage({
 
   const proposal = raw as unknown as Proposal & {
     profiles: { display_name: string } | null;
+    groups: {
+      name: string;
+      threshold_alignment: number;
+      threshold_participation: number;
+      threshold_values_floor: number;
+    } | null;
   };
+
+  // A proposal addressed to a place has no group and no steward. The rule it
+  // is closed by comes from the scale instead, and the clock decides when.
+  const { data: ruleRow } = proposal.group_id
+    ? { data: null }
+    : await supabase
+        .from("scope_rules")
+        .select("*")
+        .eq("scope", proposal.scope)
+        .maybeSingle();
+
+  const rule = ruleRow as ScopeRule | null;
+
+  const thresholds = proposal.groups
+    ? {
+        alignment: Number(proposal.groups.threshold_alignment),
+        participation: Number(proposal.groups.threshold_participation),
+      }
+    : { alignment: Number(rule?.threshold_alignment ?? 0.618), participation: 0 };
+
+  const valuesFloor = proposal.groups
+    ? Number(proposal.groups.threshold_values_floor)
+    : 0.3;
+
+  const myRole = groups.find((g) => g.id === proposal.group_id)?.role ?? null;
+
+  // Who may close it. A group has stewards. A place does not, so the window
+  // holds it open and then anyone it was addressed to can perform the closing
+  // — the database refuses an early one either way.
+  const windowOpen = Boolean(
+    proposal.closes_at && new Date(proposal.closes_at) > new Date(),
+  );
+  const canClose = proposal.group_id
+    ? Boolean(myRole && isSteward(myRole))
+    : !windowOpen;
 
   const [
     { data: reviewRows },
@@ -203,7 +245,13 @@ export default async function ProposalPage({
             {STATUS_LABEL[proposal.status]}
           </Tag>
           {proposal.category ? <Tag>{proposal.category}</Tag> : null}
-          <Tag>{proposal.scope}</Tag>
+          <Tag tone="gold">
+            {proposal.groups
+              ? proposal.groups.name
+              : proposal.scope === "global"
+                ? "Global"
+                : `${proposal.place} · ${proposal.scope}`}
+          </Tag>
           {unanswered.length ? (
             <Tag tone="alarm">
               {unanswered.length} to answer
@@ -277,7 +325,7 @@ export default async function ProposalPage({
         </SectionLabel>
 
         {review ? (
-          <AiLayer review={review} floor={Number(group.threshold_values_floor)} />
+          <AiLayer review={review} floor={valuesFloor} />
         ) : (
           <RunReview proposalId={id} />
         )}
@@ -343,10 +391,8 @@ export default async function ProposalPage({
           decision={decision}
           activated={["executing", "completed"].includes(proposal.status)}
           proposalId={id}
-          thresholds={{
-            alignment: Number(group.threshold_alignment),
-            participation: Number(group.threshold_participation),
-          }}
+          thresholds={thresholds}
+          minVoices={rule?.min_voices ?? null}
           votes={
             decision
               ? ((voteRows ?? []) as unknown as (ResonanceVote & {
@@ -378,7 +424,8 @@ export default async function ProposalPage({
               needs={needs}
               ready={Boolean(activation?.ready)}
               isAuthorOrSteward={
-                proposal.author_id === userId || isSteward(group.role)
+                proposal.author_id === userId ||
+                Boolean(myRole && isSteward(myRole))
               }
               myPledges={myPledges}
               pledgesByNeed={pledgesByNeed}
@@ -386,7 +433,7 @@ export default async function ProposalPage({
           </div>
         ) : null}
 
-        {open && isSteward(group.role) ? (
+        {open && canClose ? (
           <div className="mt-4">
             <CloseButton
               proposalId={id}
@@ -394,13 +441,19 @@ export default async function ProposalPage({
               lawTensions={standing?.unanswered_tensions ?? 0}
               unanswered={unanswered.length}
               voters={summary?.voter_count ?? 0}
-              members={summary?.member_count ?? 0}
-              thresholds={{
-                alignment: Number(group.threshold_alignment),
-                participation: Number(group.threshold_participation),
-              }}
+              members={summary?.member_count ?? null}
+              minVoices={rule?.min_voices ?? 1}
+              thresholds={thresholds}
             />
           </div>
+        ) : null}
+
+        {open && !canClose && !proposal.group_id && windowOpen ? (
+          <p className="mt-4 text-sm leading-relaxed text-paper-faint">
+            Deliberation is open until {shortDate(proposal.closes_at!)}. Nobody
+            can close it sooner — a place has no steward to pick the moment, so
+            the window does it instead.
+          </p>
         ) : null}
 
         {/* in_review counts too: a proposal whose review failed to run is

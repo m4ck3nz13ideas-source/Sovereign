@@ -58,6 +58,23 @@ export default async function SettingsPage() {
         </Card>
       </section>
 
+      <section className="mb-10">
+        <SectionLabel>Where you are</SectionLabel>
+        <Card>
+          <p className="text-[0.95rem] leading-relaxed text-paper-dim">
+            Four lines that decide which proposals are addressed to you, and
+            which ones you can write. No coordinates, no register — a claim,
+            checkable by the people standing next to you.
+          </p>
+          <Link
+            href="/settings/place"
+            className="smallcaps mt-3 inline-block text-[11px] text-gold hover:underline"
+          >
+            Set where you are →
+          </Link>
+        </Card>
+      </section>
+
       {group ? (
         <>
           <section className="mb-10">

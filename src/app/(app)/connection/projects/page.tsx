@@ -1,23 +1,33 @@
 import Link from "next/link";
 
 import { CollectiveTabs } from "@/components/nav/CollectiveTabs";
+import { ScaleSelector } from "@/components/nav/ScaleSelector";
 import { Card, Empty, Page, PageTitle, Tag } from "@/components/ui";
+import { addressOptions, requireAddress } from "@/lib/address";
 import { ago, money, STATUS_LABEL } from "@/lib/format";
-import { requireGroup } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Project } from "@/lib/types";
 
 export const metadata = { title: "Projects · Sovereign" };
 
 export default async function ProjectsPage() {
-  const { group } = await requireGroup();
+  const session = await requireAddress();
+  const { address } = session;
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const base = supabase
     .from("projects")
-    .select("*, project_tasks(status), reflections(id)")
-    .eq("group_id", group.id)
-    .order("created_at", { ascending: false });
+    .select("*, project_tasks(status), reflections(id), proposals!inner(scope, group_id)");
+
+  const { data } =
+    address.kind === "group"
+      ? await base
+          .eq("group_id", address.group.id)
+          .order("created_at", { ascending: false })
+      : await base
+          .is("group_id", null)
+          .eq("proposals.scope", address.scope)
+          .order("created_at", { ascending: false });
 
   const projects = (data ?? []) as unknown as (Project & {
     project_tasks: { status: string }[];
@@ -31,6 +41,14 @@ export default async function ProjectsPage() {
     <Page>
       <PageTitle sub="What passed, and what became of it.">Projects</PageTitle>
       <CollectiveTabs />
+      <ScaleSelector
+        options={addressOptions(session)}
+        current={
+          address.kind === "group"
+            ? `group:${address.group.id}`
+            : `scope:${address.scope}`
+        }
+      />
 
       {live.length ? (
         <ul className="mb-10 space-y-3">

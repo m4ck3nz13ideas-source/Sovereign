@@ -4,13 +4,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 import { Button, Field, inputClass } from "@/components/ui";
-import type { GroupScope } from "@/lib/types";
 
 import { submitProposal } from "../../actions";
 
 const DRAFT_KEY = "sovereign.draft.proposal";
-
-const SCOPES: GroupScope[] = ["local", "regional", "national", "continental", "global"];
 
 /**
  * Drafts live here, in this browser, and nowhere else.
@@ -21,16 +18,23 @@ const SCOPES: GroupScope[] = ["local", "regional", "national", "continental", "g
  * draft does not follow you between devices — which is the right trade for
  * something you have not decided to say yet.
  */
-export function ComposeProposal({ defaultScope }: { defaultScope: GroupScope }) {
+export function ComposeProposal({
+  addresses,
+  defaultAddress,
+}: {
+  addresses: { value: string; label: string; detail: string | null }[];
+  defaultAddress: string;
+}) {
   const router = useRouter();
   const [form, setForm] = useState({
     title: "",
     summary: "",
     body: "",
     category: "",
-    scope: defaultScope,
+    scope: "local" as const,
     budget: "",
     termDays: "",
+    address: defaultAddress,
   });
   const [restored, setRestored] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,9 +104,10 @@ export function ComposeProposal({ defaultScope }: { defaultScope: GroupScope }) 
       summary: "",
       body: "",
       category: "",
-      scope: defaultScope,
+      scope: "local",
       budget: "",
       termDays: "",
+      address: defaultAddress,
     });
     setRestored(false);
   }
@@ -114,6 +119,24 @@ export function ComposeProposal({ defaultScope }: { defaultScope: GroupScope }) 
           a draft was waiting in this browser
         </p>
       ) : null}
+
+      <Field
+        label="Who this is for"
+        hint="The lowest scale that can actually decide it. A thing your street can settle does not belong in front of a country."
+      >
+        <select
+          value={form.address}
+          onChange={(e) => set("address", e.target.value)}
+          className={inputClass}
+        >
+          {addresses.map((a) => (
+            <option key={a.value} value={a.value}>
+              {a.label}
+              {a.detail ? ` — ${a.detail}` : ""}
+            </option>
+          ))}
+        </select>
+      </Field>
 
       <Field label="Title">
         <input
@@ -155,20 +178,6 @@ export function ComposeProposal({ defaultScope }: { defaultScope: GroupScope }) 
             placeholder="Space, Money, Practice…"
             className={inputClass}
           />
-        </Field>
-
-        <Field label="Scope">
-          <select
-            value={form.scope}
-            onChange={(e) => set("scope", e.target.value as GroupScope)}
-            className={inputClass}
-          >
-            {SCOPES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
         </Field>
 
         <Field label="Budget" hint="A number, or blank.">

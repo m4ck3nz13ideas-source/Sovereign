@@ -1,14 +1,19 @@
 import Link from "next/link";
 
 import { Page, PageTitle } from "@/components/ui";
-import { requireGroup } from "@/lib/session";
+import { addressOptions, requireAddress } from "@/lib/address";
 
 import { ComposeProposal } from "./ComposeProposal";
 
 export const metadata = { title: "New proposal · Sovereign" };
 
 export default async function NewProposalPage() {
-  const { group } = await requireGroup();
+  const session = await requireAddress();
+  const options = addressOptions(session);
+  const current =
+    session.address.kind === "group"
+      ? `group:${session.address.group.id}`
+      : `scope:${session.address.scope}`;
 
   return (
     <Page>
@@ -19,11 +24,9 @@ export default async function NewProposalPage() {
         ← Proposals
       </Link>
 
-      <PageTitle sub={`To ${group.name}. Private until you submit it.`}>
-        A proposal
-      </PageTitle>
+      <PageTitle sub="Private until you submit it.">A proposal</PageTitle>
 
-      <ComposeProposal defaultScope={group.scope} />
+      <ComposeProposal addresses={options} defaultAddress={current} />
     </Page>
   );
 }

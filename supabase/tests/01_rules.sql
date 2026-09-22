@@ -263,11 +263,16 @@ begin
   if outcome = 'passed' then passes := passes + 1; else fails := fails + 1;
     raise warning 'FAIL: proposal did not pass with the rule satisfied'; end if;
 
-  ------------------------------------------ passing creates a project, and
+  ------------------------------------------ ratification is not activation
   ------------------------------------------ closing reveals the numbers
   select id into projid from projects where proposal_id = pid;
+  if projid is null then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: passing created a project before it was activated'; end if;
+
+  -- Nothing was asked for, so it is ready the moment it passes.
+  projid := activate_proposal(pid);
   if projid is not null then passes := passes + 1; else fails := fails + 1;
-    raise warning 'FAIL: a passed proposal did not create a project'; end if;
+    raise warning 'FAIL: a proposal needing nothing did not activate'; end if;
 
   perform set_config('test.uid', ben::text, true);
   select count(*) into n from resonance_votes where proposal_id = pid;

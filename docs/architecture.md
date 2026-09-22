@@ -43,6 +43,10 @@ lives in a React component is a rule that a future refactor can quietly delete.
 | **Ratification is not activation** | `close_proposal()` stops at `passed`; only `activate_proposal()` creates a project |
 | **A proposal activates only when resourced** | `activate_proposal()` + `activation_standing()` |
 | **Nobody commits anyone else** | `commitments_own` policy: `profile_id = auth.uid()` |
+| **Eligibility is one question** | `can_reach_proposal()`, used by every policy on the loop |
+| **You cannot propose for somewhere you are not** | `proposals_create` policy: `in_scope(auth.uid(), scope, place)` |
+| **A proposal's address cannot be re-aimed** | `freeze_proposal_address()` trigger |
+| **A place proposal cannot be closed early** | `close_proposal()` checks `closes_at` |
 | No completion without reflection | `complete_project()` + a length check |
 | The ledger cannot be forged | No insert policy; `record_ledger_event()` only |
 
@@ -154,6 +158,67 @@ script in one — so a migration that needed a new status would work in psql and
 fail in the dashboard, for exactly the people following the README. `passed`
 already means "ratified, not yet under way".
 
+## Scope — the Subsidiarity Engine
+
+A proposal is addressed to a **group** — people who invited each other — or to
+a **place** at one of five scales. Both run the identical loop. Everything that
+used to ask "are you in this group" now asks `can_reach_proposal()`, which asks
+membership for one and `in_scope()` for the other. Nothing above that function
+knows which kind it is looking at, which is why adding the second kind did not
+fork the loop.
+
+### Where you are
+
+Four nullable text columns on `profiles` — local, regional, national,
+continental — matched through `place_key()`, which lowercases and collapses
+whitespace. Stored exactly as typed; only the comparison is normalised.
+
+No geocoder and no coordinate. Three reasons, in order of weight: a precise
+location is the most sensitive thing a governance system could hold; a
+gazetteer is a third-party dependency in the eligibility path; and at local
+scale a claim is already checkable by the people standing next to you, which is
+the only verification that means anything there.
+
+The cost is real and worth stating: names have no containment relation, so a
+regional proposal does not automatically reach everyone whose locality sits
+inside that region. Each person states each scale separately. `docs/roadmap.md`
+has what would have to be true before that changes.
+
+### The rule at each scale
+
+`scope_rules` — one row per scale, readable by everyone, writable from no
+client at all.
+
+A group knows its membership, so `close_proposal()` can ask what share
+responded. A place cannot: there is no register, and the fix would be a
+surveillance project rather than a governance one. So the share is replaced by
+`min_voices`, a floor on responses, and `decisions.participation` is left null
+rather than filled with a percentage of a population nobody counted. The
+interface prints the count and the floor.
+
+The alignment threshold does not move. 0.618 at every scale.
+
+### Who closes it, and when
+
+A group has stewards. A place has nobody entitled to pick the moment
+deliberation ends, and the moment is not neutral — closing when the numbers
+suit you is the oldest trick there is. So a place proposal carries `closes_at`,
+set at submission from the rule in force then, and `close_proposal()` refuses
+until it passes. After that anyone the proposal was addressed to can perform
+the closing; the rule is the same whoever clicks.
+
+`freeze_proposal_address()` makes the address and the window immutable after
+insert, because the author-withdraw policy would otherwise permit re-aiming a
+live proposal at a friendlier place.
+
+### The public chain
+
+A place proposal has no group, so its ledger events form the chain with a null
+`group_id` — the public one, which `ledger_read` already lets anyone read.
+That is the intended answer rather than a leftover: a decision taken in the
+open should be auditable in the open. `verify_ledger()` with no argument
+replays it.
+
 ## The AI layer
 
 `src/lib/ai/` is `server-only`. The key never reaches the browser, and the
@@ -173,22 +238,29 @@ signals (are costs given, are claims supported, is the commitment reversible),
 so the whole loop can be walked without a key. It records its model as `mock`,
 and the review UI renders a warning on any review that carries it.
 
-**Four prompts, versioned.** Proposal review, decision rationale, reflection
-prompt, synthesis prompt. Every artefact stores the id and version that made
+**Five prompts, versioned.** Law audit, proposal review, decision rationale,
+reflection prompt, synthesis prompt. Every artefact stores the id and version that made
 it. Changing a rubric means bumping the version — editing in place silently
 changes what an old score meant.
 
 ### Retrieval
 
-When a proposal is submitted, `related_decisions()` returns up to six past
-decisions from the same group, ranked by overlap of the values they invoked,
+When a proposal is submitted, `related_decisions_for()` returns up to six past
+decisions from the **same address** — the same group, or the same place at the
+same scale — ranked by overlap of the values they invoked,
 each with its expected outcome, its actual outcome, and the lesson recorded.
 The reviewer is given these and records which ones it used in `memory_used`,
 which the proposal page displays.
 
 This is the loop that makes the product get better rather than just run: a
 group that writes honest reflections gets reviews that know what it has been
-wrong about before.
+wrong about before, and so does a street.
+
+The rubric differs by address. A group has one — the union of what its members
+have named and shared. A place does not, and inventing one would be the system
+telling people what they hold, so the rubric is built from whoever has actually
+turned up: the author, and anyone who has written in the deliberation. It
+starts thin and thickens.
 
 ## Data flow: one proposal, start to finish
 
@@ -257,8 +329,11 @@ would break before a group of thousands:
   not at tens of thousands — that wants an embedding index.
 - Every member's values union into one rubric. At fifty people that is a long
   and incoherent list; groups would need a shared, agreed set.
-- Invite-trust identity has no uniqueness guarantee. At any scale where the
-  outcome is worth gaming, this is the first thing that must change.
+- Invite-trust identity has no uniqueness guarantee, and a self-declared place
+  has none either — one person can claim a street they have never been to. At
+  local scale the neighbours are the check. At national scale there is none,
+  which is why `min_voices` rises steeply and why anything above regional
+  should be read as a straw poll until identity is solved.
 - The feed loads forty posts with no pagination.
 
 None of these are worth fixing before the loop has been proven to help a real

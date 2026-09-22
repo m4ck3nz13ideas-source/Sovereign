@@ -2,7 +2,7 @@
 
 import { ledger } from "@/lib/ledger";
 
-export async function verifyRecord(groupId: string) {
+export async function verifyRecord(groupId: string | null) {
   try {
     const result = await ledger().verify(groupId);
     return { ok: true as const, result };

@@ -1,9 +1,10 @@
 import Link from "next/link";
 
 import { CollectiveTabs } from "@/components/nav/CollectiveTabs";
+import { ScaleSelector } from "@/components/nav/ScaleSelector";
 import { Card, Empty, Page, PageTitle, ScoreBar, Tag } from "@/components/ui";
+import { addressOptions, requireAddress } from "@/lib/address";
 import { shortDate } from "@/lib/format";
-import { requireGroup } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Decision } from "@/lib/types";
 
@@ -19,14 +20,25 @@ export const metadata = { title: "Decisions · Sovereign" };
  * teach it anything, which is the point of the gate on completing a project.
  */
 export default async function DecisionsPage() {
-  const { group } = await requireGroup();
+  const session = await requireAddress();
+  const { address } = session;
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const base = supabase
     .from("decisions")
-    .select("*, proposals(title, summary, id)")
-    .order("decided_at", { ascending: false })
-    .limit(60);
+    .select("*, proposals!inner(title, summary, id, group_id, scope)");
+
+  const { data } =
+    address.kind === "group"
+      ? await base
+          .eq("proposals.group_id", address.group.id)
+          .order("decided_at", { ascending: false })
+          .limit(60)
+      : await base
+          .is("proposals.group_id", null)
+          .eq("proposals.scope", address.scope)
+          .order("decided_at", { ascending: false })
+          .limit(60);
 
   const decisions = (data ?? []) as unknown as (Decision & {
     proposals: { id: string; title: string; summary: string } | null;
@@ -34,8 +46,16 @@ export default async function DecisionsPage() {
 
   return (
     <Page>
-      <PageTitle sub={group.name}>Decisions</PageTitle>
+      <PageTitle sub={address.label}>Decisions</PageTitle>
       <CollectiveTabs />
+      <ScaleSelector
+        options={addressOptions(session)}
+        current={
+          address.kind === "group"
+            ? `group:${address.group.id}`
+            : `scope:${address.scope}`
+        }
+      />
 
       {decisions.length ? (
         <ul className="space-y-4">

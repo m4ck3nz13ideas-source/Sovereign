@@ -1,7 +1,9 @@
 import Link from "next/link";
 
 import { CollectiveTabs } from "@/components/nav/CollectiveTabs";
+import { ScaleSelector } from "@/components/nav/ScaleSelector";
 import { Empty, Page, PageTitle, SectionLabel, Tag } from "@/components/ui";
+import { addressOptions, currentAddress } from "@/lib/address";
 import { ago, STATUS_LABEL } from "@/lib/format";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
@@ -20,7 +22,9 @@ export const metadata = { title: "Connection · Sovereign" };
  * algorithmic noise labels, no counts on anything but replies.
  */
 export default async function ConnectionPage() {
-  const { profile, group } = await requireSession();
+  const session = await requireSession();
+  const { profile, group } = session;
+  const address = await currentAddress(session);
   const supabase = await createClient();
 
   const [{ data: ready }, { data: posts }, { data: open }] = await Promise.all([
@@ -37,11 +41,18 @@ export default async function ConnectionPage() {
       .select("*, profiles(display_name), post_reactions(profile_id)")
       .order("created_at", { ascending: false })
       .limit(40),
-    group
-      ? supabase
-          .from("proposals")
-          .select("id, title, status, submitted_at")
-          .eq("group_id", group.id)
+    address
+      ? (address.kind === "group"
+          ? supabase
+              .from("proposals")
+              .select("id, title, status, submitted_at")
+              .eq("group_id", address.group.id)
+          : supabase
+              .from("proposals")
+              .select("id, title, status, submitted_at")
+              .is("group_id", null)
+              .eq("scope", address.scope)
+        )
           .in("status", ["in_review", "in_deliberation", "voting"])
           .order("submitted_at", { ascending: false })
           .limit(3)
@@ -50,11 +61,30 @@ export default async function ConnectionPage() {
 
   return (
     <Page>
-      <PageTitle sub={group ? group.name : "You are not in a group yet."}>
+      <PageTitle
+        sub={
+          address
+            ? address.kind === "group"
+              ? address.group.name
+              : (address.place ?? address.label)
+            : "Say where you are, and proposals will find you."
+        }
+      >
         Connection
       </PageTitle>
 
       <CollectiveTabs />
+
+      {address ? (
+        <ScaleSelector
+          options={addressOptions(session)}
+          current={
+            address.kind === "group"
+              ? `group:${address.group.id}`
+              : `scope:${address.scope}`
+          }
+        />
+      ) : null}
 
       {ready?.length ? (
         <section className="mb-8">
@@ -76,7 +106,7 @@ export default async function ConnectionPage() {
       {open?.length ? (
         <section className="mb-8">
           <SectionLabel right={<Link href="/connection/proposals" className="hover:text-gold">all</Link>}>
-            Waiting on the group
+            {address?.kind === "group" ? "Waiting on the group" : "Waiting on a response"}
           </SectionLabel>
           <ul className="space-y-2">
             {(open as Proposal[]).map((p) => (
@@ -134,20 +164,22 @@ export default async function ConnectionPage() {
         )}
       </section>
 
-      {!group ? (
+      {!profile.place_set_at ? (
         <div className="mt-8">
           <Empty
             action={
               <Link
-                href="/onboarding/group"
+                href="/settings/place"
                 className="smallcaps inline-flex rounded-md bg-gold px-4 py-2.5 text-xs text-ink"
               >
-                Start or join a group
+                Say where you are
               </Link>
             }
           >
-            Proposals, decisions and projects need a group. Yours can be three
-            people.
+            Nobody has to invite you into anything. Write down where you are —
+            a street, a city, a country — and the proposals addressed to those
+            places become yours to read, answer and write. A group is the other
+            way in, and entirely optional.
           </Empty>
         </div>
       ) : null}

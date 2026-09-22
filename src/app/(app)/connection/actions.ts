@@ -2,11 +2,24 @@
 
 import { revalidatePath } from "next/cache";
 
+import { setAddress } from "@/lib/address";
 import { auditAgainstLaw, reviewProposal, writeRationale } from "@/lib/ai";
+import { placeAt } from "@/lib/collective";
 import { ledger } from "@/lib/ledger";
-import { requireGroup } from "@/lib/session";
+import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type { CommitmentKind, GroupScope } from "@/lib/types";
+
+/* ---------------------------------------------------------------------------
+   The scale selector
+--------------------------------------------------------------------------- */
+
+/** Look at a different address. Persisted, so the five tabs stay in one circle. */
+export async function chooseAddress(value: string) {
+  await setAddress(value);
+  revalidatePath("/connection", "layout");
+  return { ok: true as const };
+}
 
 /* ---------------------------------------------------------------------------
    Connection — posting
@@ -14,7 +27,7 @@ import type { CommitmentKind, GroupScope } from "@/lib/types";
 
 /** Post an Output entry to the feed. The entry is marked examined. */
 export async function publishEntry(entryId: string, body: string, groupOnly = true) {
-  const { userId, group } = await requireGroup();
+  const { userId, group } = await requireSession();
   const supabase = await createClient();
 
   const text = body.trim();
@@ -22,7 +35,7 @@ export async function publishEntry(entryId: string, body: string, groupOnly = tr
 
   const { error } = await supabase.from("posts").insert({
     author_id: userId,
-    group_id: groupOnly ? group.id : null,
+    group_id: groupOnly && group ? group.id : null,
     entry_id: entryId || null,
     body: text,
   });
@@ -83,6 +96,8 @@ export interface ProposalInput {
   scope: GroupScope;
   budget: string;
   termDays: string;
+  /** "group:<id>" or "scope:<scale>" — where this proposal is addressed. */
+  address: string;
 }
 
 /**
@@ -94,8 +109,29 @@ export interface ProposalInput {
  * thread, and a failed proposal is rewritten as a new one.
  */
 export async function submitProposal(input: ProposalInput) {
-  const { userId, group } = await requireGroup();
+  const { userId, profile, groups } = await requireSession();
   const supabase = await createClient();
+
+  // Where it is addressed. A group you are in, or a place you are in — the
+  // policy refuses anything else, and this is the readable version of that.
+  let groupId: string | null = null;
+  let scope: GroupScope = input.scope;
+  let place: string | null = null;
+
+  if (input.address.startsWith("group:")) {
+    const g = groups.find((x) => x.id === input.address.slice(6));
+    if (!g) return { ok: false as const, error: "You are not in that group." };
+    groupId = g.id;
+  } else {
+    scope = input.address.slice(6) as GroupScope;
+    place = scope === "global" ? null : placeAt(profile, scope);
+    if (scope !== "global" && !place?.trim()) {
+      return {
+        ok: false as const,
+        error: "Say where you are before proposing at that scale.",
+      };
+    }
+  }
 
   if (!input.title.trim()) return { ok: false as const, error: "A proposal needs a title." };
   if (!input.summary.trim()) return { ok: false as const, error: "A proposal needs a one-line summary." };
@@ -116,13 +152,14 @@ export async function submitProposal(input: ProposalInput) {
   const { data: proposal, error } = await supabase
     .from("proposals")
     .insert({
-      group_id: group.id,
+      group_id: groupId,
       author_id: userId,
       title: input.title.trim(),
       summary: input.summary.trim(),
       body: input.body.trim(),
       category: input.category.trim() || null,
-      scope: input.scope,
+      scope,
+      place,
       budget_amount: budget,
       term_days: term,
       status: "in_review",
@@ -133,11 +170,11 @@ export async function submitProposal(input: ProposalInput) {
   if (error) return { ok: false as const, error: error.message };
 
   await ledger().record({
-    groupId: group.id,
+    groupId,
     kind: "proposal.submitted",
     subjectType: "proposal",
     subjectId: proposal.id,
-    payload: { title: input.title.trim() },
+    payload: { title: input.title.trim(), scope, place },
   });
 
   revalidatePath("/connection/proposals");
@@ -176,27 +213,43 @@ export async function runReview(proposalId: string) {
     name: string;
     purpose: string | null;
     threshold_values_floor: number;
-  };
+  } | null;
 
-  // The rubric is the group's own values — the union of what its members have
-  // named and chosen to share. A group that has named nothing gets scored on
-  // nothing, which is the honest outcome.
-  const { data: members } = await supabase
-    .from("group_members")
-    .select("profile_id")
-    .eq("group_id", group.id);
+  // The rubric.
+  //
+  // A group has one: the union of what its members have named and chosen to
+  // share. A place does not — there is no agreed set of values for a street,
+  // and inventing one would be the system telling people what they hold. So at
+  // place scale the rubric is built from whoever has actually turned up: the
+  // author, and anyone who has written in the deliberation. It starts thin and
+  // thickens, which is the honest shape of it.
+  let rubricIds: string[];
 
-  const memberIds = (members ?? []).map((m) => m.profile_id);
+  if (group) {
+    const { data: members } = await supabase
+      .from("group_members")
+      .select("profile_id")
+      .eq("group_id", group.id);
+    rubricIds = (members ?? []).map((m) => m.profile_id);
+  } else {
+    const { data: voices } = await supabase
+      .from("deliberation_comments")
+      .select("author_id")
+      .eq("proposal_id", proposalId);
+    rubricIds = Array.from(
+      new Set([proposal.author_id, ...(voices ?? []).map((v) => v.author_id)]),
+    );
+  }
 
   const { data: valueRows } = await supabase
     .from("profile_values")
     .select("name, definition, profile_id")
-    .in("profile_id", memberIds.length ? memberIds : ["00000000-0000-0000-0000-000000000000"]);
+    .in("profile_id", rubricIds.length ? rubricIds : ["00000000-0000-0000-0000-000000000000"]);
 
   const values = dedupeValues(valueRows ?? []);
 
-  const { data: memory } = await supabase.rpc("related_decisions", {
-    p_group_id: group.id,
+  const { data: memory } = await supabase.rpc("related_decisions_for", {
+    p_proposal_id: proposalId,
     p_values: values.map((v) => v.name),
     p_limit: 6,
   });
@@ -213,8 +266,8 @@ export async function runReview(proposalId: string) {
           : null,
         termDays: proposal.term_days,
       },
-      groupName: group.name,
-      groupPurpose: group.purpose,
+      groupName: group?.name ?? placeName(proposal),
+      groupPurpose: group?.purpose ?? null,
       values,
       memory: (memory ?? []).map(
         (m: {
@@ -270,7 +323,8 @@ export async function runReview(proposalId: string) {
 
     // Critical flags: any value below the group's floor, and any high-severity
     // risk. Each needs a written answer before the proposal can pass.
-    const floor = Number(group.threshold_values_floor);
+    // A place has no group to set a floor, so the protocol default stands.
+    const floor = group ? Number(group.threshold_values_floor) : 0.3;
     const flags: {
       proposal_id: string;
       review_id: string;
@@ -315,7 +369,7 @@ export async function runReview(proposalId: string) {
       .eq("status", "in_review");
 
     await ledger().record({
-      groupId: group.id,
+      groupId: proposal.group_id,
       kind: "proposal.reviewed",
       subjectType: "proposal",
       subjectId: proposalId,
@@ -347,7 +401,7 @@ export async function runReview(proposalId: string) {
  * be closed properly instead.
  */
 export async function withdrawProposal(proposalId: string) {
-  const { userId, group } = await requireGroup();
+  const { userId } = await requireSession();
   const supabase = await createClient();
 
   const { count } = await supabase
@@ -371,8 +425,14 @@ export async function withdrawProposal(proposalId: string) {
 
   if (error) return { ok: false as const, error: error.message };
 
+  const { data: withdrawn } = await supabase
+    .from("proposals")
+    .select("group_id")
+    .eq("id", proposalId)
+    .maybeSingle();
+
   await ledger().record({
-    groupId: group.id,
+    groupId: withdrawn?.group_id ?? null,
     kind: "proposal.decided",
     subjectType: "proposal",
     subjectId: proposalId,
@@ -476,7 +536,7 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
     const violations = readings.filter((r) => r.verdict === "violation").length;
 
     await ledger().record({
-      groupId: group.id,
+      groupId: proposal.group_id,
       kind: "proposal.reviewed",
       subjectType: "proposal",
       subjectId: proposalId,
@@ -527,7 +587,7 @@ export async function challengeLawReading(
   proposalId: string,
   argument: string,
 ) {
-  const { userId } = await requireGroup();
+  const { userId } = await requireSession();
   const supabase = await createClient();
 
   if (argument.trim().length < 40) {
@@ -635,7 +695,7 @@ export async function answerFlag(flagId: string, resolution: string) {
  * cannot make a proposal pass that the rule says failed.
  */
 export async function closeProposal(proposalId: string) {
-  const { group } = await requireGroup();
+  await requireSession();
   const supabase = await createClient();
 
   const { data: outcome, error } = await supabase.rpc("close_proposal", {
@@ -648,7 +708,7 @@ export async function closeProposal(proposalId: string) {
   // engage with them.
   const [{ data: proposal }, { data: reviews }, { data: comments }, { data: flags }, { data: decision }] =
     await Promise.all([
-      supabase.from("proposals").select("*").eq("id", proposalId).single(),
+      supabase.from("proposals").select("*, groups(threshold_alignment, threshold_participation)").eq("id", proposalId).single(),
       supabase
         .from("proposal_reviews")
         .select("summary")
@@ -665,6 +725,14 @@ export async function closeProposal(proposalId: string) {
       supabase.from("decisions").select("*").eq("proposal_id", proposalId).single(),
     ]);
 
+  const { data: rule } = proposal!.group_id
+    ? { data: null }
+    : await supabase
+        .from("scope_rules")
+        .select("*")
+        .eq("scope", proposal!.scope)
+        .maybeSingle();
+
   try {
     const { rationale, prompt } = await writeRationale({
       title: proposal!.title,
@@ -676,10 +744,7 @@ export async function closeProposal(proposalId: string) {
       participation: decision?.participation ?? null,
       voters: decision?.voter_count ?? 0,
       members: decision?.member_count ?? 0,
-      thresholds: {
-        alignment: Number(group.threshold_alignment),
-        participation: Number(group.threshold_participation),
-      },
+      thresholds: closingThresholds(proposal, rule),
       reviewSummary: reviews?.[0]?.summary ?? null,
       comments: (comments ?? []).map((c) => ({
         author:
@@ -716,6 +781,38 @@ export async function closeProposal(proposalId: string) {
  * definition any member gave it. Two members who both named "Honesty" score
  * the proposal against one entry, not two.
  */
+/** What to call a proposal's address when it has no group. */
+function placeName(proposal: { scope: string; place: string | null }): string {
+  if (proposal.scope === "global") return "Everyone";
+  return proposal.place ?? "here";
+}
+
+/**
+ * The numbers the rule was applied with, for the rationale.
+ *
+ * A place has no register, so there is no participation share to meet and the
+ * threshold is zero — the floor it actually had to clear was a count of
+ * voices, which the decision row carries.
+ */
+function closingThresholds(
+  proposal: { group_id: string | null; groups?: unknown } | null,
+  rule: { threshold_alignment: number } | null,
+): { alignment: number; participation: number } {
+  const g = proposal?.groups as
+    | { threshold_alignment: number; threshold_participation: number }
+    | null
+    | undefined;
+
+  if (proposal?.group_id && g) {
+    return {
+      alignment: Number(g.threshold_alignment),
+      participation: Number(g.threshold_participation),
+    };
+  }
+
+  return { alignment: Number(rule?.threshold_alignment ?? 0.618), participation: 0 };
+}
+
 function dedupeValues(
   rows: { name: string; definition: string | null }[],
 ): { name: string; definition: string | null }[] {
@@ -749,7 +846,7 @@ export async function addNeed(
   quantity: string,
   unit: string,
 ) {
-  const { userId } = await requireGroup();
+  const { userId } = await requireSession();
   const supabase = await createClient();
 
   const n = Number(quantity);
@@ -780,7 +877,7 @@ export async function pledge(
   quantity: string,
   note: string,
 ) {
-  const { userId } = await requireGroup();
+  const { userId } = await requireSession();
   const supabase = await createClient();
 
   const n = Number(quantity);

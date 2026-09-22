@@ -1,9 +1,10 @@
 import Link from "next/link";
 
 import { CollectiveTabs } from "@/components/nav/CollectiveTabs";
+import { ScaleSelector } from "@/components/nav/ScaleSelector";
 import { Card, Empty, Page, PageTitle, SectionLabel } from "@/components/ui";
+import { addressOptions, requireAddress } from "@/lib/address";
 import { money, shortDate } from "@/lib/format";
-import { requireGroup } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type { ContributionRecord, Project, Reflection } from "@/lib/types";
 
@@ -20,27 +21,45 @@ export const metadata = { title: "Impact · Sovereign" };
  * is not a record.
  */
 export default async function ImpactPage() {
-  const { userId, group } = await requireGroup();
+  const session = await requireAddress();
+  const { userId, address } = session;
   const supabase = await createClient();
+
+  const projectQuery = supabase
+    .from("projects")
+    .select("*, proposals!inner(scope, group_id)");
 
   const [{ data: projectRows }, { data: reflectionRows }, { data: record }] =
     await Promise.all([
-      supabase.from("projects").select("*").eq("group_id", group.id),
+      address.kind === "group"
+        ? projectQuery.eq("group_id", address.group.id)
+        : projectQuery.is("group_id", null).eq("proposals.scope", address.scope),
       supabase
         .from("reflections")
-        .select("*, projects(title, proposal_id, group_id)")
+        .select("*, projects!inner(title, proposal_id, group_id, proposals!inner(scope))")
         .order("created_at", { ascending: false })
         .limit(30),
-      supabase.rpc("contribution_record", {
-        p_profile_id: userId,
-        p_group_id: group.id,
-      }),
+      // The contribution record is still a group question. At place scale
+      // there is no single circle to have a record within, and inventing one
+      // would be a reputation score by another name.
+      address.kind === "group"
+        ? supabase.rpc("contribution_record", {
+            p_profile_id: userId,
+            p_group_id: address.group.id,
+          })
+        : Promise.resolve({ data: null }),
     ]);
 
-  const projects = (projectRows ?? []) as Project[];
-  const reflections = (reflectionRows ?? []).filter(
-    (r) => (r.projects as unknown as { group_id: string } | null)?.group_id === group.id,
-  ) as unknown as (Reflection & {
+  const projects = (projectRows ?? []) as unknown as Project[];
+  const reflections = (reflectionRows ?? []).filter((r) => {
+    const p = r.projects as unknown as
+      | { group_id: string | null; proposals: { scope: string } | null }
+      | null;
+    if (!p) return false;
+    return address.kind === "group"
+      ? p.group_id === address.group.id
+      : p.group_id === null && p.proposals?.scope === address.scope;
+  }) as unknown as (Reflection & {
     projects: { title: string; proposal_id: string } | null;
   })[];
 
@@ -57,8 +76,16 @@ export default async function ImpactPage() {
 
   return (
     <Page>
-      <PageTitle sub={group.name}>Impact</PageTitle>
+      <PageTitle sub={address.label}>Impact</PageTitle>
       <CollectiveTabs />
+      <ScaleSelector
+        options={addressOptions(session)}
+        current={
+          address.kind === "group"
+            ? `group:${address.group.id}`
+            : `scope:${address.scope}`
+        }
+      />
 
       <section className="mb-10">
         <SectionLabel>Results</SectionLabel>
@@ -155,7 +182,9 @@ export default async function ImpactPage() {
 
       <section>
         <SectionLabel>The record itself</SectionLabel>
-        <LedgerCheck groupId={group.id} />
+        <LedgerCheck
+          groupId={address.kind === "group" ? address.group.id : null}
+        />
       </section>
     </Page>
   );

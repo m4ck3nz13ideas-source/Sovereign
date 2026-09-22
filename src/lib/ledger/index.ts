@@ -41,7 +41,7 @@ export type LedgerKind =
 
 export interface LedgerRecorder {
   record(args: {
-    groupId: string;
+    groupId: string | null;
     kind: LedgerKind;
     subjectType: "group" | "proposal" | "project" | "profile";
     subjectId: string;
@@ -49,7 +49,7 @@ export interface LedgerRecorder {
   }): Promise<void>;
 
   /** Replay the chain. `ok: false` means the record has been altered. */
-  verify(groupId: string): Promise<{ ok: boolean; checked: number; brokenAt: number | null }>;
+  verify(groupId: string | null): Promise<{ ok: boolean; checked: number; brokenAt: number | null }>;
 }
 
 /**
@@ -65,7 +65,7 @@ class PostgresLedger implements LedgerRecorder {
     subjectId,
     payload = {},
   }: {
-    groupId: string;
+    groupId: string | null;
     kind: LedgerKind;
     subjectType: string;
     subjectId: string;
@@ -87,7 +87,7 @@ class PostgresLedger implements LedgerRecorder {
     }
   }
 
-  async verify(groupId: string) {
+  async verify(groupId: string | null) {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("verify_ledger", { p_group_id: groupId });
     if (error) throw new Error(error.message);

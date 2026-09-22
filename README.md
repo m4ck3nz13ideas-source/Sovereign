@@ -4,9 +4,10 @@ A quiet place to think, and a way for a group to decide together.
 
 Two halves, one app. The **individual space** is yours alone: what you write,
 what you are working out, what you believe, and how that has changed. The
-**collective space** is shared with a group of people who know each other, and
-is where proposals are examined, responded to, decided, carried out, and
-honestly reflected on.
+**collective space** is where proposals are examined, responded to, decided,
+carried out, and honestly reflected on — by the people a proposal is actually
+addressed to, which is either a group who invited each other or everyone in a
+place.
 
 The first half never becomes the second unless you send it there.
 
@@ -33,7 +34,8 @@ of faith, a purpose, and what you keep returning to. Faith and purpose are
 revisable and never overwritten — the history stays, and stays private even
 when the current statement is shared.
 
-**Connection** is the collective, and the chain runs left to right:
+**Connection** is the collective, and the chain runs left to right, under a
+scale selector that says which circle you are looking at:
 
 ```
 Feed → Proposals → Decisions → Projects → Impact
@@ -45,7 +47,8 @@ The governance cycle from the whitepaper, in full:
 Propose → Align → Vote → Activate → Reflect
 ```
 
-**Propose** — anyone in the group writes one.
+**Propose** — anyone it concerns writes one, addressed to the lowest scale
+that can actually decide it.
 **Align** — the Truth Engine reads it against the ten Universal Laws, and the
 review layer scores it against the group's own values.
 **Vote** — resonance, three sliders, ratified at ≥ 0.618.
@@ -104,7 +107,29 @@ can read the rubric, at `/settings/prompts`.
 
 **The threshold is the golden ratio.** 0.618, as the whitepaper specifies, "so
 that consensus comes through harmony rather than dominance" — not a number
-chosen here.
+chosen here, and it does not move between scales.
+
+**Nobody has to be invited.** A proposal is addressed to a group, or to a
+place at one of five scales — Local, Regional, National, Continental, Global.
+Where you are is four lines you write on your profile, not a coordinate and
+not a lookup: a claim, checkable by the people standing next to you. You can
+read, answer and write proposals at any scale you are in, and you cannot
+propose for somewhere you are not. Subsidiarity is in the protocol, not in the
+advice: the compose screen asks for the lowest scale that can decide the
+thing.
+
+**A place has no register, so it has no participation share.** A group knows
+how many members it has. A city does not, and building that list would be a
+surveillance project rather than a governance one. So at place scale the share
+is replaced by a floor on how many people actually responded, and the
+interface says "4 voices, this scale needs 12" rather than inventing a
+percentage. Those floors live in `scope_rules`, readable by everyone at
+`/settings/place`.
+
+**A place has no steward, so the clock closes it.** A group's steward decides
+when deliberation ends. A place has nobody entitled to pick that moment, so a
+proposal carries a window set at submission and cannot be closed before it
+expires — and its address cannot be changed afterwards either.
 
 **No chain, no token, no ZK.** What the whitepaper puts on-chain, this puts
 behind interfaces in `src/lib/ledger` — with an append-only, hash-chained
@@ -141,6 +166,15 @@ supabase/migrations/0002_rls.sql            row-level security
 supabase/migrations/0003_functions.sql      the decision rule, the ledger, retrieval
 supabase/migrations/0004_universal_law.sql  the ten laws as a gate, and 0.618
 supabase/migrations/0005_activation.sql     needs, commitments, Activate
+supabase/migrations/0006_scope.sql          places, scales, the subsidiarity engine
+```
+
+`scope_rules` ships with local set to one voice and no waiting period, so a
+new instance can get through a decision on its first day. That is the first
+number to raise as people arrive:
+
+```sql
+update scope_rules set min_voices = 3, deliberation_days = 2 where scope = 'local';
 ```
 
 `supabase/reset.sql` clears a half-applied install — a migration that fails
@@ -173,8 +207,8 @@ URL when you have one. Magic links fail silently without this.
 npm run dev
 ```
 
-Sign in with your email, name three values you actually hold, and start a
-group.
+Sign in with your email, name three values you actually hold, and say where
+you are. A group is optional.
 
 ### Optional: the worked example
 
@@ -205,12 +239,14 @@ rather than a failed build.
 
 The rules that define this product live in Postgres, so that is where they are
 tested. `supabase/tests/` runs against any local Postgres as a non-superuser,
-so row-level security actually applies, and checks twenty-four things — that a
-member cannot read another member's journal, that resonance is refused before
-the review is read, that two unanswered flags fail a proposal whatever the
-numbers say, that a project cannot complete without a reflection, that an
-edited ledger row is detected. See `supabase/tests/README.md` for how to run
-it.
+so row-level security actually applies, and checks seventy-three things across
+four suites — that a member cannot read another member's journal, that
+resonance is refused before the review is read, that two unanswered flags fail
+a proposal whatever the numbers say, that a project cannot complete without a
+reflection, that an edited ledger row is detected, that someone in Totnes
+cannot read or answer a proposal addressed to Hackney, and that an author
+cannot re-aim a proposal once it is out. See `supabase/tests/README.md` for how
+to run it.
 
 ```bash
 createdb sovereign_test
@@ -219,7 +255,13 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0001_schema.sql \
   -f supabase/migrations/0002_rls.sql \
   -f supabase/migrations/0003_functions.sql \
-  -f supabase/tests/01_rules.sql
+  -f supabase/migrations/0004_universal_law.sql \
+  -f supabase/migrations/0005_activation.sql \
+  -f supabase/migrations/0006_scope.sql \
+  -f supabase/tests/01_rules.sql \
+  -f supabase/tests/02_universal_law.sql \
+  -f supabase/tests/03_activation.sql \
+  -f supabase/tests/04_scope.sql
 ```
 
 ---
@@ -232,10 +274,12 @@ network, no liquid democracy or delegation, no tiered transparency. No public
 feeds, public profiles or cross-group discovery. No screen-time features, no
 streaks, no notifications.
 
-The scope model is the notable gap: the whitepaper routes proposals
-geospatially — Local → Regional → National → Continental → Global, with
-subsidiarity in the protocol — and this still requires group membership
-instead. The enum carries the scopes; nothing yet acts on them.
+The subsidiarity engine here routes on place *names*, not geometry: there is
+no containment relation, so a regional proposal does not automatically reach
+everyone whose locality sits inside that region — each person states each
+scale themselves. A gazetteer would fix it and would also be the moment this
+starts holding real location data, which is a decision worth making
+deliberately rather than by default.
 
 Most of these are in the whitepaper, and several are good ideas. None of them
 help a group of eight decide something on a Thursday, which is the thing that

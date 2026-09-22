@@ -35,8 +35,8 @@ end
 $reset$;
 
 -- ------------------------------------------------------------
--- After this, apply the three migrations in supabase/migrations
--- in order, then run the grants at the bottom of this file.
+-- After this, apply every migration in supabase/migrations in
+-- order, then run the grants at the bottom of this file.
 -- ------------------------------------------------------------
 
 -- ============================================================
