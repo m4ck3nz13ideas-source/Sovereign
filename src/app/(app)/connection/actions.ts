@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { reviewProposal, writeRationale } from "@/lib/ai";
+import { auditAgainstLaw, reviewProposal, writeRationale } from "@/lib/ai";
 import { ledger } from "@/lib/ledger";
 import { requireGroup } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
@@ -142,8 +142,11 @@ export async function submitProposal(input: ProposalInput) {
 
   revalidatePath("/connection/proposals");
 
-  // The review runs immediately, but a failure here must not lose the
-  // proposal — it stays in_review and anyone can run the review from its page.
+  // Law first, then the review. A proposal the constitution forbids should not
+  // be scored against a group's values as though the question were open.
+  // Neither failure may lose the proposal: it stays in_review and any member
+  // can run either step from its page.
+  await runLawAudit(proposal.id).catch(() => undefined);
   await runReview(proposal.id).catch(() => undefined);
 
   return { ok: true as const, id: proposal.id };
@@ -379,6 +382,176 @@ export async function withdrawProposal(proposalId: string) {
   revalidatePath(`/connection/proposals/${proposalId}`);
   revalidatePath("/connection/proposals");
   return { ok: true as const };
+}
+
+/**
+ * Run the Universal Law audit.
+ *
+ * Runs on submission, before the review, because there is no point reading a
+ * proposal against a group's values if the constitution forbids it outright.
+ * A violation is not a low score — it ends the proposal, and nothing in this
+ * file offers a way to set it aside.
+ *
+ * `challengeId` re-runs the audit with a member's argument in front of the
+ * Truth Engine. The earlier readings are superseded rather than deleted: an
+ * audit that changed its mind should show that it did.
+ */
+export async function runLawAudit(proposalId: string, challengeId?: string) {
+  const supabase = await createClient();
+
+  const { data: proposal } = await supabase
+    .from("proposals")
+    .select("*, groups(id, name)")
+    .eq("id", proposalId)
+    .maybeSingle();
+
+  if (!proposal) return { ok: false as const, error: "No such proposal." };
+  const group = proposal.groups as unknown as { id: string; name: string };
+
+  let challenge: { law: string; previousVerdict: string; argument: string } | null = null;
+
+  if (challengeId) {
+    const { data: row } = await supabase
+      .from("law_challenges")
+      .select("argument, law_assessments(law_id, verdict)")
+      .eq("id", challengeId)
+      .maybeSingle();
+
+    const prior = row?.law_assessments as unknown as
+      | { law_id: string; verdict: string }
+      | null;
+
+    if (row && prior) {
+      challenge = {
+        law: prior.law_id,
+        previousVerdict: prior.verdict,
+        argument: row.argument,
+      };
+    }
+  }
+
+  try {
+    const { readings, model, prompt } = await auditAgainstLaw({
+      proposal: {
+        title: proposal.title,
+        summary: proposal.summary,
+        body: proposal.body,
+        scope: proposal.scope,
+        budget: proposal.budget_amount
+          ? `${proposal.budget_currency} ${proposal.budget_amount}`
+          : null,
+      },
+      groupName: group.name,
+      challenge,
+    });
+
+    // Supersede rather than delete, so a changed verdict leaves a trail.
+    await supabase
+      .from("law_assessments")
+      .update({ superseded_at: new Date().toISOString() })
+      .eq("proposal_id", proposalId)
+      .is("superseded_at", null);
+
+    const { error } = await supabase.from("law_assessments").insert(
+      readings.map((r) => ({
+        proposal_id: proposalId,
+        law_id: r.law_id,
+        verdict: r.verdict,
+        reasoning: r.reasoning,
+        prompt_id: prompt.id,
+        prompt_version: prompt.version,
+        model,
+      })),
+    );
+
+    if (error) return { ok: false as const, error: error.message };
+
+    if (challengeId) {
+      await supabase
+        .from("law_challenges")
+        .update({ answered_at: new Date().toISOString() })
+        .eq("id", challengeId);
+    }
+
+    const violations = readings.filter((r) => r.verdict === "violation").length;
+
+    await ledger().record({
+      groupId: group.id,
+      kind: "proposal.reviewed",
+      subjectType: "proposal",
+      subjectId: proposalId,
+      payload: {
+        stage: "law_audit",
+        prompt_version: prompt.version,
+        model,
+        violations,
+        challenged: Boolean(challengeId),
+      },
+    });
+
+    revalidatePath(`/connection/proposals/${proposalId}`);
+    revalidatePath("/connection/proposals");
+    return { ok: true as const, violations };
+  } catch (e) {
+    return {
+      ok: false as const,
+      error: e instanceof Error ? e.message : "The law audit could not be produced.",
+    };
+  }
+}
+
+/** Answer a tension. A violation cannot be answered — only challenged. */
+export async function answerLawTension(assessmentId: string, resolution: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("resolve_law_tension", {
+    p_assessment_id: assessmentId,
+    p_resolution: resolution,
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath("/connection/proposals", "layout");
+  return { ok: true as const };
+}
+
+/**
+ * Challenge a reading.
+ *
+ * The Truth Engine's verdicts cannot be overridden, which means a wrong one
+ * would kill a proposal with no recourse. §6.4 of the paper gives citizens a
+ * challenge mechanism, and this is it: the argument goes back to the audit,
+ * which must address it. It may well not change its mind.
+ */
+export async function challengeLawReading(
+  assessmentId: string,
+  proposalId: string,
+  argument: string,
+) {
+  const { userId } = await requireGroup();
+  const supabase = await createClient();
+
+  if (argument.trim().length < 40) {
+    return {
+      ok: false as const,
+      error:
+        "Make the argument properly — what the audit got wrong, and why the law does not reach this proposal.",
+    };
+  }
+
+  const { data: challenge, error } = await supabase
+    .from("law_challenges")
+    .insert({
+      assessment_id: assessmentId,
+      proposal_id: proposalId,
+      challenger_id: userId,
+      argument: argument.trim(),
+    })
+    .select("id")
+    .single();
+
+  if (error) return { ok: false as const, error: error.message };
+
+  return runLawAudit(proposalId, challenge.id);
 }
 
 /** Mark the review read. The resonance sliders stay inert until this happens. */

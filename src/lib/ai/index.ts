@@ -1,17 +1,21 @@
 import "server-only";
 
 import { env } from "@/lib/env";
+import { UNIVERSAL_LAWS } from "@/lib/universal-law";
 
 import { AnthropicProvider } from "./anthropic";
 import { MockProvider } from "./mock";
 import {
   DECISION_RATIONALE,
+  LAW_AUDIT,
   PROPOSAL_REVIEW,
   REFLECTION_PROMPT,
   SYNTHESIS_PROMPT,
 } from "./prompts";
 import { AiError, type AiProvider } from "./provider";
 import {
+  lawAuditJsonSchema,
+  lawAuditSchema,
   rationaleJsonSchema,
   rationaleSchema,
   reflectionJsonSchema,
@@ -20,6 +24,7 @@ import {
   reviewSchema,
   synthesisJsonSchema,
   synthesisSchema,
+  type LawAuditOutput,
   type ReflectionOutput,
   type ReviewOutput,
   type SynthesisOutput,
@@ -129,6 +134,71 @@ ${ctx.proposal.body}`;
   }
 
   return { review: parsed.data, model, prompt: PROPOSAL_REVIEW };
+}
+
+/**
+ * The Universal Law audit.
+ *
+ * The laws are sent with every call rather than assumed known, because the
+ * model must be reading the text that shipped with this build — not its
+ * memory of something similar. A challenge from a member is passed in and
+ * must be considered; it does not oblige a different answer.
+ */
+export async function auditAgainstLaw(ctx: {
+  proposal: { title: string; summary: string; body: string; scope: string; budget: string | null };
+  groupName: string;
+  /** A member's argument that a previous verdict was wrong. */
+  challenge?: { law: string; previousVerdict: string; argument: string } | null;
+}): Promise<{ readings: LawAuditOutput["readings"]; model: string; prompt: typeof LAW_AUDIT }> {
+  const laws = UNIVERSAL_LAWS.map(
+    (l) =>
+      `${l.ordinal}. ${l.name}\n   id: ${l.id}\n   "${l.text}"\n   a violation here looks like: ${l.violationLooksLike}`,
+  ).join("\n\n");
+
+  const challengeBlock = ctx.challenge
+    ? `\n\nA MEMBER HAS CHALLENGED AN EARLIER READING\n\nlaw: ${ctx.challenge.law}\nyour previous verdict: ${ctx.challenge.previousVerdict}\ntheir argument:\n${ctx.challenge.argument}\n\nConsider it seriously and address it in your reasoning for that law. It does not oblige you to change your verdict — if the law still says what it said, say so and explain why their argument does not reach it. Changing a verdict because someone objected, rather than because they were right, would make the audit worthless.`
+    : "";
+
+  const input = `THE TEN UNIVERSAL LAWS
+
+${laws}
+
+THE PROPOSAL
+group: ${ctx.groupName}
+scope: ${ctx.proposal.scope}
+title: ${ctx.proposal.title}
+summary: ${ctx.proposal.summary}
+budget: ${ctx.proposal.budget ?? "none stated"}
+
+${ctx.proposal.body}${challengeBlock}
+
+Return exactly ten readings, one per law, using the ids given above.`;
+
+  const { data, model } = await provider().complete({
+    prompt: LAW_AUDIT,
+    input,
+    schema: lawAuditJsonSchema as unknown as Record<string, unknown>,
+    schemaName: "record_law_audit",
+    maxTokens: 4000,
+  });
+
+  const parsed = lawAuditSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new AiError(`The law audit did not match the expected shape: ${parsed.error.message}`);
+  }
+
+  // Every law must be present exactly once. A model that returns ten readings
+  // covering nine laws would otherwise leave one unexamined while law_standing()
+  // reported a complete audit.
+  const seen = new Set(parsed.data.readings.map((r) => r.law_id));
+  const missing = UNIVERSAL_LAWS.filter((l) => !seen.has(l.id));
+  if (missing.length) {
+    throw new AiError(
+      `The audit did not cover: ${missing.map((l) => l.name).join(", ")}.`,
+    );
+  }
+
+  return { readings: parsed.data.readings, model, prompt: LAW_AUDIT };
 }
 
 export interface RationaleContext {

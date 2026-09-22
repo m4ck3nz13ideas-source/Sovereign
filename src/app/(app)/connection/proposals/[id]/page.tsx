@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   Decision,
   DeliberationComment,
+  LawAssessment,
+  LawStanding,
   Proposal,
   ProposalFlag,
   ResonanceSummary,
@@ -18,6 +20,7 @@ import type {
 import { AiLayer } from "./AiLayer";
 import { CloseButton } from "./CloseButton";
 import { Deliberation } from "./Deliberation";
+import { LawLayer } from "./LawLayer";
 import { FlagList } from "./FlagList";
 import { Outcome } from "./Outcome";
 import { RunReview } from "./RunReview";
@@ -66,6 +69,8 @@ export default async function ProposalPage({
     { data: summaryRows },
     { data: decisionRow },
     { data: voteRows },
+    { data: lawRows },
+    { data: standingRows },
   ] = await Promise.all([
     supabase
       .from("proposal_reviews")
@@ -101,6 +106,12 @@ export default async function ProposalPage({
       .from("resonance_votes")
       .select("*, profiles(display_name)")
       .eq("proposal_id", id),
+    supabase
+      .from("law_assessments")
+      .select("*, profiles:resolved_by(display_name)")
+      .eq("proposal_id", id)
+      .is("superseded_at", null),
+    supabase.rpc("law_standing", { p_proposal_id: id }),
   ]);
 
   const review = reviewRows?.[0] ? asReview(reviewRows[0]) : null;
@@ -114,6 +125,15 @@ export default async function ProposalPage({
     | ResonanceSummary
     | undefined;
   const decision = decisionRow as Decision | null;
+
+  // Ordered by the constitution, not by when the model happened to emit them.
+  const lawAssessments = ((lawRows ?? []) as unknown as (LawAssessment & {
+    profiles: { display_name: string } | null;
+  })[]);
+  const standing = (Array.isArray(standingRows) ? standingRows[0] : standingRows) as
+    | LawStanding
+    | undefined;
+  const unlawful = Boolean(standing && (standing.violations > 0 || !standing.audited));
 
   const unanswered = flags.filter((f) => !f.resolved_at);
   const hasRead = Boolean(readRow);
@@ -187,6 +207,23 @@ export default async function ProposalPage({
         <Prose>{proposal.body}</Prose>
       </section>
 
+      {/* ------------------------------------------------------ UNIVERSAL LAW */}
+      {/* Above everything else on the page, because it is above everything
+          else in the architecture: a violation ends the proposal regardless
+          of what the review found or how the group resonated. */}
+      <section className="mb-10">
+        <SectionLabel
+          right={
+            standing?.audited
+              ? `${standing.laws_assessed} of 10`
+              : undefined
+          }
+        >
+          Universal Law
+        </SectionLabel>
+        <LawLayer proposalId={id} assessments={lawAssessments} open={open} />
+      </section>
+
       {/* -------------------------------------------------------- AI LAYER */}
       <section className="mb-10">
         <SectionLabel
@@ -243,6 +280,7 @@ export default async function ProposalPage({
         <SectionLabel>Resonance</SectionLabel>
         <ResonancePanel
           proposalId={id}
+          unlawful={unlawful}
           hasReview={Boolean(review)}
           hasRead={hasRead}
           open={open}
@@ -289,6 +327,8 @@ export default async function ProposalPage({
           <div className="mt-4">
             <CloseButton
               proposalId={id}
+              lawViolations={standing?.violations ?? 0}
+              lawTensions={standing?.unanswered_tensions ?? 0}
               unanswered={unanswered.length}
               voters={summary?.voter_count ?? 0}
               members={summary?.member_count ?? 0}

@@ -39,6 +39,25 @@ export default async function SettingsPage() {
 
       <PageTitle>Settings</PageTitle>
 
+      <section className="mb-10">
+        <SectionLabel right={<Tag tone="gold">constitutional</Tag>}>
+          Universal Law
+        </SectionLabel>
+        <Card>
+          <p className="text-[0.95rem] leading-relaxed text-paper-dim">
+            Ten laws sit above every decision made here. A proposal that
+            violates one cannot pass, whatever the resonance says and whatever a
+            steward does.
+          </p>
+          <Link
+            href="/settings/law"
+            className="smallcaps mt-3 inline-block text-[11px] text-gold hover:underline"
+          >
+            Read the ten laws →
+          </Link>
+        </Card>
+      </section>
+
       {group ? (
         <>
           <section className="mb-10">
@@ -114,7 +133,7 @@ export default async function SettingsPage() {
             href="/settings/prompts"
             className="smallcaps mt-3 inline-block text-[11px] text-gold hover:underline"
           >
-            Read the four prompts →
+            Read the prompts →
           </Link>
         </Card>
       </section>

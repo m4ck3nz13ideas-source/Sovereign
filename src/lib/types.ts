@@ -215,6 +215,48 @@ export interface ResonanceSummary {
   revealed: boolean;
 }
 
+/* ---------------------------------------------------------------------------
+   Universal Law — the constitutional layer.
+   The laws themselves are in src/lib/universal-law.ts; these are the records
+   of a proposal being read against them.
+--------------------------------------------------------------------------- */
+
+export interface LawAssessment {
+  id: string;
+  proposal_id: string;
+  review_id: string | null;
+  law_id: string;
+  verdict: "aligned" | "tension" | "violation";
+  reasoning: string;
+  resolution: string | null;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  superseded_at: string | null;
+  prompt_id: string;
+  prompt_version: string;
+  model: string;
+  created_at: string;
+}
+
+export interface LawChallenge {
+  id: string;
+  assessment_id: string;
+  proposal_id: string;
+  challenger_id: string;
+  argument: string;
+  answered_at: string | null;
+  created_at: string;
+}
+
+/** What law_standing() returns: everything between a proposal and lawfulness. */
+export interface LawStanding {
+  audited: boolean;
+  laws_assessed: number;
+  violations: number;
+  unanswered_tensions: number;
+  lawful: boolean;
+}
+
 export interface Decision {
   id: string;
   proposal_id: string;

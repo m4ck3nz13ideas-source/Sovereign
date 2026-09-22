@@ -68,7 +68,7 @@ export default async function PromptsPage() {
       </div>
 
       <p className="mt-8 text-xs leading-relaxed text-paper-faint">
-        Changing a rubric means bumping its version in{" "}
+        The Universal Law audit is first because its verdicts invalidate rather than advise. Changing a rubric means bumping its version in{" "}
         <code className="text-paper-dim">src/lib/ai/prompts.ts</code>, never
         editing it in place. Artefacts already written keep pointing at the
         wording that produced them, so an old score never silently acquires a

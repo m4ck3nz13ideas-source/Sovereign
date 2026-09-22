@@ -25,6 +25,8 @@ export class MockProvider implements AiProvider {
     const text = input.toLowerCase();
 
     switch (schemaName) {
+      case "record_law_audit":
+        return { data: this.lawAudit(input), model: "mock" };
       case "record_review":
         return { data: this.review(input, text), model: "mock" };
       case "record_rationale":
@@ -39,6 +41,34 @@ export class MockProvider implements AiProvider {
   }
 
   /* ----------------------------------------------------------------------- */
+
+  /**
+   * The offline Universal Law audit.
+   *
+   * It returns `aligned` for every law and says why in plain terms. That is a
+   * deliberate choice, not laziness: this reviewer cannot read, and a
+   * structural guess that returned `violation` would permanently invalidate a
+   * proposal on the strength of a regular expression. Under-blocking here is
+   * recoverable — someone sets a key and runs the audit again. Over-blocking
+   * is not, because the whole point of the law layer is that its verdicts
+   * cannot be overridden.
+   *
+   * Every reading says, in the text a member will read, that no model examined
+   * it. The UI marks the audit as unread as well, so nobody mistakes this for
+   * a constitutional clearance.
+   */
+  private lawAudit(input: string) {
+    const ids = [...input.matchAll(/^\s*id: ([a-z_]+)$/gm)].map((m) => m[1]);
+
+    return {
+      readings: ids.map((law_id) => ({
+        law_id,
+        verdict: "aligned" as const,
+        reasoning:
+          "No model read this proposal — ANTHROPIC_API_KEY is not set, so the offline reviewer answered. It cannot weigh a proposal against a law, so it records no objection rather than inventing one: a violation it guessed at would invalidate this proposal permanently, and nothing here could overturn it. Treat this as unexamined, not as cleared. Set a key and run the audit again before relying on it.",
+      })),
+    };
+  }
 
   private review(input: string, text: string) {
     // Values are passed to the prompt as "- <name>: <definition>" lines.

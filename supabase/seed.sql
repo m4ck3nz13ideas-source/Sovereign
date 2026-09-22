@@ -168,6 +168,49 @@ begin
   )
   returning id into v_review;
 
+  -- ----------------------------------------------- the Universal Law audit
+  -- Nine aligned and one tension, answered below — the example exists to show
+  -- the mechanism, and a clean sheet would show nothing.
+  insert into law_assessments (proposal_id, review_id, law_id, verdict, reasoning,
+                               prompt_id, prompt_version, model, created_at)
+  values
+    (v_proposal, v_review, 'sanctity_of_life', 'aligned',
+     'Renting a room engages this law only distantly. Nothing here destroys life or risks it.',
+     'law.audit', '1.0.0', 'example', now() - interval '94 days'),
+    (v_proposal, v_review, 'truth_and_transparency', 'aligned',
+     'The cost, the venue and the term are all stated plainly, and the author names what she is unsure about rather than hiding it.',
+     'law.audit', '1.0.0', 'example', now() - interval '94 days'),
+    (v_proposal, v_review, 'sovereignty_of_the_individual', 'aligned',
+     'Nobody is bound by this. Attendance stays a choice, and the proposal does not condition anyone''s standing in the group on paying.',
+     'law.audit', '1.0.0', 'example', now() - interval '94 days'),
+    (v_proposal, v_review, 'equity_and_justice', 'tension',
+     'The 44 pounds per head falls equally on people whose means are not equal, which advantages those who can absorb it. That is not privilege by design, but it is an unequal effect the proposal does not address. Answer it or change it.',
+     'law.audit', '1.0.0', 'example', now() - interval '94 days'),
+    (v_proposal, v_review, 'subsidiarity', 'aligned',
+     'A decision about where this group meets, made by this group. This is the right scale.',
+     'law.audit', '1.0.0', 'example', now() - interval '94 days'),
+    (v_proposal, v_review, 'reciprocity_and_mutual_care', 'aligned',
+     'What is taken in fees is returned in a reliable room and a lockable cupboard. Tom fronting the money is offered, not assumed.',
+     'law.audit', '1.0.0', 'example', now() - interval '94 days'),
+    (v_proposal, v_review, 'stewardship_of_earth', 'aligned',
+     'A room above a pub rather than a hall two streets away. No ecological dimension worth reporting.',
+     'law.audit', '1.0.0', 'example', now() - interval '94 days'),
+    (v_proposal, v_review, 'harmony_of_diversity', 'aligned',
+     'Nothing here requires uniformity or excludes a way of doing things. One member''s reasons for not coming turn out to matter, but the proposal does not cause that.',
+     'law.audit', '1.0.0', 'example', now() - interval '94 days'),
+    (v_proposal, v_review, 'right_use_of_power', 'aligned',
+     'The author is a steward proposing something she will pay for like everyone else. No asymmetry is being used to get agreement.',
+     'law.audit', '1.0.0', 'example', now() - interval '94 days'),
+    (v_proposal, v_review, 'continuous_evolution', 'aligned',
+     'A fixed term with an explicit decision point at the end. The group has written in its own chance to change its mind.',
+     'law.audit', '1.0.0', 'example', now() - interval '94 days');
+
+  update law_assessments
+     set resolution = 'Two places come out of the workshop fund, unnamed, so nobody has to ask. Halving the term to six weeks takes it from 44 pounds to 22.',
+         resolved_at = now() - interval '91 days',
+         resolved_by = v_ruth
+   where proposal_id = v_proposal and law_id = 'equity_and_justice';
+
   -- ------------------------------------------------- the flags, and answers
   insert into proposal_flags (
     proposal_id, review_id, kind, label, severity, detail,

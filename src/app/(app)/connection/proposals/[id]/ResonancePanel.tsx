@@ -25,6 +25,7 @@ import { castResonance, markRead } from "../../actions";
  */
 export function ResonancePanel({
   proposalId,
+  unlawful,
   hasReview,
   hasRead,
   open,
@@ -32,6 +33,8 @@ export function ResonancePanel({
   summary,
 }: {
   proposalId: string;
+  /** A violation of Universal Law, or no audit at all. Closes the sliders. */
+  unlawful: boolean;
   hasReview: boolean;
   hasRead: boolean;
   open: boolean;
@@ -48,12 +51,20 @@ export function ResonancePanel({
   const [saved, setSaved] = useState(false);
   const [pending, start] = useTransition();
 
-  const locked = !hasReview || !hasRead || !open;
+  const locked = unlawful || !hasReview || !hasRead || !open;
 
   return (
     <div className="space-y-4">
-      {/* The gate. Explicit, not implied. */}
-      {!hasReview ? (
+      {/* The gates, in the order the architecture applies them. Universal Law
+          first: there is no point asking how people feel about something that
+          cannot lawfully happen. */}
+      {unlawful ? (
+        <Empty>
+          Resonance is closed. Either this proposal violates a Universal Law, or
+          it has not been audited against them yet — and the group is not asked
+          to weigh in on something the constitution has not cleared.
+        </Empty>
+      ) : !hasReview ? (
         <Empty>
           Resonance opens when the review lands. Nobody is asked to respond to
           something that has not been read.
@@ -62,7 +73,7 @@ export function ResonancePanel({
         <ReadGate proposalId={proposalId} />
       ) : null}
 
-      {hasReview && hasRead && open ? (
+      {!unlawful && hasReview && hasRead && open ? (
         <Card>
           <div className="space-y-6">
             {RESONANCE_DIMENSIONS.map((dim) => (

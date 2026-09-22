@@ -45,6 +45,16 @@ declare
   passes int := 0;
   fails  int := 0;
 
+  -- Since 0004, close_proposal() refuses a proposal that has not been read
+  -- against Universal Law. These tests are about the resonance rules, so they
+  -- clear the law gate explicitly and 02_universal_law.sql covers the gate.
+  all_laws text[] := array[
+    'sanctity_of_life','truth_and_transparency','sovereignty_of_the_individual',
+    'equity_and_justice','subsidiarity','reciprocity_and_mutual_care',
+    'stewardship_of_earth','harmony_of_diversity','right_use_of_power',
+    'continuous_evolution'];
+  l text;
+
 begin
   -- tiny assertion helpers, inline
   -- (a real suite would use pgTAP; this is a smoke test that must not need one)
@@ -132,6 +142,12 @@ begin
     '["Who is liable?"]'::jsonb, '[]'::jsonb, 'A reading.'
   ) returning id into rid;
 
+  foreach l in array all_laws loop
+    insert into law_assessments (proposal_id, review_id, law_id, verdict, reasoning,
+                                 prompt_id, prompt_version, model)
+    values (pid, rid, l, 'aligned', 'cleared for this test', 'law.audit', '1.0.0', 'test');
+  end loop;
+
   update proposals set status = 'in_deliberation' where id = pid;
 
   insert into proposal_flags (proposal_id, review_id, kind, label, severity, detail)
@@ -212,6 +228,12 @@ begin
     pid, 'proposal.review', '1.2.0', 'test', 0.85, 0.7, 0.8, 0.7,
     '{"Hospitality": 0.62, "Restraint": 0.71}'::jsonb, 'Better.'
   ) returning id into rid;
+
+  foreach l in array all_laws loop
+    insert into law_assessments (proposal_id, review_id, law_id, verdict, reasoning,
+                                 prompt_id, prompt_version, model)
+    values (pid, rid, l, 'aligned', 'cleared for this test', 'law.audit', '1.0.0', 'test');
+  end loop;
 
   update proposals set status = 'in_deliberation' where id = pid;
 

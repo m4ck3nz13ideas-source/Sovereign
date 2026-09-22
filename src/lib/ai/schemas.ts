@@ -32,6 +32,27 @@ export const reviewSchema = z.object({
 
 export type ReviewOutput = z.infer<typeof reviewSchema>;
 
+/**
+ * The Universal Law audit.
+ *
+ * Exactly ten readings, one per law, is enforced here rather than trusted:
+ * a nine-law audit would silently leave a law unexamined while looking
+ * complete, and law_standing() would call it lawful.
+ */
+export const lawAuditSchema = z.object({
+  readings: z
+    .array(
+      z.object({
+        law_id: z.string().min(1),
+        verdict: z.enum(["aligned", "tension", "violation"]),
+        reasoning: z.string().min(1),
+      }),
+    )
+    .length(10),
+});
+
+export type LawAuditOutput = z.infer<typeof lawAuditSchema>;
+
 export const rationaleSchema = z.object({
   rationale: z.string().min(1),
 });
@@ -105,6 +126,38 @@ export const reviewJsonSchema = {
       items: { type: "string" },
     },
     summary: { type: "string" },
+  },
+} as const;
+
+export const lawAuditJsonSchema = {
+  type: "object",
+  required: ["readings"],
+  properties: {
+    readings: {
+      type: "array",
+      minItems: 10,
+      maxItems: 10,
+      description: "One reading per Universal Law, all ten, in the order given.",
+      items: {
+        type: "object",
+        required: ["law_id", "verdict", "reasoning"],
+        properties: {
+          law_id: {
+            type: "string",
+            description: "The law's id, exactly as given in the prompt.",
+          },
+          verdict: {
+            type: "string",
+            enum: ["aligned", "tension", "violation"],
+          },
+          reasoning: {
+            type: "string",
+            description:
+              "One paragraph. What in the proposal, against what part of the law.",
+          },
+        },
+      },
+    },
   },
 } as const;
 

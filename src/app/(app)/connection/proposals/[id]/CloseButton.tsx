@@ -15,12 +15,18 @@ import { closeProposal } from "../../actions";
  */
 export function CloseButton({
   proposalId,
+  lawViolations,
+  lawTensions,
   unanswered,
   voters,
   members,
   thresholds,
 }: {
   proposalId: string;
+  /** Violations of Universal Law. Any at all and the proposal cannot pass. */
+  lawViolations: number;
+  /** Tensions left unanswered. Same effect, but answerable. */
+  lawTensions: number;
   unanswered: number;
   voters: number;
   members: number;
@@ -33,7 +39,8 @@ export function CloseButton({
   const participation = members > 0 ? voters / members : 0;
   const participationShort = participation < thresholds.participation;
 
-  const willFail = unanswered > 0 || participationShort;
+  const willFail =
+    lawViolations > 0 || lawTensions > 0 || unanswered > 0 || participationShort;
 
   if (!confirming) {
     return (
@@ -48,6 +55,16 @@ export function CloseButton({
       <h3 className="font-serif text-lg text-paper">Close it now?</h3>
 
       <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-paper-dim">
+        <li className={lawViolations > 0 ? "text-alarm" : undefined}>
+          {lawViolations === 0
+            ? "No violation of Universal Law"
+            : `${lawViolations} violation${lawViolations === 1 ? "" : "s"} of Universal Law — this cannot pass, and closing it now records that`}
+        </li>
+        <li className={lawTensions > 0 ? "text-alarm" : undefined}>
+          {lawTensions === 0
+            ? "No unanswered tension with Universal Law"
+            : `${lawTensions} unanswered tension${lawTensions === 1 ? "" : "s"} with Universal Law`}
+        </li>
         <li>
           {voters} of {members} responded ({participation.toFixed(2)}), threshold{" "}
           {thresholds.participation.toFixed(2)}
