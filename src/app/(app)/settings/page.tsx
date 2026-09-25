@@ -6,10 +6,12 @@ import { identity, treasury } from "@/lib/ledger";
 import { isSteward, requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { shortDate } from "@/lib/format";
+import { THEMES, currentTheme } from "@/lib/theme";
 
 import { GroupPanel } from "./GroupPanel";
 import { InvitePanel } from "./InvitePanel";
 import { SignOutButton } from "./SignOutButton";
+import { ThemePanel } from "./ThemePanel";
 import { ThresholdPanel } from "./ThresholdPanel";
 
 export const metadata = { title: "Settings · Sovereign" };
@@ -17,6 +19,7 @@ export const metadata = { title: "Settings · Sovereign" };
 export default async function SettingsPage() {
   const { group, groups } = await requireSession();
   const supabase = await createClient();
+  const theme = await currentTheme();
 
   const { data: members } = group
     ? await supabase
@@ -56,6 +59,16 @@ export default async function SettingsPage() {
             Read the ten laws →
           </Link>
         </Card>
+      </section>
+
+      <section className="mb-10">
+        <SectionLabel>Appearance</SectionLabel>
+        <div className="overflow-hidden rounded-card border border-line bg-surface-soft py-1">
+          <ThemePanel current={theme} options={THEMES} />
+          <p className="px-5 pb-3 text-[0.8125rem] leading-relaxed text-paper-faint">
+            System follows your phone, including when it changes at dusk.
+          </p>
+        </div>
       </section>
 
       <section className="mb-10">

@@ -83,7 +83,7 @@ export function TopBar({
   children?: ReactNode;
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-ink/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-line bg-veil backdrop-blur-xl">
       <div className="flex h-12 items-center gap-1 px-2">
         {back ? (
           <Link

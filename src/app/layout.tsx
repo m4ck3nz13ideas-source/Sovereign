@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
+import { currentTheme } from "@/lib/theme";
+
 /**
  * Fonts are self-hosted rather than loaded from Google.
  *
@@ -28,17 +30,30 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0d0d0f",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+/**
+ * The theme is decided here, on the server, from a cookie.
+ *
+ * No attribute means follow the device. An explicit choice becomes
+ * `data-theme`, which sets `color-scheme` and flips every token in
+ * globals.css. Doing it in the markup rather than in a script is the whole
+ * point: a theme applied after paint is a white flash on a black app.
+ */
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const theme = await currentTheme();
+
   return (
-    <html lang="en">
+    <html lang="en" data-theme={theme === "system" ? undefined : theme}>
       <body className="min-h-dvh bg-ink text-paper antialiased">{children}</body>
     </html>
   );

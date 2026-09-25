@@ -3,7 +3,7 @@
 /* ---------------------------------------------------------------------------
    Sovereign design tokens
 
-   Pure black, white, one hot accent. The discipline is the point: with no
+   Black, white, one hot accent. The discipline is the point: with no
    photographs anywhere in this app, colour has to be earned rather than
    sprayed, so AMBER means one thing only — this is yours to act on. Red and
    green are functional state, not brand. Everything else is greyscale and
@@ -17,33 +17,49 @@
    attention. Rule 1 of the overview is "calm over noise — slow-thinking, not
    dopamine-driven", and it rules out engagement algorithms by name. The feel
    is a surface decision. The mechanics are not.
+
+   Two themes, written once. Every token is light-dark(light, dark), which
+   resolves against `color-scheme` — so the whole palette flips by changing one
+   property on <html>, and there is no second copy of the palette to drift out
+   of step with this one. `color-scheme` is set from a cookie on the server, so
+   the first paint is already the right one.
+
+   The amber is not the same amber in both. #ff9500 on white is around 2:1,
+   which is a colour you can see but not read; the light theme burns it down to
+   a hotter, darker orange that still reads as the same signal. An accent that
+   only works on black is a dark-mode app with a light-mode setting.
 --------------------------------------------------------------------------- */
 
 @theme {
-  /* Ground. Pure black — full-bleed content sits on nothing. */
-  --color-ink: #000000;
-  --color-ink-raised: #0c0c0c;
-  --color-surface: #161616;
-  --color-surface-soft: #0f0f0f;
-  --color-surface-lift: #212121;
-  --color-line: #262626;
-  --color-line-soft: #1a1a1a;
+  /* Ground. Pure black, or pure white — full-bleed content sits on nothing. */
+  --color-ink: light-dark(#ffffff, #000000);
+  --color-ink-raised: light-dark(#ffffff, #0c0c0c);
+  --color-surface: light-dark(#f2f2f2, #161616);
+  --color-surface-soft: light-dark(#f8f8f8, #0f0f0f);
+  --color-surface-lift: light-dark(#e6e6e6, #212121);
+  --color-line: light-dark(#e3e3e3, #262626);
+  --color-line-soft: light-dark(#ededed, #1a1a1a);
+
+  /* The ground, translucent, for the two bars that blur what passes under
+     them. A token rather than bg-ink/85 so the alpha is written once per
+     theme instead of mixed at use — white needs more of it than black does. */
+  --color-veil: light-dark(#ffffffd4, #000000d9);
 
   /* Text. Three levels and no more. */
-  --color-paper: #ffffff;
-  --color-paper-dim: #a8a8a8;
-  --color-paper-faint: #737373;
+  --color-paper: light-dark(#000000, #ffffff);
+  --color-paper-dim: light-dark(#575757, #a8a8a8);
+  --color-paper-faint: light-dark(#8a8a8a, #737373);
 
   /* THE accent. One colour, one meaning: this is yours to act on. */
-  --color-gold: #ff9500;
-  --color-gold-dim: #8a5200;
-  --color-gold-wash: #ff950014;
+  --color-gold: light-dark(#b25c00, #ff9500);
+  --color-gold-dim: light-dark(#e2a96a, #8a5200);
+  --color-gold-wash: light-dark(#b25c001f, #ff950014);
 
   /* State. Functional, never decorative, never used for emphasis. */
-  --color-alarm: #ff453a;
-  --color-alarm-wash: #ff453a14;
-  --color-calm: #32d74b;
-  --color-calm-wash: #32d74b14;
+  --color-alarm: light-dark(#c8102e, #ff453a);
+  --color-alarm-wash: light-dark(#c8102e1a, #ff453a14);
+  --color-calm: light-dark(#1d7a35, #32d74b);
+  --color-calm-wash: light-dark(#1d7a351a, #32d74b14);
 
   --font-serif: "Playfair Display Variable", Georgia, "Times New Roman", serif;
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -53,7 +69,18 @@
   --radius-pill: 999px;
 }
 
+/* No attribute means follow the device, and keep following it — a phone that
+   switches at dusk should take this with it. An attribute means the person
+   said otherwise, and that outranks the device until they say something else. */
 :root {
+  color-scheme: light dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
   color-scheme: dark;
 }
 
