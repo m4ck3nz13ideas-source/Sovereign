@@ -122,6 +122,11 @@ that matter are already load-bearing here in the negative: no counters framed
 as debts, no algorithmic feed, no reason to open the app that isn't a reason
 you already had. Adding a streak would undo that.
 
+**Ranking a feed by anything but what is blocked.** The attention queue sorts
+on what stands in the way, and that is the only ordering here that is not a
+judgement about whose proposal matters more. An "interesting" or "popular" cut
+would need engagement to exist, and the moment it exists people write for it.
+
 **Public profiles, cross-group discovery, a global feed.** A post reaches your
 group or your street, and nothing wider. Sovereign works because the circle is
 small enough that people know each other. A discovery surface turns it into a

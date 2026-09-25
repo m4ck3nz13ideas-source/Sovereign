@@ -87,6 +87,26 @@ export default async function ProposalPage({
 
   const rule = ruleRow as ScopeRule | null;
 
+  // The thread, both ways. A second attempt says what it came from; a proposal
+  // somebody has taken up again says so, so nobody reads a dead record as the
+  // current state of the question.
+  const [{ data: cameFrom }, { data: takenUp }] = await Promise.all([
+    proposal.supersedes
+      ? supabase
+          .from("proposals")
+          .select("id, title, status")
+          .eq("id", proposal.supersedes)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("proposals")
+      .select("id, title, status")
+      .eq("supersedes", id)
+      .order("submitted_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
   const thresholds = proposal.groups
     ? {
         alignment: Number(proposal.groups.threshold_alignment),
@@ -304,6 +324,36 @@ export default async function ProposalPage({
           ) : null}
         </p>
       </header>
+
+      {cameFrom || takenUp ? (
+        <div className="mb-8 rounded-card border border-line bg-surface-soft px-4 py-3">
+          {cameFrom ? (
+            <p className="text-sm leading-relaxed text-paper-dim">
+              Written from{" "}
+              <Link
+                href={`/connection/proposals/${(cameFrom as { id: string }).id}`}
+                className="text-gold hover:underline"
+              >
+                {(cameFrom as { title: string }).title}
+              </Link>
+              , which ran out of people rather than out of merit. It was
+              sharpened and audited again from scratch.
+            </p>
+          ) : null}
+          {takenUp ? (
+            <p className={`text-sm leading-relaxed text-paper-dim${cameFrom ? " mt-2" : ""}`}>
+              Taken up again as{" "}
+              <Link
+                href={`/connection/proposals/${(takenUp as { id: string }).id}`}
+                className="text-gold hover:underline"
+              >
+                {(takenUp as { title: string }).title}
+              </Link>
+              . This record stands as it was.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* --------------------------------------------------------- CONTEXT */}
       <section className="mb-10 space-y-7">

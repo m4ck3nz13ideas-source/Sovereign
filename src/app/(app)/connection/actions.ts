@@ -111,6 +111,8 @@ export interface ProposalInput {
   termDays: string;
   /** "group:<id>" or "scope:<scale>" — where this proposal is addressed. */
   address: string;
+  /** The dormant proposal this was written from, if it is a second attempt. */
+  supersedes?: string | null;
 }
 
 /** Where a draft is addressed, resolved once and used by both actions below. */
@@ -270,6 +272,7 @@ export async function submitProposal(input: ProposalInput) {
       category: input.category.trim() || null,
       scope,
       place,
+      supersedes: input.supersedes ?? null,
       budget_amount: budget,
       term_days: term,
       status: "in_review",
@@ -284,7 +287,12 @@ export async function submitProposal(input: ProposalInput) {
     kind: "proposal.submitted",
     subjectType: "proposal",
     subjectId: proposal.id,
-    payload: { title: input.title.trim(), scope, place },
+    payload: {
+      title: input.title.trim(),
+      scope,
+      place,
+      ...(input.supersedes ? { supersedes: input.supersedes } : {}),
+    },
   });
 
   revalidatePath("/connection/proposals");

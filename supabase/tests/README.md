@@ -6,7 +6,7 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Five suites, eighty-nine checks. Every one of them runs as a non-superuser,
+Six suites, a hundred and five checks. Every one of them runs as a non-superuser,
 so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
@@ -83,6 +83,22 @@ nothing about what a member can see.
 - An unattached reading is private to its author; an attached one is part of
   the record.
 
+### `06_discovery.sql` — sixteen checks
+
+- The attention queue leads with what is most blocked, not what is newest.
+- Every open proposal is in it exactly once, with a reason naming what blocks it.
+- One you have already answered sinks, and says it is waiting on other people.
+- Another street sees none of it.
+- A proposal that ran out of voices comes back as dormant.
+- **A proposal people read and declined never does.**
+- Taking one up writes a new proposal, and the original drops out of dormant.
+- A revival cannot be re-aimed at a different audience.
+- The signal feed carries the decisions, and only to the place they were made in.
+
+It raises `scope_rules.min_voices` for local at the top, as the owner, because
+the shipped rule is one voice and this suite is about what happens below the
+floor. It puts it back at the end.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -98,12 +114,14 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0005_activation.sql \
   -f supabase/migrations/0006_scope.sql \
   -f supabase/migrations/0007_readiness.sql \
+  -f supabase/migrations/0008_discovery.sql \
   -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
   -f supabase/tests/03_activation.sql \
   -f supabase/tests/04_scope.sql \
-  -f supabase/tests/05_readiness.sql
+  -f supabase/tests/05_readiness.sql \
+  -f supabase/tests/06_discovery.sql
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server

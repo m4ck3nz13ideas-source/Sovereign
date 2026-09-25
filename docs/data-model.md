@@ -176,6 +176,16 @@ and the old reading stays.
 unattached readings of this text, not the most recent. Asking again about the
 same words can only lower where they stand.
 
+### `proposals.supersedes`
+The thread back to the proposal a second attempt was written from. Nullable,
+self-referencing, `on delete set null` — losing the original should lose the
+link, not the attempt.
+
+`check_supersedes()` requires the same address, so taking one up again cannot
+move a proposal that failed in one place to a friendlier one and call it the
+same idea. Nothing else is inherited: the new proposal is sharpened and
+audited from scratch.
+
 ### `law_assessments`, `law_challenges`
 One row per law per audit, so an audit always covers all ten — a missing row
 means the audit did not finish, rather than "nothing to report". There is no
@@ -289,6 +299,9 @@ There is no repost, no follower graph, and no engagement count on the card.
 | `can_steward_proposal` | Author, or a steward of the group it belongs to |
 | `related_decisions_for` | Retrieval from the same address, not the same author |
 | `scope_counts` | What is open at each scale this person is in |
+| `attention_queue` | What is blocked here, and on whom — ordered by what blocks it |
+| `dormant_proposals` | Failed for want of people, never for want of merit |
+| `signal_feed` | Governance acts, straight off the ledger |
 
 ## Indexes
 

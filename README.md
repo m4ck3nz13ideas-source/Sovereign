@@ -82,6 +82,26 @@ actually go wrong, were alternatives weighed including doing nothing. It says
 plainly that no model read it. That is a real filter and it is the honest
 limit of a reader that cannot read.
 
+**The feed is ordered by what is blocked, not by what is new.** Connection
+opens on what is actually waiting on you, with the reason attached — not
+audited yet, a tension unanswered, you have not read the review, you have not
+responded — and everything you have already answered sinks. A feed sorted by
+recency asks everyone to read everything, which is how people stop reading
+anything.
+
+**A proposal that ran out of people comes back.** Not one that was read and
+declined — that was decided, and offering it back would be the system quietly
+asking for a different answer. But a proposal that never reached the floor of
+responses its scale requires, or that passed and then sat because nobody
+committed what it needed, appears under *Deserves another look*. Taking one up
+writes a new proposal from its words and nothing else: it is sharpened and
+audited again, because a clearance from one moment is not a clearance now. The
+new one records what it came from, and both ends of the thread say so.
+
+**What has happened is read off the ledger**, not assembled from the tables. A
+second, softer account of the same events is how a record starts disagreeing
+with itself.
+
 **Resonance is three sliders, not a vote.** Alignment, confidence and urgency,
 each 0–1. A yes/no collapses "I think this is wrong", "I have no idea" and "not
 now" into the same mark.
@@ -189,6 +209,7 @@ supabase/migrations/0004_universal_law.sql  the ten laws as a gate, and 0.618
 supabase/migrations/0005_activation.sql     needs, commitments, Activate
 supabase/migrations/0006_scope.sql          places, scales, the subsidiarity engine
 supabase/migrations/0007_readiness.sql      the six sections, and the gate on submitting
+supabase/migrations/0008_discovery.sql      the feed, dormant proposals, lineage
 ```
 
 `scope_rules` ships with local set to one voice and no waiting period, so a
@@ -261,14 +282,15 @@ rather than a failed build.
 
 The rules that define this product live in Postgres, so that is where they are
 tested. `supabase/tests/` runs against any local Postgres as a non-superuser,
-so row-level security actually applies, and checks eighty-nine things across
-five suites — that a member cannot read another member's journal, that
+so row-level security actually applies, and checks a hundred and five things
+across six suites — that a member cannot read another member's journal, that
 resonance is refused before the review is read, that two unanswered flags fail
 a proposal whatever the numbers say, that a project cannot complete without a
 reflection, that an edited ledger row is detected, that someone in Totnes
 cannot read or answer a proposal addressed to Hackney, and that an author
 cannot re-aim a proposal once it is out, that an unsharpened draft is refused
-and a sharpening of one text cannot be spent on another. See
+and a sharpening of one text cannot be spent on another, and that a proposal
+people read and declined is never offered back as dormant. See
 `supabase/tests/README.md` for how to run it.
 
 ```bash
@@ -282,12 +304,14 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0005_activation.sql \
   -f supabase/migrations/0006_scope.sql \
   -f supabase/migrations/0007_readiness.sql \
+  -f supabase/migrations/0008_discovery.sql \
   -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
   -f supabase/tests/03_activation.sql \
   -f supabase/tests/04_scope.sql \
-  -f supabase/tests/05_readiness.sql
+  -f supabase/tests/05_readiness.sql \
+  -f supabase/tests/06_discovery.sql
 ```
 
 ---

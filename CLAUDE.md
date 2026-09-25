@@ -38,7 +38,11 @@ on purpose, in a commit that says so.
     constraints; `bind_proposal_readiness()` refuses a submission without a
     reading of that exact body above 0.70. `body` is composed in exactly one
     place — `draftBody()` — because the hash is taken over it.
-12. **A place has no register and no steward.** So there is no participation
+12. **A declined proposal is never offered back.** `dormant_proposals()`
+    returns only what failed for want of people. If you find yourself widening
+    that filter, you are building a system that asks until it gets the answer
+    it wanted.
+13. **A place has no register and no steward.** So there is no participation
     share (a `min_voices` floor instead, and `participation` stays null) and
     nobody picks the closing moment (`closes_at` does). Do not fill either gap
     with a plausible-looking number.

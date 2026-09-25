@@ -25,6 +25,13 @@ const EMPTY = {
   termDays: "",
 };
 
+/** The compose form's own shape, without the id that identifies the original. */
+function stripId(t: typeof EMPTY & { id: string }): typeof EMPTY {
+  const rest = { ...t } as typeof EMPTY & { id?: string };
+  delete rest.id;
+  return rest;
+}
+
 type Sharpening = {
   sections: { section: string; ready: boolean; note: string; questions: string[] }[];
   readiness: number;
@@ -92,14 +99,25 @@ export function ComposeProposal({
   addresses,
   defaultAddress,
   unsetScopes,
+  takingUp,
 }: {
   addresses: { value: string; label: string; detail: string | null }[];
   defaultAddress: string;
   /** Scales this person has not said where they are, so cannot yet propose to. */
   unsetScopes: string[];
+  /**
+   * A dormant proposal being taken up again. Its words come across; nothing
+   * else does. The sharpening and the audit run again from scratch, and the
+   * new proposal records what it came from.
+   */
+  takingUp: (typeof EMPTY & { id: string }) | null;
 }) {
   const router = useRouter();
-  const [form, setForm] = useState({ ...EMPTY, address: defaultAddress });
+  const [form, setForm] = useState(
+    takingUp
+      ? { ...EMPTY, ...stripId(takingUp), address: defaultAddress }
+      : { ...EMPTY, address: defaultAddress },
+  );
   const [restored, setRestored] = useState(false);
   const [sharp, setSharp] = useState<Sharpening | null>(null);
   const [sharpOf, setSharpOf] = useState<string>("");
@@ -107,8 +125,11 @@ export function ComposeProposal({
   const [pending, start] = useTransition();
 
   // Reading browser storage has to wait for mount: the server cannot see it,
-  // so initialising state from it would desynchronise hydration.
+  // so initialising state from it would desynchronise hydration. A draft that
+  // is being taken up from a dormant proposal wins over a stored one — it was
+  // asked for explicitly, a moment ago.
   useEffect(() => {
+    if (takingUp) return;
     try {
       const saved = window.localStorage.getItem(DRAFT_KEY);
       if (saved) {
@@ -121,7 +142,7 @@ export function ComposeProposal({
     } catch {
       // A browser that refuses storage just means no draft recovery.
     }
-  }, []);
+  }, [takingUp]);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -157,7 +178,7 @@ export function ComposeProposal({
   function sharpen() {
     start(async () => {
       setError(null);
-      const r = await assessDraft(form);
+      const r = await assessDraft({ ...form, supersedes: takingUp?.id ?? null });
       if (!r.ok) {
         setError(r.error);
         return;
@@ -170,7 +191,7 @@ export function ComposeProposal({
   function submit() {
     start(async () => {
       setError(null);
-      const r = await submitProposal(form);
+      const r = await submitProposal({ ...form, supersedes: takingUp?.id ?? null });
       if (!r.ok) {
         setError(r.error);
         return;
@@ -200,6 +221,15 @@ export function ComposeProposal({
       {restored ? (
         <p className="smallcaps rounded-md border border-line bg-surface-soft px-3 py-2 text-[10px] text-paper-faint">
           a draft was waiting in this browser
+        </p>
+      ) : null}
+
+      {takingUp ? (
+        <p className="rounded-md border border-gold-dim bg-gold-wash px-3 py-2.5 text-sm leading-relaxed text-paper-dim">
+          This is a second attempt, and it starts from the first one&rsquo;s
+          words and nothing else. Whatever went wrong the first time — nobody
+          responded, or nobody committed what it needed — the fix goes in the
+          text, not in the record. It will be sharpened and audited again.
         </p>
       ) : null}
 

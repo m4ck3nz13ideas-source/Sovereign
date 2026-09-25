@@ -52,6 +52,8 @@ lives in a React component is a rule that a future refactor can quietly delete.
 | **A sharpening is bound to one text** | `body_sha256`, checked by the same trigger |
 | **Asking again cannot raise your score** | the trigger takes `min(readiness)`, not the latest |
 | **A submitted proposal's text is fixed** | `freeze_proposal_text()` trigger |
+| **A revival is put to the same people** | `check_supersedes()` trigger |
+| **A declined proposal is never offered back** | `dormant_proposals()` excludes anything that failed on merit |
 | No completion without reflection | `complete_project()` + a length check |
 | The ledger cannot be forged | No insert policy; `record_ledger_event()` only |
 
@@ -290,6 +292,53 @@ for more work costs the author ten minutes. So it is demanding about structure
 weighing doing nothing — and says plainly which of its objections come from
 reading and which from counting. Six of six clears the bar; five does not.
 
+## Discovery
+
+A place proposal needs a floor of real responses before it can pass. A proposal
+nobody finds gets none. So the feed is not presentation here — it is the
+difference between the loop running and stalling, and it is the reason this
+came straight after scope and readiness.
+
+Three functions, no new content type.
+
+**`attention_queue()`** returns the open proposals at an address with the
+reason each one is in front of you and a sort key. The ordering is the whole
+design: not audited (0), an unanswered tension (1), not reviewed (2), an
+unanswered flag (3), you have not read the review (4), you have not responded
+(5), waiting on other people (9). A feed sorted by recency asks everyone to
+read everything, and that is how people stop reading anything.
+
+The weight is a sort key and is never shown. It is not a priority score, it is
+not comparable between proposals beyond the ordering, and dressing it up as a
+number on the page would invite exactly that reading.
+
+**`dormant_proposals()`** returns proposals that failed for want of people
+rather than for want of merit. Two shapes qualify: failed with fewer responses
+than the scale required and everything else clean, or passed and never
+activated because nobody committed what it needed. A proposal carrying a
+violation, an unanswered flag, or a mean alignment below the threshold is
+excluded — it was considered and declined, and offering it back would be the
+system quietly asking for a different answer. Anything already taken up again
+drops out.
+
+**`signal_feed()`** reads governance acts off `ledger_events` rather than
+assembling them from the tables. The tables would give the same facts and a
+second, softer account of them, which is how a record starts disagreeing with
+itself.
+
+### Taking one up again
+
+Reviving writes a **new proposal**. That is the existing rule holding — a
+failed proposal is rewritten, not amended — and it means a second attempt goes
+through the sharpening pass and the law audit from scratch rather than
+inheriting a clearance from a different moment. `proposals.supersedes` is the
+thread back, and `check_supersedes()` requires the same address, so a revival
+cannot be a way to move a proposal that failed in one place to a friendlier
+one and call it the same idea.
+
+Both ends of the thread say so on the page. A record somebody has already
+carried forward should not read as the current state of the question.
+
 ## The AI layer
 
 `src/lib/ai/` is `server-only`. The key never reaches the browser, and the
@@ -381,7 +430,14 @@ projects (executing) ──────────► ledger: project.started
 reflections
 complete_project() ────────────► ledger: project.completed
    │
-   └──► read by related_decisions() on the next proposal
+   └──► read by related_decisions_for() on the next proposal
+
+ if it failed for want of people, not merit:
+   dormant_proposals() ──────────► "Deserves another look"
+      │ taken up
+      ▼
+   a NEW proposal, supersedes = the old one
+      └── sharpened and audited again from scratch
 ```
 
 ## Performance

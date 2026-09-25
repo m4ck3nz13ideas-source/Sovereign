@@ -2,24 +2,39 @@ import Link from "next/link";
 
 import { CollectiveTabs } from "@/components/nav/CollectiveTabs";
 import { ScaleSelector } from "@/components/nav/ScaleSelector";
-import { Empty, Page, PageTitle, SectionLabel, Tag } from "@/components/ui";
+import { Empty, LinkButton, Page, PageTitle, SectionLabel } from "@/components/ui";
 import { addressOptions, currentAddress } from "@/lib/address";
-import { ago, STATUS_LABEL } from "@/lib/format";
+import { ago } from "@/lib/format";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
-import type { Entry, Post, Proposal } from "@/lib/types";
+import type {
+  AttentionItem,
+  DormantProposal,
+  Entry,
+  Post,
+  SignalEvent,
+} from "@/lib/types";
 
+import { Attention, Dormant, Signal } from "./Discover";
 import { FeedItem } from "./FeedItem";
 import { ReadyToShare } from "./ReadyToShare";
 
 export const metadata = { title: "Connection · Sovereign" };
 
 /**
- * Connection — outward contribution: posting, reading others, engaging.
+ * Connection — the discovery layer, and then the people.
  *
- * Output banners from Launch sit in a thin strip above the feed. The feed
- * itself is warm and intellectual, not social-media frantic: no trending, no
- * algorithmic noise labels, no counts on anything but replies.
+ *   "Users see three types of content: active proposals, important updates,
+ *    verified knowledge. Purpose: help people discover important issues,
+ *    prevent overload, show signal over noise."
+ *
+ * The ordering is the argument. What is waiting on you comes first, with the
+ * reason attached, because a feed sorted by recency asks everyone to read
+ * everything and that is how people stop reading anything. Then what deserves
+ * another look. Then what actually happened, read off the ledger. Then the
+ * posts, which are the only part of this page that is social.
+ *
+ * Nothing is ranked by engagement. There is no engagement.
  */
 export default async function ConnectionPage() {
   const session = await requireSession();
@@ -27,7 +42,17 @@ export default async function ConnectionPage() {
   const address = await currentAddress(session);
   const supabase = await createClient();
 
-  const [{ data: ready }, { data: posts }, { data: open }] = await Promise.all([
+  const scope = address?.kind === "place" ? address.scope : null;
+  const groupId = address?.kind === "group" ? address.group.id : null;
+  const args = { p_group_id: groupId, p_scope: scope };
+
+  const [
+    { data: ready },
+    { data: posts },
+    { data: attention },
+    { data: dormant },
+    { data: signal },
+  ] = await Promise.all([
     supabase
       .from("entries")
       .select("*")
@@ -42,36 +67,30 @@ export default async function ConnectionPage() {
       .order("created_at", { ascending: false })
       .limit(40),
     address
-      ? (address.kind === "group"
-          ? supabase
-              .from("proposals")
-              .select("id, title, status, submitted_at")
-              .eq("group_id", address.group.id)
-          : supabase
-              .from("proposals")
-              .select("id, title, status, submitted_at")
-              .is("group_id", null)
-              .eq("scope", address.scope)
-        )
-          .in("status", ["in_review", "in_deliberation", "voting"])
-          .order("submitted_at", { ascending: false })
-          .limit(3)
-      : Promise.resolve({ data: [] as Proposal[] }),
+      ? supabase.rpc("attention_queue", args)
+      : Promise.resolve({ data: [] }),
+    address
+      ? supabase.rpc("dormant_proposals", { ...args, p_limit: 6 })
+      : Promise.resolve({ data: [] }),
+    address
+      ? supabase.rpc("signal_feed", { ...args, p_limit: 12 })
+      : Promise.resolve({ data: [] }),
   ]);
+
+  const queue = (attention ?? []) as AttentionItem[];
+  const sleeping = (dormant ?? []) as DormantProposal[];
+  const events = (signal ?? []) as SignalEvent[];
+
+  const here =
+    address?.kind === "group"
+      ? address.group.name
+      : address
+        ? (address.place ?? address.label)
+        : "Say where you are, and proposals will find you.";
 
   return (
     <Page>
-      <PageTitle
-        sub={
-          address
-            ? address.kind === "group"
-              ? address.group.name
-              : (address.place ?? address.label)
-            : "Say where you are, and proposals will find you."
-        }
-      >
-        Connection
-      </PageTitle>
+      <PageTitle sub={here}>Connection</PageTitle>
 
       <CollectiveTabs />
 
@@ -103,33 +122,37 @@ export default async function ConnectionPage() {
         </section>
       ) : null}
 
-      {open?.length ? (
-        <section className="mb-8">
-          <SectionLabel right={<Link href="/connection/proposals" className="hover:text-gold">all</Link>}>
-            {address?.kind === "group" ? "Waiting on the group" : "Waiting on a response"}
-          </SectionLabel>
-          <ul className="space-y-2">
-            {(open as Proposal[]).map((p) => (
-              <li key={p.id}>
-                <Link
-                  href={`/connection/proposals/${p.id}`}
-                  className="flex items-center justify-between gap-3 rounded-card border border-line bg-surface-soft px-4 py-3 transition-colors hover:border-gold-dim"
-                >
-                  <span className="min-w-0 truncate text-[0.95rem] text-paper">
-                    {p.title}
-                  </span>
-                  <Tag tone={p.status === "voting" ? "gold" : "neutral"}>
-                    {STATUS_LABEL[p.status]}
-                  </Tag>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      {/* ------------------------------------------------- WAITING ON YOU */}
+      <section className="mb-10">
+        <SectionLabel
+          right={
+            <Link href="/connection/proposals" className="hover:text-gold">
+              all
+            </Link>
+          }
+        >
+          Waiting on you
+        </SectionLabel>
+        <Attention items={queue} />
 
+        {!queue.length ? (
+          <div className="mt-4">
+            <LinkButton href="/connection/proposals/new" tone="gold">
+              Write a proposal
+            </LinkButton>
+          </div>
+        ) : null}
+      </section>
+
+      {/* ----------------------------------------------------- DORMANT */}
+      <Dormant items={sleeping} />
+
+      {/* ------------------------------------------------------ SIGNAL */}
+      <Signal events={events} />
+
+      {/* ------------------------------------------------------- PEOPLE */}
       <section>
-        <SectionLabel>From the people you follow</SectionLabel>
+        <SectionLabel>From the people you share a place with</SectionLabel>
 
         {posts?.length ? (
           <ul className="space-y-3">

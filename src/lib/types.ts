@@ -151,6 +151,8 @@ export interface Proposal {
   /** The score the draft cleared before it could be submitted. */
   readiness: number | null;
   body_sha256: string | null;
+  /** The earlier proposal this one was written from, if it is a second attempt. */
+  supersedes: string | null;
   /** The place it is addressed to. Null for a group proposal and for a global one. */
   place: string | null;
   /** When deliberation ends for a place proposal. Nobody may close it sooner. */
@@ -162,6 +164,42 @@ export interface Proposal {
   created_at: string;
   submitted_at: string;
   closed_at: string | null;
+}
+
+/** A row from `attention_queue()`: one open proposal, and why it is in front of you. */
+export interface AttentionItem {
+  proposal_id: string;
+  title: string;
+  summary: string;
+  status: ProposalStatus;
+  reason: string;
+  detail: string;
+  /** Sort key, not a score. Lower is more urgent. Never shown. */
+  weight: number;
+  closes_at: string | null;
+  submitted_at: string;
+}
+
+/** A proposal that failed for want of people rather than for want of merit. */
+export interface DormantProposal {
+  proposal_id: string;
+  title: string;
+  summary: string;
+  why: string;
+  voices: number;
+  needed: number;
+  decided_at: string;
+}
+
+/** One governance act, read off the ledger. */
+export interface SignalEvent {
+  seq: number;
+  kind: string;
+  subject_id: string;
+  title: string;
+  payload: Record<string, unknown>;
+  actor: string;
+  created_at: string;
 }
 
 /** One section's reading from the sharpening pass. */
