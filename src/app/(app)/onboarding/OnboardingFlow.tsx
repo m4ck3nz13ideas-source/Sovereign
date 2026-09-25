@@ -153,7 +153,7 @@ export function OnboardingFlow({ displayName }: { displayName: string }) {
         <Button type="button" tone="quiet" onClick={() => router.push("/onboarding/group")}>
           Set up a group instead
         </Button>
-        <Button type="button" tone="ghost" onClick={() => router.push("/launch")}>
+        <Button type="button" tone="ghost" onClick={() => router.push("/home")}>
           Later
         </Button>
       </div>

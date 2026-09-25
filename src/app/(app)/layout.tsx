@@ -1,14 +1,14 @@
-import { BottomNav } from "@/components/nav/BottomNav";
+import { TabBar } from "@/components/nav/TabBar";
 
 /**
- * The app shell. The bottom nav is always visible, per life_OS.pdf.
- * Pages add their own bottom padding via <Page> to clear it.
+ * The app shell. Three tabs, always visible; every screen clears them with its
+ * own bottom padding.
  */
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <main className="min-h-dvh">{children}</main>
-      <BottomNav />
+      <TabBar />
     </>
   );
 }

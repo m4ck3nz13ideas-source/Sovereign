@@ -51,7 +51,7 @@ export default function AppError({
             Try again
           </Button>
           <a
-            href="/launch"
+            href="/write"
             className="smallcaps inline-flex items-center rounded-md border border-line bg-surface px-4 py-2.5 text-xs text-paper transition-colors hover:border-gold-dim"
           >
             Back to Launch

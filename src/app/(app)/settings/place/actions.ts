@@ -40,6 +40,6 @@ export async function savePlaces(input: {
   if (error) return { ok: false as const, error: error.message };
 
   revalidatePath("/settings/place");
-  revalidatePath("/connection", "layout");
+  revalidatePath("/home", "layout");
   return { ok: true as const };
 }

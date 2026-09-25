@@ -47,7 +47,7 @@ export function GroupSetup({ hasGroups }: { hasGroups: boolean }) {
         {hasGroups ? (
           <button
             type="button"
-            onClick={() => router.push("/connection")}
+            onClick={() => router.push("/home")}
             className="smallcaps text-[11px] text-paper-faint hover:text-gold"
           >
             back to Connection
@@ -148,7 +148,7 @@ export function GroupSetup({ hasGroups }: { hasGroups: boolean }) {
               setError(null);
               const r = await joinGroup(code);
               if (!r.ok) setError(r.error);
-              else router.push("/connection");
+              else router.push("/home");
             })
           }
         >

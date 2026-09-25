@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useTransition } from "react";
 
-import { chooseAddress } from "@/app/(app)/connection/actions";
+import { chooseAddress } from "@/app/(app)/collective/actions";
 
 /**
  * The scale selector.

@@ -42,7 +42,7 @@ export async function updateThresholds(
   if (error) return { ok: false as const, error: error.message };
 
   revalidatePath("/settings");
-  revalidatePath("/connection", "layout");
+  revalidatePath("/home", "layout");
   return { ok: true as const };
 }
 

@@ -13,7 +13,7 @@ export default async function GroupSetupPage() {
   return (
     <Page>
       <Link
-        href="/launch"
+        href="/write"
         className="smallcaps mb-6 inline-block text-[11px] text-paper-faint hover:text-gold"
       >
         ← Launch

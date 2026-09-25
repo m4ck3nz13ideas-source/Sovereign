@@ -2,9 +2,16 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 /**
- * The primitives. Spare on purpose: a card, a banner, a panel, a label, a
- * button, an empty state. Anything more ornamental than this belongs to a
- * particular screen, not to the system.
+ * The primitives.
+ *
+ * Built for a phone held in one hand: full-bleed rows with hairline
+ * separators, sticky translucent headers, bottom sheets instead of inline
+ * forms, and everything tappable answering the finger.
+ *
+ * The colour discipline is the whole system. Amber means one thing — this is
+ * yours to act on. Red and green are functional state. Everything else is
+ * greyscale and weight, because with no photographs anywhere, colour has to be
+ * earned rather than sprayed.
  */
 
 export function cx(...parts: (string | false | null | undefined)[]) {
@@ -21,9 +28,184 @@ export function Page({
   className?: string;
 }) {
   return (
-    <div className={cx("mx-auto w-full max-w-2xl px-5 pt-8 pb-32", className)}>
+    <div className={cx("mx-auto w-full max-w-2xl px-5 pt-6 pb-32", className)}>
       {children}
     </div>
+  );
+}
+
+/**
+ * A full-bleed screen. Content runs to the edges and each section decides its
+ * own gutter, which is what lets rows, rails and media go edge to edge while
+ * prose stays readable.
+ */
+export function Screen({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cx("mx-auto w-full max-w-2xl pb-32", className)}>
+      {children}
+    </div>
+  );
+}
+
+/** The standard side gutter, for anything inside a Screen that needs one. */
+export function Gutter({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <div className={cx("px-5", className)}>{children}</div>;
+}
+
+/**
+ * A sticky header that stays out of the way. The title is small and the screen
+ * is what you look at — the opposite of a document, where the title is the
+ * first thing and takes a third of the page.
+ */
+export function TopBar({
+  title,
+  back,
+  action,
+  children,
+}: {
+  title: ReactNode;
+  /** A href for the back chevron. Omitted on a tab root. */
+  back?: string;
+  action?: ReactNode;
+  /** A rail or tab strip that scrolls with the bar. */
+  children?: ReactNode;
+}) {
+  return (
+    <header className="sticky top-0 z-30 border-b border-line bg-ink/80 backdrop-blur-xl">
+      <div className="flex h-12 items-center gap-1 px-2">
+        {back ? (
+          <Link
+            href={back}
+            aria-label="Back"
+            className="press -ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-paper active:bg-surface"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
+              <path
+                d="M15 5l-7 7 7 7"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+        ) : (
+          <span className="w-2" aria-hidden />
+        )}
+        <h1 className="display min-w-0 flex-1 truncate px-1 text-[1.0625rem] text-paper">
+          {title}
+        </h1>
+        {action ? <div className="shrink-0 pr-1">{action}</div> : null}
+      </div>
+      {children}
+    </header>
+  );
+}
+
+/**
+ * A horizontal rail of pills. The scale selector, and anything else that is a
+ * short set of mutually exclusive choices — which on a phone is a rail, not a
+ * dropdown.
+ */
+export function Rail({ children }: { children: ReactNode }) {
+  return (
+    <div className="no-scrollbar rail overflow-x-auto">
+      <div className="flex w-max min-w-full items-center gap-2 px-5 py-2.5">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function Pill({
+  active = false,
+  children,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
+  return (
+    <button
+      {...props}
+      aria-current={active ? "true" : undefined}
+      className={cx(
+        "press shrink-0 rounded-pill px-3.5 py-1.5 text-[0.8125rem] font-medium whitespace-nowrap",
+        active
+          ? "bg-paper text-ink"
+          : "bg-surface text-paper-dim active:bg-surface-lift",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function PillLink({
+  href,
+  active = false,
+  children,
+}: {
+  href: string;
+  active?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cx(
+        "press shrink-0 rounded-pill px-3.5 py-1.5 text-[0.8125rem] font-medium whitespace-nowrap",
+        active
+          ? "bg-paper text-ink"
+          : "bg-surface text-paper-dim active:bg-surface-lift",
+      )}
+    >
+      {children}
+    </Link>
+  );
+}
+
+/**
+ * A full-bleed tappable row. Separated by a hairline rather than boxed, which
+ * is what lets a list of forty read as one surface instead of forty cards.
+ */
+export function Row({
+  href,
+  children,
+  className,
+  onClick,
+}: {
+  href?: string;
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
+  const cls = cx(
+    "press block w-full border-b border-line-soft px-5 py-4 text-left active:bg-surface-soft",
+    className,
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={cls}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} className={cls}>
+      {children}
+    </button>
   );
 }
 
@@ -167,15 +349,15 @@ export function Tag({
 }) {
   const tones = {
     neutral: "border-line text-paper-dim",
-    gold: "border-gold-dim text-gold",
-    alarm: "border-alarm/50 text-alarm",
+    gold: "border-gold/40 text-gold",
+    alarm: "border-alarm/40 text-alarm",
     calm: "border-calm/40 text-calm",
   } as const;
 
   return (
     <span
       className={cx(
-        "smallcaps inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] leading-none",
+        "inline-flex items-center rounded-pill border px-2 py-[3px] text-[0.6875rem] font-medium leading-none",
         tones[tone],
       )}
     >
@@ -207,8 +389,8 @@ export function Empty({
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-card border border-dashed border-line px-5 py-8 text-center">
-      <p className="text-sm leading-relaxed text-paper-faint">{children}</p>
+    <div className="rounded-card border border-dashed border-line px-5 py-10 text-center">
+      <p className="text-[0.9375rem] leading-relaxed text-paper-faint">{children}</p>
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
@@ -219,11 +401,10 @@ export function Empty({
 type ButtonTone = "gold" | "quiet" | "ghost" | "danger";
 
 const buttonTones: Record<ButtonTone, string> = {
-  gold: "bg-gold text-ink hover:bg-gold/90 disabled:bg-gold-dim disabled:text-ink/60",
-  quiet:
-    "border border-line bg-surface text-paper hover:border-gold-dim disabled:opacity-50",
-  ghost: "text-paper-dim hover:text-paper disabled:opacity-40",
-  danger: "border border-alarm/50 text-alarm hover:bg-alarm/10",
+  gold: "bg-gold text-ink active:bg-gold/90 disabled:bg-surface disabled:text-paper-faint",
+  quiet: "bg-surface text-paper active:bg-surface-lift disabled:opacity-40",
+  ghost: "text-paper-dim active:text-paper disabled:opacity-30",
+  danger: "bg-alarm/15 text-alarm active:bg-alarm/25",
 };
 
 export function Button({
@@ -236,7 +417,7 @@ export function Button({
     <button
       {...props}
       className={cx(
-        "smallcaps inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-xs transition-colors disabled:cursor-not-allowed",
+        "press inline-flex min-h-11 items-center justify-center gap-2 rounded-pill px-5 py-2.5 text-[0.9375rem] font-semibold disabled:cursor-not-allowed",
         buttonTones[tone],
         className,
       )}
@@ -261,7 +442,7 @@ export function LinkButton({
     <Link
       href={href}
       className={cx(
-        "smallcaps inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-xs transition-colors",
+        "press inline-flex min-h-11 items-center justify-center gap-2 rounded-pill px-5 py-2.5 text-[0.9375rem] font-semibold",
         buttonTones[tone],
         className,
       )}
@@ -292,7 +473,7 @@ export function Field({
 }
 
 export const inputClass =
-  "w-full rounded-md border border-line bg-ink-raised px-3 py-2.5 text-[0.95rem] text-paper placeholder:text-paper-faint focus:border-gold-dim focus:outline-none";
+  "w-full rounded-xl border border-line bg-surface-soft px-3.5 py-3 text-[1rem] text-paper placeholder:text-paper-faint focus:border-gold focus:outline-none";
 
 /* --- data display --------------------------------------------------------- */
 
@@ -340,4 +521,28 @@ export function ScoreBar({
 
 export function Divider() {
   return <hr className="my-7 border-line" />;
+}
+
+/**
+ * A screen heading, for a page that already sits under a TopBar.
+ *
+ * Small, quiet, and it does not take a third of the viewport the way a
+ * document title does. The bar says where you are; this says what this
+ * particular screen is for.
+ */
+export function ScreenHead({
+  children,
+  sub,
+}: {
+  children: ReactNode;
+  sub?: ReactNode;
+}) {
+  return (
+    <header className="mb-5">
+      <h2 className="display text-[1.5rem] text-paper">{children}</h2>
+      {sub ? (
+        <p className="mt-1 text-[0.9375rem] text-paper-dim">{sub}</p>
+      ) : null}
+    </header>
+  );
 }

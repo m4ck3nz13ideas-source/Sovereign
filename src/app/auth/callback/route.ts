@@ -44,5 +44,5 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(`${origin}${next && next.startsWith("/") ? next : "/launch"}`);
+  return NextResponse.redirect(`${origin}${next && next.startsWith("/") ? next : "/home"}`);
 }

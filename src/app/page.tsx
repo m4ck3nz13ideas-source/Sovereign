@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Launch is the intake point for everything, so it is also the front door. */
-export default function Home() {
-  redirect("/launch");
+/** Home is where you land: what is waiting on you, and what just happened. */
+export default function Root() {
+  redirect("/home");
 }

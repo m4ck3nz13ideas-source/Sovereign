@@ -31,7 +31,7 @@ export default async function SettingsPage() {
   return (
     <Page>
       <Link
-        href="/profile"
+        href="/individual/profile"
         className="smallcaps mb-6 inline-block text-[11px] text-paper-faint hover:text-gold"
       >
         ← Profile

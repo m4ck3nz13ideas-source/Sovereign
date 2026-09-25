@@ -23,10 +23,10 @@ export default function NotFound() {
         </p>
 
         <div className="mt-5 flex flex-wrap gap-4">
-          <Link href="/launch" className="smallcaps text-[11px] text-gold hover:underline">
+          <Link href="/write" className="smallcaps text-[11px] text-gold hover:underline">
             Launch
           </Link>
-          <Link href="/connection" className="smallcaps text-[11px] text-gold hover:underline">
+          <Link href="/home" className="smallcaps text-[11px] text-gold hover:underline">
             Connection
           </Link>
         </div>

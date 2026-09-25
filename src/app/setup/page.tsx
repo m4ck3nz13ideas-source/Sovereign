@@ -18,7 +18,7 @@ export default function SetupPage() {
       {configured ? (
         <p className="mt-6 text-[0.95rem] leading-relaxed text-paper-dim">
           Configuration looks complete.{" "}
-          <a href="/launch" className="text-gold hover:underline">
+          <a href="/home" className="text-gold hover:underline">
             Open the app →
           </a>
         </p>

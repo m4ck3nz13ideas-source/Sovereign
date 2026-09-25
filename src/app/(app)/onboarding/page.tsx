@@ -18,7 +18,7 @@ export const metadata = { title: "Welcome · Sovereign" };
 export default async function OnboardingPage() {
   const { profile } = await requireSession();
 
-  if (profile.onboarded_at) redirect("/launch");
+  if (profile.onboarded_at) redirect("/write");
 
   return (
     <Page>
