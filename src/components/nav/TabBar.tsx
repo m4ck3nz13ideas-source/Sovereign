@@ -7,12 +7,13 @@ import { usePathname } from "next/navigation";
  * Three tabs, left to right: Individual, Home, Collective.
  *
  * Straight from the overview's architecture diagram — SOVEREIGN APP branching
- * into HOME, INDIVIDUAL and COLLECTIVE — with Home promoted to the middle
- * because it is the one you sit in. Each tab has its own strip of sub-tabs
- * underneath it, so the depth is in the tab rather than in the bar.
+ * into HOME, INDIVIDUAL and COLLECTIVE — with Home in the middle because it is
+ * the one you sit in. Each tab has its own strip of sub-tabs underneath it, so
+ * the depth is in the tab rather than in this bar.
  *
- * Write sits in the centre, raised, always amber: the one thing you can do
- * from anywhere. Everything else in this bar is navigation.
+ * Nothing else lives here. Writing is a plus in the Home bar, where it belongs:
+ * a raised centre button is the shape of an app whose whole purpose is posting,
+ * and that is not what this is.
  */
 
 const TABS = [
@@ -23,7 +24,6 @@ const TABS = [
 
 export function TabBar() {
   const pathname = usePathname();
-  const onWrite = pathname.startsWith("/write");
 
   return (
     <nav
@@ -31,47 +31,25 @@ export function TabBar() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ink/85 backdrop-blur-xl"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="mx-auto flex max-w-2xl items-center justify-around px-2 py-1.5">
-        {TABS.map((tab, i) => {
+      <ul className="mx-auto flex max-w-2xl items-center px-2 py-1.5">
+        {TABS.map((tab) => {
           const active =
             pathname === tab.href || pathname.startsWith(`${tab.href}/`);
 
           return (
-            <li key={tab.href} className="contents">
-              {i === 2 ? (
-                <li className="flex-none px-1">
-                  <Link
-                    href="/write"
-                    aria-label="Write"
-                    aria-current={onWrite ? "page" : undefined}
-                    className="press flex h-11 w-11 items-center justify-center rounded-full bg-gold text-ink"
-                  >
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
-                      <path
-                        d="M12 5v14M5 12h14"
-                        stroke="currentColor"
-                        strokeWidth="2.25"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </Link>
-                </li>
-              ) : null}
-
-              <li className="flex-1">
-                <Link
-                  href={tab.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`press flex flex-col items-center gap-0.5 rounded-xl py-1.5 ${
-                    active ? "text-paper" : "text-paper-faint"
-                  }`}
-                >
-                  <tab.Icon filled={active} />
-                  <span className="text-[0.625rem] font-medium tracking-wide">
-                    {tab.label}
-                  </span>
-                </Link>
-              </li>
+            <li key={tab.href} className="flex-1">
+              <Link
+                href={tab.href}
+                aria-current={active ? "page" : undefined}
+                className={`press flex flex-col items-center gap-0.5 rounded-xl py-1.5 ${
+                  active ? "text-paper" : "text-paper-faint"
+                }`}
+              >
+                <tab.Icon filled={active} />
+                <span className="text-[0.625rem] font-medium tracking-wide">
+                  {tab.label}
+                </span>
+              </Link>
             </li>
           );
         })}
