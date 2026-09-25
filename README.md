@@ -82,6 +82,37 @@ actually go wrong, were alternatives weighed including doing nothing. It says
 plainly that no model read it. That is a real filter and it is the honest
 limit of a reader that cannot read.
 
+**A contribution to a debate says what it is.** A question, an amendment, an
+alternative, a concern — the four the whitepaper names — and a reply is a
+reply. That is not taxonomy for its own sake: a question can be answered and
+counted, and a thread where everything looks the same is one where nothing has
+to be answered by anybody.
+
+Questions and concerns are answered in writing, attributed, permanent — the
+same standard as a flag. **They do not block.** A flag is the rubric finding
+something below the group's own floor; a concern is a person disagreeing, and a
+system where any one person can hold a proposal until satisfied has a veto in
+it. So an unanswered concern is put in front of everyone before they touch a
+slider, and recorded on the decision, and then the group decides with it in
+view.
+
+An amendment can be *adopted* — the author saying they will carry it into a
+rewrite. It changes nothing about the live proposal, because the text is fixed
+at submission and stays fixed.
+
+**A mean cannot hide a split.** Everyone at 0.50, and half at 0.10 with half at
+0.90, both average 0.50 — and they are not the same group. The first is a room
+that is unsure; the second is a room that disagrees. Every decision now carries
+the spread of alignment and a `polarized` flag: real dispersion, with both ends
+occupied. A polarized proposal still passes if it clears the threshold — but
+the record says the group was split, which is "prevents tyranny of slim
+majorities" made legible rather than asserted.
+
+While a proposal is open the votes stay hidden, so polarization there is read
+from the **argument** instead: whether people are still addressing each other,
+or have started restating positions at each other. The summary says which, and
+says plainly that it is a reading of the thread and not of anyone's resonance.
+
 **The feed is ordered by what is blocked, not by what is new.** Connection
 opens on what is actually waiting on you, with the reason attached — not
 audited yet, a tension unanswered, you have not read the review, you have not
@@ -210,6 +241,7 @@ supabase/migrations/0005_activation.sql     needs, commitments, Activate
 supabase/migrations/0006_scope.sql          places, scales, the subsidiarity engine
 supabase/migrations/0007_readiness.sql      the six sections, and the gate on submitting
 supabase/migrations/0008_discovery.sql      the feed, dormant proposals, lineage
+supabase/migrations/0009_debate.sql         typed contributions, summaries, polarization
 ```
 
 `scope_rules` ships with local set to one voice and no waiting period, so a
@@ -282,15 +314,16 @@ rather than a failed build.
 
 The rules that define this product live in Postgres, so that is where they are
 tested. `supabase/tests/` runs against any local Postgres as a non-superuser,
-so row-level security actually applies, and checks a hundred and five things
-across six suites — that a member cannot read another member's journal, that
+so row-level security actually applies, and checks a hundred and twenty-eight
+things across seven suites — that a member cannot read another member's journal, that
 resonance is refused before the review is read, that two unanswered flags fail
 a proposal whatever the numbers say, that a project cannot complete without a
 reflection, that an edited ledger row is detected, that someone in Totnes
 cannot read or answer a proposal addressed to Hackney, and that an author
 cannot re-aim a proposal once it is out, that an unsharpened draft is refused
-and a sharpening of one text cannot be spent on another, and that a proposal
-people read and declined is never offered back as dormant. See
+and a sharpening of one text cannot be spent on another, that a proposal
+people read and declined is never offered back as dormant, and that four people
+split two against two are not recorded as a consensus. See
 `supabase/tests/README.md` for how to run it.
 
 ```bash
@@ -305,13 +338,15 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0006_scope.sql \
   -f supabase/migrations/0007_readiness.sql \
   -f supabase/migrations/0008_discovery.sql \
+  -f supabase/migrations/0009_debate.sql \
   -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
   -f supabase/tests/03_activation.sql \
   -f supabase/tests/04_scope.sql \
   -f supabase/tests/05_readiness.sql \
-  -f supabase/tests/06_discovery.sql
+  -f supabase/tests/06_discovery.sql \
+  -f supabase/tests/07_debate.sql
 ```
 
 ---

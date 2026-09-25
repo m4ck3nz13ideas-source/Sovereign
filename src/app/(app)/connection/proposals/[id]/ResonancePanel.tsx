@@ -31,6 +31,8 @@ export function ResonancePanel({
   open,
   mine,
   summary,
+  openQuestions,
+  openConcerns,
 }: {
   proposalId: string;
   /** A violation of Universal Law, or no audit at all. Closes the sliders. */
@@ -40,6 +42,9 @@ export function ResonancePanel({
   open: boolean;
   mine: ResonanceVote | null;
   summary: ResonanceSummary;
+  /** Questions and concerns nobody has answered. They do not block. */
+  openQuestions: number;
+  openConcerns: number;
 }) {
   const [values, setValues] = useState({
     alignment: mine ? Number(mine.alignment) : 0.5,
@@ -71,6 +76,33 @@ export function ResonancePanel({
         </Empty>
       ) : !hasRead && open ? (
         <ReadGate proposalId={proposalId} />
+      ) : null}
+
+      {/* An unanswered question or concern does not stop anybody responding —
+          one person holding a proposal until satisfied is a veto, and a veto is
+          the thing resonance exists to avoid. What it does is get said, here,
+          before the sliders, rather than discovered afterwards in the record. */}
+      {!unlawful && hasReview && hasRead && open && (openQuestions || openConcerns) ? (
+        <div className="rounded-md border border-gold-dim bg-gold-wash px-3 py-2.5">
+          <p className="text-[0.95rem] leading-relaxed text-paper">
+            {[
+              openQuestions
+                ? `${openQuestions} ${openQuestions === 1 ? "question" : "questions"}`
+                : null,
+              openConcerns
+                ? `${openConcerns} ${openConcerns === 1 ? "concern" : "concerns"}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" and ")}{" "}
+            nobody has answered.
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-paper-dim">
+            You can respond anyway — nobody here has a veto. They are in the
+            deliberation above, and the decision record will say they were open
+            when the group answered.
+          </p>
+        </div>
       ) : null}
 
       {!unlawful && hasReview && hasRead && open ? (

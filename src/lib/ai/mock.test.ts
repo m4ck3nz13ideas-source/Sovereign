@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { MockProvider } from "./mock";
-import { reviewSchema, sharpenSchema } from "./schemas";
+import { debateSchema, reviewSchema, sharpenSchema } from "./schemas";
 
 /**
  * The offline reviewer is what runs when no API key is set, which means it is
@@ -195,5 +195,93 @@ describe("the offline sharpener", () => {
     const a = await sharpen(THOUGHT_THROUGH);
     const b = await sharpen(THOUGHT_THROUGH);
     expect(a.parsed).toEqual(b.parsed);
+  });
+});
+
+/* ---------------------------------------------------------------------------
+   The offline debate summariser — abstains on the arguments, not on the shape.
+--------------------------------------------------------------------------- */
+
+function threadInput(
+  blocks: { kind: string; author: string; body: string; answered?: string }[],
+): string {
+  return (
+    `THE PROPOSAL\ntitle: A thing\nin one line: One line.\n\nwhat it is solving:\nx\n\nwhat would change:\ny\n\nTHE THREAD, in order\n` +
+    blocks
+      .map((b) =>
+        [
+          `[${b.kind}] ${b.author} — 12 Mar`,
+          b.body,
+          b.answered ? `ANSWERED by Someone: ${b.answered}` : null,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      )
+      .join("\n\n---\n\n") +
+    `\n\nYou cannot see anyone's resonance and are not being asked to guess it.`
+  );
+}
+
+async function debate(blocks: Parameters<typeof threadInput>[0]) {
+  const { data, model } = await provider.complete({
+    input: threadInput(blocks),
+    schemaName: "record_debate_summary",
+  });
+  return { parsed: debateSchema.parse(data), model };
+}
+
+describe("the offline debate summariser", () => {
+  it("refuses to put words in anybody's mouth", async () => {
+    const { parsed } = await debate([
+      { kind: "concern", author: "Ben", body: "Too expensive for what it is." },
+      { kind: "reply", author: "Ann", body: "It lasts ten years though." },
+    ]);
+    expect(parsed.arguments_for).toEqual([]);
+    expect(parsed.arguments_against).toEqual([]);
+    expect(parsed.reading).toMatch(/no model read/i);
+  });
+
+  it("carries unanswered questions through verbatim", async () => {
+    const { parsed } = await debate([
+      { kind: "question", author: "Ben", body: "Who stores it, and where?" },
+      { kind: "question", author: "Cara", body: "What happens in year two?", answered: "We revisit it." },
+    ]);
+    expect(parsed.unresolved).toHaveLength(1);
+    expect(parsed.unresolved[0]).toContain("Who stores it");
+  });
+
+  it("reads a thread where people reply to each other as converging", async () => {
+    const { parsed } = await debate([
+      { kind: "concern", author: "Ben", body: "Too expensive." },
+      { kind: "reply", author: "Ann", body: "It lasts ten years." },
+      { kind: "reply", author: "Ben", body: "Fair, that changes it." },
+    ]);
+    expect(parsed.polarization).toBe("converging");
+  });
+
+  it("reads positions stated at each other with no replies as splitting", async () => {
+    const { parsed } = await debate([
+      { kind: "concern", author: "Ben", body: "This is the wrong priority." },
+      { kind: "concern", author: "Cara", body: "It is the only priority." },
+      { kind: "alternative", author: "Dan", body: "Do the other thing instead." },
+      { kind: "concern", author: "Ben", body: "Still the wrong priority." },
+    ]);
+    expect(parsed.polarization).toBe("splitting");
+    expect(parsed.reading).toMatch(/structural guess/i);
+  });
+
+  it("does not call a short thread splitting", async () => {
+    const { parsed } = await debate([
+      { kind: "concern", author: "Ben", body: "Too expensive." },
+    ]);
+    expect(parsed.polarization).toBe("mixed");
+  });
+
+  it("reads the same thread the same way twice", async () => {
+    const blocks = [
+      { kind: "question", author: "Ben", body: "Who stores it?" },
+      { kind: "reply", author: "Ann", body: "The shed." },
+    ];
+    expect((await debate(blocks)).parsed).toEqual((await debate(blocks)).parsed);
   });
 });

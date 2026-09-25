@@ -8,10 +8,13 @@ import {
   draftBody,
   reviewProposal,
   sharpenDraft,
+  summariseDebate,
   writeRationale,
   type Draft,
 } from "@/lib/ai";
+import { shortDate } from "@/lib/format";
 import { READINESS_THRESHOLD, sha256 } from "@/lib/readiness";
+import type { ContributionKind } from "@/lib/types";
 import { placeAt } from "@/lib/collective";
 import { ledger } from "@/lib/ledger";
 import { requireSession } from "@/lib/session";
@@ -749,25 +752,158 @@ export async function markRead(proposalId: string) {
   return { ok: true as const };
 }
 
-export async function comment(proposalId: string, body: string, parentId?: string) {
+/**
+ * Add something to the deliberation.
+ *
+ * A top-level contribution says what kind of thing it is — a question, an
+ * amendment, an alternative, a concern. That is not taxonomy for its own sake:
+ * a question can be answered and counted, and a thread where everything looks
+ * the same is one where nothing has to be answered.
+ */
+export async function contribute(
+  proposalId: string,
+  kind: ContributionKind,
+  body: string,
+  parentId?: string,
+) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false as const, error: "You are not signed in." };
 
-  if (!body.trim()) return { ok: false as const, error: "Nothing to say." };
+  const text = body.trim();
+  if (!text) return { ok: false as const, error: "Nothing to say." };
 
   const { error } = await supabase.from("deliberation_comments").insert({
     proposal_id: proposalId,
     author_id: user.id,
     parent_id: parentId ?? null,
-    body: body.trim(),
+    kind: parentId ? "reply" : kind,
+    body: text,
   });
 
   if (error) return { ok: false as const, error: error.message };
   revalidatePath(`/connection/proposals/${proposalId}`);
   return { ok: true as const };
+}
+
+/** Answer a question or a concern. Attributed, permanent, twenty characters. */
+export async function answerContribution(
+  commentId: string,
+  proposalId: string,
+  answer: string,
+) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("answer_contribution", {
+    p_comment_id: commentId,
+    p_answer: answer,
+  });
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/connection/proposals/${proposalId}`);
+  return { ok: true as const };
+}
+
+/**
+ * Say you will carry an amendment into a rewrite.
+ *
+ * It changes nothing about this proposal — the text is fixed at submission and
+ * stays fixed. It puts a marker on the record so the amendment does not have
+ * to be argued twice.
+ */
+export async function adoptAmendment(commentId: string, proposalId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("adopt_amendment", { p_comment_id: commentId });
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/connection/proposals/${proposalId}`);
+  return { ok: true as const };
+}
+
+/**
+ * Summarise the thread.
+ *
+ * Run by a member when the thread has got long enough to need it, not on a
+ * timer — a summary is an artefact with a version on it, and one written at
+ * 3am by a cron job is one nobody asked for and nobody can date to a moment in
+ * the argument.
+ */
+export async function summariseThread(proposalId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, error: "You are not signed in." };
+
+  const [{ data: proposal }, { data: rows }] = await Promise.all([
+    supabase
+      .from("proposals")
+      .select("title, summary, intent, change")
+      .eq("id", proposalId)
+      .maybeSingle(),
+    supabase
+      .from("deliberation_comments")
+      .select("kind, body, answer, created_at, profiles(display_name), answered:answered_by(display_name)")
+      .eq("proposal_id", proposalId)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  if (!proposal) return { ok: false as const, error: "No such proposal." };
+
+  const contributions = (rows ?? []).map((c) => ({
+    kind: String((c as { kind: string }).kind),
+    author:
+      (c.profiles as unknown as { display_name: string } | null)?.display_name ??
+      "A member",
+    body: String((c as { body: string }).body),
+    answer: (c as { answer: string | null }).answer,
+    answeredBy:
+      (c.answered as unknown as { display_name: string } | null)?.display_name ?? null,
+    when: shortDate(String((c as { created_at: string }).created_at)),
+  }));
+
+  if (contributions.length < 2) {
+    return {
+      ok: false as const,
+      error: "There is not enough here to summarise. Two contributions is the floor.",
+    };
+  }
+
+  try {
+    const { debate, model, prompt } = await summariseDebate({
+      proposal: {
+        title: proposal.title,
+        summary: proposal.summary,
+        intent: proposal.intent,
+        change: proposal.change,
+      },
+      contributions,
+    });
+
+    const { error } = await supabase.from("debate_summaries").insert({
+      proposal_id: proposalId,
+      covers: contributions.length,
+      arguments_for: debate.arguments_for,
+      arguments_against: debate.arguments_against,
+      unresolved: debate.unresolved,
+      shifted: debate.shifted || null,
+      polarization: debate.polarization,
+      reading: debate.reading,
+      prompt_id: prompt.id,
+      prompt_version: prompt.version,
+      model,
+      created_by: user.id,
+    });
+
+    if (error) return { ok: false as const, error: error.message };
+
+    revalidatePath(`/connection/proposals/${proposalId}`);
+    return { ok: true as const };
+  } catch (e) {
+    return {
+      ok: false as const,
+      error: e instanceof Error ? e.message : "The thread could not be summarised.",
+    };
+  }
 }
 
 export async function castResonance(

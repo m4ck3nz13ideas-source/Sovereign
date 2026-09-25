@@ -6,7 +6,7 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Six suites, a hundred and five checks. Every one of them runs as a non-superuser,
+Seven suites, a hundred and twenty-eight checks. Every one of them runs as a non-superuser,
 so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
@@ -99,6 +99,21 @@ It raises `scope_rules.min_voices` for local at the top, as the owner, because
 the shipped rule is one voice and this suite is about what happens below the
 floor. It puts it back at the end.
 
+### `07_debate.sql` — twenty-three checks
+
+- A top-level contribution cannot be a reply, and a reply cannot be a question.
+- A reply is not an answer, however good it is.
+- An eight-character answer is refused; a real one is attributed, and cannot be
+  given twice.
+- An amendment is adopted, not answered — and only by the author or a steward.
+- Adopting one alters nothing about the proposal's text.
+- **An unanswered concern does not block a proposal**, and the decision records
+  that it was open.
+- Four people who agreed are not recorded as split.
+- **Four people split two against two are** — and the proposal still passes on
+  its mean, which is the whole reason the flag exists.
+- A summary is readable by the group and cannot be rewritten afterwards.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -115,13 +130,15 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0006_scope.sql \
   -f supabase/migrations/0007_readiness.sql \
   -f supabase/migrations/0008_discovery.sql \
+  -f supabase/migrations/0009_debate.sql \
   -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
   -f supabase/tests/03_activation.sql \
   -f supabase/tests/04_scope.sql \
   -f supabase/tests/05_readiness.sql \
-  -f supabase/tests/06_discovery.sql
+  -f supabase/tests/06_discovery.sql \
+  -f supabase/tests/07_debate.sql
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server

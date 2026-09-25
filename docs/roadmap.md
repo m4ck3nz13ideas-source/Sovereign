@@ -122,6 +122,13 @@ that matter are already load-bearing here in the negative: no counters framed
 as debts, no algorithmic feed, no reason to open the app that isn't a reason
 you already had. Adding a streak would undo that.
 
+**Letting a concern block a proposal.** It would look like rigour and it would
+be a veto. The mechanism that fails a proposal is the review flag, which is the
+rubric against the group's own stated floor, not one member's objection. If
+concerns need more force than being read before everyone responds and recorded
+afterwards, the honest change is to raise the alignment threshold, not to give
+individuals a hold.
+
 **Ranking a feed by anything but what is blocked.** The attention queue sorts
 on what stands in the way, and that is the only ordering here that is not a
 judgement about whose proposal matters more. An "interesting" or "popular" cut

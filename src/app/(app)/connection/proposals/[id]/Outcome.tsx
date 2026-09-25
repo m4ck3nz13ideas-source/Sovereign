@@ -119,6 +119,50 @@ export function Outcome({
           />
         </div>
 
+        {/* A mean says nothing about a split. Everyone at 0.50 and half at
+            0.10 with half at 0.90 both average 0.50, and they are not the same
+            group — the first is unsure, the second disagrees. A system that
+            reports them identically launders a rift into a consensus. */}
+        {decision.dispersion !== null ? (
+          <div
+            className={`mt-4 rounded-md border px-3 py-2.5 ${
+              decision.polarized
+                ? "border-alarm/40 bg-alarm/10"
+                : "border-line bg-surface"
+            }`}
+          >
+            <p className="text-[0.95rem] leading-relaxed text-paper">
+              {decision.polarized
+                ? `The group was split. Spread ${Number(decision.dispersion).toFixed(2)}, with people at both ends.`
+                : `Spread ${Number(decision.dispersion).toFixed(2)} — the responses sat close together.`}
+            </p>
+            {decision.polarized ? (
+              <p className="mt-1 text-sm leading-relaxed text-paper-dim">
+                {passed
+                  ? "This passed, and the threshold is the threshold. But the mean above describes two groups rather than one, and anyone reading this later should know that."
+                  : "Not a room that was unsure. A room that disagreed."}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {decision.open_questions || decision.open_concerns ? (
+          <p className="mt-3 text-sm leading-relaxed text-paper-faint">
+            {[
+              decision.open_questions
+                ? `${decision.open_questions} ${decision.open_questions === 1 ? "question" : "questions"}`
+                : null,
+              decision.open_concerns
+                ? `${decision.open_concerns} ${decision.open_concerns === 1 ? "concern" : "concerns"}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" and ")}{" "}
+            were unanswered when this closed. Nobody was blocked by them —
+            they are recorded because the group decided with them open.
+          </p>
+        ) : null}
+
         {decision.prompt_version ? (
           <p className="smallcaps mt-4 text-[10px] text-paper-faint">
             rationale written by decision.rationale v{decision.prompt_version}

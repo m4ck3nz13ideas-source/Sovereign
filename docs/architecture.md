@@ -54,6 +54,10 @@ lives in a React component is a rule that a future refactor can quietly delete.
 | **A submitted proposal's text is fixed** | `freeze_proposal_text()` trigger |
 | **A revival is put to the same people** | `check_supersedes()` trigger |
 | **A declined proposal is never offered back** | `dormant_proposals()` excludes anything that failed on merit |
+| **A contribution says what it is** | `comments_kind_shape` check constraint |
+| **An answer is written, attributed, permanent** | `answer_contribution()` + the `comments_answer` policy |
+| **A concern does not become a veto** | `close_proposal()` records open concerns; it does not fail on them |
+| **A split is never reported as a consensus** | `alignment_shape()`, stored on every decision |
 | No completion without reflection | `complete_project()` + a length check |
 | The ledger cannot be forged | No insert policy; `record_ledger_event()` only |
 
@@ -339,6 +343,77 @@ one and call it the same idea.
 Both ends of the thread say so on the page. A record somebody has already
 carried forward should not read as the current state of the question.
 
+## Debate
+
+A flat comment thread is the shape that produces argument rather than
+improvement: everything looks the same, so nothing has to be answered and
+nothing can be counted.
+
+**Contributions have a kind.** `question`, `amendment`, `alternative`,
+`concern` at the top level; `reply` underneath, and only underneath. The check
+constraint enforces both directions — a top-level thing cannot be a reply and a
+reply cannot be a question — because the counting downstream is only worth
+anything if the kinds mean something.
+
+**Questions and concerns are answered.** Twenty characters, attributed, with no
+policy that permits an answer to change or be removed. The `comments_answer`
+policy is written so the only update it allows is one that supplies an answer
+and signs it.
+
+**They do not block, and that asymmetry is the point.** A flag is the review
+finding something below the group's own values floor, and it fails a proposal
+until answered. A concern is a person disagreeing. If one person could hold a
+proposal until satisfied, the system would contain a veto — which is precisely
+what resonance exists to avoid. So an unanswered concern is surfaced above the
+sliders before anyone responds, and written onto the decision, and the group
+decides with it in view.
+
+**Adopting an amendment changes nothing.** The proposal's text is fixed at
+submission (`freeze_proposal_text()`) and stays fixed. `adopt_amendment()` puts
+a marker on the record saying the author will carry it into a rewrite, so it
+does not have to be argued twice. The rewrite is a new proposal with
+`supersedes` set, like any other second attempt.
+
+### Polarization, twice, honestly
+
+The two readings answer different questions and neither pretends to be the
+other.
+
+**While it is open**, from the argument. `DEBATE_SUMMARY` returns
+`converging | mixed | splitting`, read from whether people are addressing each
+other or restating positions at each other. The votes are not passed to it and
+must not be — they are hidden until close, and inferring polarization from them
+would be that rule broken by another route. The panel says so in those words.
+
+**At close**, from the numbers. `alignment_shape()` returns the population
+standard deviation and a `polarized` boolean: dispersion above 0.25, with at
+least a fifth of responses in the bottom third and a fifth in the top third, and
+at least three responses. Both go onto the decision.
+
+The thresholds are guesses and are meant to be argued with. What is not a guess
+is that a mean alone launders a rift into a consensus — everyone at 0.50 and
+half at 0.10 with half at 0.90 report identically — and that a governance tool
+which does that is lying by arithmetic.
+
+A polarized proposal still passes if it clears the threshold. The threshold is
+the threshold. What changes is that the record says the group was split, and
+anyone reading it later knows the difference.
+
+### The summary
+
+On request, not on a timer. A summary is an artefact with a prompt version on
+it, and one written at 3am by a cron job is one nobody asked for and nobody can
+date to a moment in the argument. It stores `covers` — how many contributions
+it was written across — so a summary made over nine and left while six more
+arrive is visibly behind rather than quietly wrong. No update policy and no
+delete: a summary that was wrong is superseded, and both stay.
+
+The offline summariser abstains on the arguments and does not abstain on the
+shape. Those are different jobs — putting words in a member's mouth is not
+something a regular expression should ever do, while counting who wrote what
+and whether anyone is replying to anyone is arithmetic, and it is most of what
+"is this thread going anywhere" means.
+
 ## The AI layer
 
 `src/lib/ai/` is `server-only`. The key never reaches the browser, and the
@@ -358,8 +433,8 @@ signals (are costs given, are claims supported, is the commitment reversible),
 so the whole loop can be walked without a key. It records its model as `mock`,
 and the review UI renders a warning on any review that carries it.
 
-**Six prompts, versioned.** Proposal sharpening, law audit, proposal review,
-decision rationale, reflection prompt, synthesis prompt. Sharpening is the only
+**Seven prompts, versioned.** Proposal sharpening, law audit, proposal review,
+debate summary, decision rationale, reflection prompt, synthesis prompt. Sharpening is the only
 one that runs before anything is stored, and the only one that can stop a
 member doing something. Every artefact stores the id and version that made
 it. Changing a rubric means bumping the version — editing in place silently
@@ -405,7 +480,9 @@ proposals (in_review) ─────────► ledger: proposal.submitted
 proposal_reviews + proposal_flags
 proposals (in_deliberation) ───► ledger: proposal.reviewed
    │
-   ├─ deliberation_comments     open to all members
+   ├─ deliberation_comments     question / amendment / alternative / concern
+   │   ├─ answer_contribution() written, attributed, permanent
+   │   └─ summariseDebate()     the case each way, and converging/splitting
    ├─ proposal_flags.resolution answered, attributed, permanent
    │
    │ markRead() → proposal_reads

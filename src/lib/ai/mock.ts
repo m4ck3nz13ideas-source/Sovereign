@@ -25,6 +25,8 @@ export class MockProvider implements AiProvider {
     const text = input.toLowerCase();
 
     switch (schemaName) {
+      case "record_debate_summary":
+        return { data: this.debate(input), model: "mock" };
       case "record_sharpening":
         return { data: this.sharpen(input), model: "mock" };
       case "record_law_audit":
@@ -43,6 +45,78 @@ export class MockProvider implements AiProvider {
   }
 
   /* ----------------------------------------------------------------------- */
+
+  /**
+   * The offline debate summary.
+   *
+   * It abstains on the arguments and does not abstain on the shape. Those are
+   * different jobs: putting words in a member's mouth is not something a
+   * regular expression should ever do, but counting who wrote what, what is
+   * still unanswered, and whether anybody is replying to anybody is arithmetic
+   * — and it is most of what "is this thread going anywhere" means.
+   *
+   * So: unresolved comes from the thread verbatim, polarization comes from the
+   * structure, and the two argument lists come back empty with the reading
+   * saying why.
+   */
+  private debate(input: string) {
+    // The thread sits between its heading and the closing note, and each
+    // contribution starts with its kind in brackets. Anything before the first
+    // bracket in a chunk is framing, not something somebody said.
+    const body = input.split("THE THREAD, in order\n").slice(1).join("");
+    const blocks = body
+      .split(/\n\n---\n\n/)
+      .map((b) => {
+        const at = b.indexOf("[");
+        const cut = at >= 0 ? b.slice(at) : "";
+        return cut.split("\nYou cannot see anyone")[0].trim();
+      })
+      .filter((b) => /^\[[a-z]+\]/.test(b));
+
+    const kindOf = (b: string) => b.match(/^\[([a-z]+)\]/)?.[1] ?? "reply";
+    const authorOf = (b: string) => b.match(/^\[[a-z]+\]\s([^—]+)—/)?.[1]?.trim() ?? "a member";
+    const firstLine = (b: string) =>
+      b.split("\n").slice(1).join(" ").replace(/ANSWERED by[\s\S]*/, "").trim();
+
+    const open = blocks.filter(
+      (b) => ["question", "concern"].includes(kindOf(b)) && !b.includes("ANSWERED by"),
+    );
+
+    const voices = new Set(blocks.map(authorOf));
+    const replies = blocks.filter((b) => kindOf(b) === "reply").length;
+    const positions = blocks.filter((b) =>
+      ["concern", "alternative"].includes(kindOf(b)),
+    ).length;
+
+    // Two or more people, several positions stated, and nobody replying to
+    // anybody is the structural signature of a thread that has stopped being a
+    // conversation. It is a weak signal and the reading says so.
+    const polarization =
+      blocks.length >= 4 && replies === 0 && positions >= 2 && voices.size >= 2
+        ? ("splitting" as const)
+        : replies >= blocks.length / 2 && blocks.length >= 3
+          ? ("converging" as const)
+          : ("mixed" as const);
+
+    return {
+      arguments_for: [],
+      arguments_against: [],
+      unresolved: open.slice(0, 6).map((b) => firstLine(b).slice(0, 200)),
+      shifted: "",
+      polarization,
+      reading:
+        `No model read this thread — ANTHROPIC_API_KEY is not set, so the offline reader answered. ` +
+        `It will not put words in anybody's mouth, so the arguments are empty: read the thread. ` +
+        `What it can count: ${blocks.length} ${blocks.length === 1 ? "contribution" : "contributions"} ` +
+        `from ${voices.size} ${voices.size === 1 ? "person" : "people"}, ` +
+        `${open.length} still unanswered, ${replies} ${replies === 1 ? "reply" : "replies"}. ` +
+        (polarization === "splitting"
+          ? `Several positions have been stated and nobody has replied to anybody, which is what a thread looks like when it has stopped being a conversation. That is a structural guess, not a reading of the argument.`
+          : polarization === "converging"
+            ? `Most of it is people replying to each other, which is what a working argument looks like from the outside.`
+            : `Nothing structural stands out.`),
+    };
+  }
 
   /**
    * The offline sharpening pass.

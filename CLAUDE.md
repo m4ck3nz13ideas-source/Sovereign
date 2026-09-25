@@ -42,7 +42,14 @@ on purpose, in a commit that says so.
     returns only what failed for want of people. If you find yourself widening
     that filter, you are building a system that asks until it gets the answer
     it wanted.
-13. **A place has no register and no steward.** So there is no participation
+13. **A concern is not a veto.** Questions and concerns are answered in
+    writing and counted onto the decision; they never fail a proposal. Only a
+    review flag does, because that is the rubric against the group's own floor
+    rather than one person disagreeing.
+14. **A split is never reported as a consensus.** Every decision carries
+    `dispersion` and `polarized` from `alignment_shape()`. Do not add a screen
+    that shows a mean without them.
+15. **A place has no register and no steward.** So there is no participation
     share (a `min_voices` floor instead, and `participation` stays null) and
     nobody picks the closing moment (`closes_at` does). Do not fill either gap
     with a plausible-looking number.

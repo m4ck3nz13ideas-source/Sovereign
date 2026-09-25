@@ -145,6 +145,31 @@ An unresolved flag fails the proposal regardless of every other number. This is
 the mechanism that lets a weak proposal be retired early without anyone having
 to be the person who objected.
 
+### `deliberation_comments`
+`kind` is one of `question`, `amendment`, `alternative`, `concern` at the top
+level, or `reply` underneath. `comments_kind_shape` enforces both directions —
+a top-level contribution cannot be a reply, and a reply cannot be a question —
+because everything counted downstream depends on the kinds meaning something.
+
+`answer`, `answered_by`, `answered_at` on questions and concerns. Twenty
+characters, attributed, and no policy permits an answer to change or be
+removed. `adopted_at` on amendments only: the author saying they will carry it
+into a rewrite. It alters nothing about the live proposal, whose text is frozen.
+
+An unanswered question or concern does **not** fail a proposal. It is shown
+above the sliders and counted onto the decision. A flag is the review finding
+something below the group's floor; a concern is a person disagreeing, and one
+person able to hold a proposal until satisfied is a veto.
+
+### `debate_summaries`
+One row per reading of a thread, with `covers` — the number of contributions it
+was written across, so a stale summary is visibly behind rather than quietly
+wrong. `polarization` is a reading of the argument, never of the votes, which
+are hidden until close.
+
+No update policy and no delete policy. A summary that was wrong is superseded
+by a later one and both stay, the same rule as a superseded law reading.
+
 ### `resonance_votes`
 Three dimensions, each constrained to 0–1: alignment, confidence, urgency.
 
@@ -215,6 +240,12 @@ passed  ⟺  no Universal Law violation
 
 A proposal that passes stops at `passed`. `activate_proposal()` creates the
 project, and only once every need has a name against it.
+
+`dispersion` is the population standard deviation of alignment and `polarized`
+marks a real split — spread, with both ends occupied. A mean alone reports
+everyone-at-0.50 and half-at-0.10-half-at-0.90 identically, and those are not
+the same group. `open_questions` and `open_concerns` record what was still
+unanswered when the group decided.
 
 `participation` is **null** for a place decision, and `member_count` is zero.
 There is no register of everyone in a city, so there is no share to compute —
@@ -299,6 +330,9 @@ There is no repost, no follower graph, and no engagement count on the card.
 | `can_steward_proposal` | Author, or a steward of the group it belongs to |
 | `related_decisions_for` | Retrieval from the same address, not the same author |
 | `scope_counts` | What is open at each scale this person is in |
+| `answer_contribution`, `adopt_amendment` | Answered in writing; adopted without touching the text |
+| `debate_standing` | Questions, concerns, amendments, and how many are open |
+| `alignment_shape` | Whether a mean describes one group or two |
 | `attention_queue` | What is blocked here, and on whom — ordered by what blocks it |
 | `dormant_proposals` | Failed for want of people, never for want of merit |
 | `signal_feed` | Governance acts, straight off the ledger |

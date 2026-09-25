@@ -6,6 +6,7 @@ import { UNIVERSAL_LAWS } from "@/lib/universal-law";
 import { AnthropicProvider } from "./anthropic";
 import { MockProvider } from "./mock";
 import {
+  DEBATE_SUMMARY,
   DECISION_RATIONALE,
   LAW_AUDIT,
   PROPOSAL_REVIEW,
@@ -15,6 +16,8 @@ import {
 } from "./prompts";
 import { AiError, type AiProvider } from "./provider";
 import {
+  debateJsonSchema,
+  debateSchema,
   lawAuditJsonSchema,
   lawAuditSchema,
   rationaleJsonSchema,
@@ -28,6 +31,7 @@ import {
   SHARPEN_SECTIONS,
   synthesisJsonSchema,
   synthesisSchema,
+  type DebateOutput,
   type LawAuditOutput,
   type ReflectionOutput,
   type ReviewOutput,
@@ -255,6 +259,73 @@ Return exactly six section readings, using the section names given above.`;
   }
 
   return { sharpen: parsed.data, model, prompt: PROPOSAL_SHARPEN };
+}
+
+/**
+ * Summarise a deliberation thread.
+ *
+ * Runs on demand rather than on a timer: a summary is an artefact with a
+ * version on it, and one written by a cron job at 3am is one nobody asked for
+ * and nobody can date to a moment in the argument.
+ *
+ * The votes are not passed in and must not be. They are hidden until the
+ * proposal closes, and a polarization reading inferred from them would be that
+ * rule broken by another route.
+ */
+export async function summariseDebate(ctx: {
+  proposal: { title: string; summary: string; intent: string; change: string };
+  contributions: {
+    kind: string;
+    author: string;
+    body: string;
+    answer: string | null;
+    answeredBy: string | null;
+    when: string;
+  }[];
+}): Promise<{ debate: DebateOutput; model: string; prompt: typeof DEBATE_SUMMARY }> {
+  const thread = ctx.contributions
+    .map((c) =>
+      [
+        `[${c.kind}] ${c.author} — ${c.when}`,
+        c.body,
+        c.answer ? `ANSWERED by ${c.answeredBy ?? "a member"}: ${c.answer}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    )
+    .join("\n\n---\n\n");
+
+  const input = `THE PROPOSAL
+title: ${ctx.proposal.title}
+in one line: ${ctx.proposal.summary}
+
+what it is solving:
+${ctx.proposal.intent}
+
+what would change:
+${ctx.proposal.change}
+
+THE THREAD, in order
+${thread || "(nothing said yet)"}
+
+You cannot see anyone's resonance and are not being asked to guess it.`;
+
+  const { data, model } = await provider().complete({
+    prompt: DEBATE_SUMMARY,
+    input,
+    schema: debateJsonSchema as unknown as Record<string, unknown>,
+    schemaName: "record_debate_summary",
+    maxTokens: 2500,
+  });
+
+  const parsed = debateSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new AiError(
+      `The debate summary did not match the expected shape: ${parsed.error.message}`,
+    );
+  }
+
+  return { debate: parsed.data, model, prompt: DEBATE_SUMMARY };
 }
 
 export async function auditAgainstLaw(ctx: {

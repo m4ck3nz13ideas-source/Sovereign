@@ -166,6 +166,46 @@ export interface Proposal {
   closed_at: string | null;
 }
 
+/** What a top-level contribution to a deliberation is. A reply is a reply. */
+export type ContributionKind =
+  | "question"
+  | "amendment"
+  | "alternative"
+  | "concern"
+  | "reply";
+
+/** Where a deliberation stands, from `debate_standing()`. */
+export interface DebateStanding {
+  contributions: number;
+  questions: number;
+  open_questions: number;
+  concerns: number;
+  open_concerns: number;
+  amendments: number;
+  adopted: number;
+  alternatives: number;
+  voices: number;
+}
+
+/** A stored reading of a deliberation thread. */
+export interface DebateSummary {
+  id: string;
+  proposal_id: string;
+  /** How many contributions it was written across. Fewer than now means stale. */
+  covers: number;
+  arguments_for: { point: string; from: string }[];
+  arguments_against: { point: string; from: string }[];
+  unresolved: string[];
+  shifted: string | null;
+  /** A reading of the argument, never of anyone's vote. */
+  polarization: "converging" | "mixed" | "splitting";
+  reading: string;
+  prompt_id: string;
+  prompt_version: string;
+  model: string;
+  created_at: string;
+}
+
 /** A row from `attention_queue()`: one open proposal, and why it is in front of you. */
 export interface AttentionItem {
   proposal_id: string;
@@ -424,6 +464,15 @@ export interface Decision {
   values_invoked: string[];
   rationale_summary: string | null;
   prompt_version: string | null;
+  /**
+   * Population standard deviation of alignment. A mean without this hides
+   * whether the group agreed or merely averaged.
+   */
+  dispersion: number | null;
+  /** Spread, with both ends occupied. A split, not an uncertainty. */
+  polarized: boolean;
+  open_questions: number;
+  open_concerns: number;
   decided_at: string;
   decided_by: string | null;
 }

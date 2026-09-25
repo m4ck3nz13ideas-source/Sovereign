@@ -88,6 +88,22 @@ export const sharpenSchema = z.object({
 
 export type SharpenOutput = z.infer<typeof sharpenSchema>;
 
+/** The debate summary. Arguments in the participants' terms, not the model's. */
+export const debateSchema = z.object({
+  arguments_for: z
+    .array(z.object({ point: z.string().min(1), from: z.string() }))
+    .max(6),
+  arguments_against: z
+    .array(z.object({ point: z.string().min(1), from: z.string() }))
+    .max(6),
+  unresolved: z.array(z.string()).max(6),
+  shifted: z.string(),
+  polarization: z.enum(["converging", "mixed", "splitting"]),
+  reading: z.string().min(1),
+});
+
+export type DebateOutput = z.infer<typeof debateSchema>;
+
 export const rationaleSchema = z.object({
   rationale: z.string().min(1),
 });
@@ -230,6 +246,54 @@ export const sharpenJsonSchema = {
     },
     readiness: scoreSchema,
     verdict: { type: "string" },
+  },
+} as const;
+
+const argumentList = {
+  type: "array",
+  maxItems: 6,
+  items: {
+    type: "object",
+    required: ["point", "from"],
+    properties: {
+      point: { type: "string", description: "The argument, at its strongest." },
+      from: {
+        type: "string",
+        description: "Who made it, by display name. Empty if it is the thread's collective position.",
+      },
+    },
+  },
+} as const;
+
+export const debateJsonSchema = {
+  type: "object",
+  required: [
+    "arguments_for",
+    "arguments_against",
+    "unresolved",
+    "shifted",
+    "polarization",
+    "reading",
+  ],
+  properties: {
+    arguments_for: argumentList,
+    arguments_against: argumentList,
+    unresolved: {
+      type: "array",
+      maxItems: 6,
+      description: "Questions and concerns nobody has taken up. Specific and short.",
+      items: { type: "string" },
+    },
+    shifted: {
+      type: "string",
+      description: "What moved during the debate. Empty string when nothing did.",
+    },
+    polarization: {
+      type: "string",
+      enum: ["converging", "mixed", "splitting"],
+      description: "A reading of the argument, never of anyone's vote.",
+    },
+    reading: { type: "string" },
   },
 } as const;
 

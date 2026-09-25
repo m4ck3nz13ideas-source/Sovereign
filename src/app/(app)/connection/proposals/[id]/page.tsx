@@ -9,6 +9,9 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   ActivationStanding,
   Commitment,
+  ContributionKind,
+  DebateStanding,
+  DebateSummary as DebateSummaryRow,
   Decision,
   DeliberationComment,
   LawAssessment,
@@ -26,7 +29,8 @@ import { READINESS_THRESHOLD, SECTION_LABELS } from "@/lib/readiness";
 
 import { AiLayer } from "./AiLayer";
 import { CloseButton } from "./CloseButton";
-import { Deliberation } from "./Deliberation";
+import { DebateSummary } from "./DebateSummary";
+import { Deliberation, type Contribution } from "./Deliberation";
 import { Activation } from "./Activation";
 import { LawLayer } from "./LawLayer";
 import { FlagList } from "./FlagList";
@@ -145,6 +149,8 @@ export default async function ProposalPage({
     { data: activationRows },
     { data: commitmentRows },
     { data: readinessRow },
+    { data: debateRows },
+    { data: summaryRow },
   ] = await Promise.all([
     supabase
       .from("proposal_reviews")
@@ -159,7 +165,7 @@ export default async function ProposalPage({
       .order("created_at", { ascending: true }),
     supabase
       .from("deliberation_comments")
-      .select("*, profiles(display_name)")
+      .select("*, profiles(display_name), answered:answered_by(display_name)")
       .eq("proposal_id", id)
       .order("created_at", { ascending: true }),
     supabase
@@ -198,6 +204,14 @@ export default async function ProposalPage({
       .select("*")
       .eq("proposal_id", id)
       .maybeSingle(),
+    supabase.rpc("debate_standing", { p_proposal_id: id }),
+    supabase
+      .from("debate_summaries")
+      .select("*")
+      .eq("proposal_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const review = reviewRows?.[0] ? asReview(reviewRows[0]) : null;
@@ -205,8 +219,51 @@ export default async function ProposalPage({
     profiles: { display_name: string } | null;
   })[];
   const comments = (commentRows ?? []) as unknown as (DeliberationComment & {
+    kind: ContributionKind;
+    answer: string | null;
+    adopted_at: string | null;
     profiles: { display_name: string } | null;
+    answered: { display_name: string } | null;
   })[];
+
+  // Threaded one level. Replies hang off the thing they answer; nothing hangs
+  // off a reply, because a thread that nests is a thread nobody finishes.
+  const toItem = (c: (typeof comments)[number]): Contribution => ({
+    id: c.id,
+    kind: c.kind,
+    author: c.profiles?.display_name ?? "A member",
+    body: c.body,
+    when: ago(c.created_at),
+    mine: c.author_id === userId,
+    answer: c.answer,
+    answeredBy: c.answered?.display_name ?? null,
+    adopted: Boolean(c.adopted_at),
+    replies: [],
+  });
+
+  const byId = new Map(comments.map((c) => [c.id, toItem(c)]));
+  const contributions: Contribution[] = [];
+  for (const c of comments) {
+    const item = byId.get(c.id)!;
+    if (c.parent_id && byId.has(c.parent_id)) byId.get(c.parent_id)!.replies.push(item);
+    else if (!c.parent_id) contributions.push(item);
+  }
+
+  const debate = (Array.isArray(debateRows) ? debateRows[0] : debateRows) as
+    | DebateStanding
+    | undefined;
+
+  const debateSummary = summaryRow
+    ? ({
+        ...(summaryRow as unknown as DebateSummaryRow),
+        arguments_for: ((summaryRow as { arguments_for?: unknown }).arguments_for ??
+          []) as DebateSummaryRow["arguments_for"],
+        arguments_against: ((summaryRow as { arguments_against?: unknown })
+          .arguments_against ?? []) as DebateSummaryRow["arguments_against"],
+        unresolved: ((summaryRow as { unresolved?: unknown }).unresolved ??
+          []) as string[],
+      } satisfies DebateSummaryRow)
+    : null;
   const summary = (Array.isArray(summaryRows) ? summaryRows[0] : summaryRows) as
     | ResonanceSummary
     | undefined;
@@ -451,21 +508,38 @@ export default async function ProposalPage({
       </section>
 
       <section className="mb-10">
-        <SectionLabel right={comments.length ? `${comments.length}` : undefined}>
+        <SectionLabel
+          right={
+            debate?.open_questions || debate?.open_concerns
+              ? `${(debate.open_questions ?? 0) + (debate.open_concerns ?? 0)} unanswered`
+              : comments.length
+                ? `${comments.length}`
+                : undefined
+          }
+        >
           Deliberation
         </SectionLabel>
         <Deliberation
           proposalId={id}
-          comments={comments.map((c) => ({
-            id: c.id,
-            author: c.profiles?.display_name ?? "A member",
-            body: c.body,
-            when: ago(c.created_at),
-            mine: c.author_id === userId,
-          }))}
-          canComment={open}
+          contributions={contributions}
+          canContribute={open}
+          canAdopt={
+            proposal.author_id === userId || Boolean(myRole && isSteward(myRole))
+          }
         />
       </section>
+
+      {comments.length >= 2 || debateSummary ? (
+        <section className="mb-10">
+          <SectionLabel>The argument, summarised</SectionLabel>
+          <DebateSummary
+            proposalId={id}
+            summary={debateSummary}
+            contributions={comments.length}
+            canRun={open}
+          />
+        </section>
+      ) : null}
 
       <section className="mb-10">
         <SectionLabel>Resonance</SectionLabel>
@@ -486,6 +560,8 @@ export default async function ProposalPage({
               revealed: false,
             }
           }
+          openQuestions={debate?.open_questions ?? 0}
+          openConcerns={debate?.open_concerns ?? 0}
         />
       </section>
 
