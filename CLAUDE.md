@@ -53,6 +53,18 @@ on purpose, in a commit that says so.
     share (a `min_voices` floor instead, and `participation` stays null) and
     nobody picks the closing moment (`closes_at` does). Do not fill either gap
     with a plausible-looking number.
+16. **A prediction is dated, frozen and marked.** `projections` take a
+    statement and a horizon, `record_projection()` refuses once the proposal
+    has closed, a trigger rejects any edit to the words, and there is no
+    delete path. `complete_project()` refuses while a projection that has come
+    due is unmarked. Adding a screen that shows predictions without their
+    verdicts puts the decoration back.
+17. **Personhood proves one thing and stores one thing.** A distinct living
+    person, and an opaque nullifier. No name, document, image or biometric —
+    and `personhood_proofs` has nowhere to put them. It is required only where
+    `scope_rules.require_personhood` says so, never for reading, writing or
+    objecting, and never inside a group. Only the person can revoke their own.
+    Every decision records `verified_voices` whether the scale asked or not.
 
 ## Where things go
 
@@ -60,6 +72,12 @@ on purpose, in a commit that says so.
   `provider.ts` is the one-method interface; adapters sit beside it.
 - `src/lib/ledger/` — the seam a chain adapter would replace. Vote recording,
   identity and treasury. Nothing above it knows which implementation is live.
+- `src/lib/personhood/` — the verifier seam. One question asked outward (is
+  this a distinct living human) and one answer kept (an opaque nullifier). An
+  adapter that returns anything identifying is a bug, not a feature: there is
+  nowhere in the schema to put it. With nothing configured the adapter refuses
+  rather than pretending — unlike the AI layer's mock, a fake personhood proof
+  IS the thing being proved.
 - `src/lib/collective.ts` — pure helpers for the collective screens. A
   `"use server"` file may only export async functions, so anything synchronous
   belongs here rather than in `actions.ts`.

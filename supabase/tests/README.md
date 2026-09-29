@@ -6,7 +6,7 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Seven suites, a hundred and twenty-eight checks. Every one of them runs as a non-superuser,
+Nine suites, a hundred and eighty-one checks. Every one of them runs as a non-superuser,
 so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
@@ -114,6 +114,38 @@ floor. It puts it back at the end.
   its mean, which is the whole reason the flag exists.
 - A summary is readable by the group and cannot be rewritten afterwards.
 
+### `08_projection.sql` — twenty-nine checks
+
+- A three-word prediction and a zero-day horizon are both refused.
+- The model's words carry the rubric that produced them; a person's words
+  cannot pretend to.
+- Another street sees none of it and cannot add to it.
+- **Nothing can be added once the proposal closes** — a prediction written
+  after the vote is a memory.
+- The clock starts at the decision, not at the sentence.
+- A miss cannot be called early; something that already happened can.
+- A verdict needs twenty characters, is given exactly once, and the words
+  cannot be rewritten or the row deleted afterwards.
+- **A project does not complete while a prediction that has come due is
+  unmarked** — and a year-out horizon does not hold it open.
+- The forecasting record splits by whose words they were, and your own record
+  does not leak into anybody else's.
+
+### `09_personhood.sql` — twenty-four checks
+
+- Unverified resonance is fine at local scale, where people can see each other.
+- Reading a national proposal and raising a concern on it need nothing.
+- **Unverified resonance at national scale is refused**, and passes once proved.
+- `personhood_proofs` has no column for a name, document, image or biometric,
+  and the nullifier never reaches the public ledger.
+- **The same human cannot verify a second account.**
+- Nobody can read, write or revoke somebody else's proof — including by
+  writing the table directly.
+- Revoking your own releases the hash for the same human to use elsewhere.
+- An expired proof stops counting on its own.
+- A group asks for nothing: it already has a register.
+- The decision records how many of its voices were verified.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -131,6 +163,8 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0007_readiness.sql \
   -f supabase/migrations/0008_discovery.sql \
   -f supabase/migrations/0009_debate.sql \
+  -f supabase/migrations/0010_projection.sql \
+  -f supabase/migrations/0011_personhood.sql \
   -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
@@ -138,7 +172,9 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/tests/04_scope.sql \
   -f supabase/tests/05_readiness.sql \
   -f supabase/tests/06_discovery.sql \
-  -f supabase/tests/07_debate.sql
+  -f supabase/tests/07_debate.sql \
+  -f supabase/tests/08_projection.sql \
+  -f supabase/tests/09_personhood.sql
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server
@@ -155,6 +191,38 @@ migrations touch: an `auth.users` table, an `auth.uid()` that reads a session
 setting, and the `authenticated` and `anon` roles. It exists so the rules can
 be tested locally without a Supabase project, and it is **not** applied to a
 real one — Supabase provides all of this already.
+
+### `08_projection.sql` — twenty-nine checks
+
+- A three-word prediction and a zero-day horizon are both refused.
+- The model's words carry the rubric that produced them; a person's words
+  cannot pretend to.
+- Another street sees none of it and cannot add to it.
+- **Nothing can be added once the proposal closes** — a prediction written
+  after the vote is a memory.
+- The clock starts at the decision, not at the sentence.
+- A miss cannot be called early; something that already happened can.
+- A verdict needs twenty characters, is given exactly once, and the words
+  cannot be rewritten or the row deleted afterwards.
+- **A project does not complete while a prediction that has come due is
+  unmarked** — and a year-out horizon does not hold it open.
+- The forecasting record splits by whose words they were, and your own record
+  does not leak into anybody else's.
+
+### `09_personhood.sql` — twenty-four checks
+
+- Unverified resonance is fine at local scale, where people can see each other.
+- Reading a national proposal and raising a concern on it need nothing.
+- **Unverified resonance at national scale is refused**, and passes once proved.
+- `personhood_proofs` has no column for a name, document, image or biometric,
+  and the nullifier never reaches the public ledger.
+- **The same human cannot verify a second account.**
+- Nobody can read, write or revoke somebody else's proof — including by
+  writing the table directly.
+- Revoking your own releases the hash for the same human to use elsewhere.
+- An expired proof stops counting on its own.
+- A group asks for nothing: it already has a register.
+- The decision records how many of its voices were verified.
 
 ## Running them against a real Supabase project
 

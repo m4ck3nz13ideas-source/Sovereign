@@ -20,6 +20,9 @@ export default async function SettingsPage() {
   const { group, groups } = await requireSession();
   const supabase = await createClient();
   const theme = await currentTheme();
+  const { data: verified } = await supabase.rpc("is_verified_person", {
+    p_profile_id: null,
+  });
 
   const { data: members } = group
     ? await supabase
@@ -69,6 +72,27 @@ export default async function SettingsPage() {
             System follows your phone, including when it changes at dusk.
           </p>
         </div>
+      </section>
+
+      <section className="mb-10">
+        <SectionLabel
+          right={<Tag tone={verified ? "calm" : undefined}>{verified ? "verified" : "not verified"}</Tag>}
+        >
+          One person
+        </SectionLabel>
+        <Card>
+          <p className="text-[0.95rem] leading-relaxed text-paper-dim">
+            A place has no register, so one person could hold five accounts.
+            Proof of personhood closes that where it matters — national scale
+            and above — and stores nothing about you but an opaque hash.
+          </p>
+          <Link
+            href="/settings/personhood"
+            className="smallcaps mt-3 inline-block text-[11px] text-gold hover:underline"
+          >
+            {verified ? "Read what it does →" : "Prove you are one person →"}
+          </Link>
+        </Card>
       </section>
 
       <section className="mb-10">

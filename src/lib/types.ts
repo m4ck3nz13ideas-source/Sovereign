@@ -276,7 +276,37 @@ export interface ScopeRule {
   threshold_alignment: number;
   min_voices: number;
   deliberation_days: number;
+  /** Whether resonance at this scale needs proof of personhood. Reading never does. */
+  require_personhood: boolean;
   note: string | null;
+}
+
+/**
+ * Proof that an account is a distinct living person.
+ *
+ * Note what is not here: a name, a document, an image, a biometric, an account
+ * at the verifier. The nullifier is an opaque per-application hash — stable
+ * for one human, not reversible into them — and it is the only thing about a
+ * person's body that this system ever holds. It is readable by its owner and
+ * nobody else.
+ */
+export interface PersonhoodProof {
+  profile_id: string;
+  method: "biometric" | "seed";
+  provider: string;
+  level: string | null;
+  nullifier: string;
+  verified_at: string;
+  expires_at: string | null;
+  revoked_at: string | null;
+}
+
+/** A row from `personhood_standing()`: what one scale asks of you. */
+export interface PersonhoodStanding {
+  scope: GroupScope;
+  required: boolean;
+  min_voices: number;
+  you_are_verified: boolean;
 }
 
 /** How a proposal is addressed: to a group, or to a place at a scale. */
@@ -473,6 +503,13 @@ export interface Decision {
   polarized: boolean;
   open_questions: number;
   open_concerns: number;
+  /**
+   * How many of the voices had proof of personhood when this closed. Recorded
+   * at every scale, required at some — a decision carried by four accounts
+   * that might be one person is a different object from one carried by four
+   * people, and a record that showed them identically would be lying.
+   */
+  verified_voices: number | null;
   decided_at: string;
   decided_by: string | null;
 }

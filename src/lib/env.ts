@@ -41,6 +41,22 @@ export const env = {
   get anthropicModel(): string {
     return process.env.ANTHROPIC_MODEL?.trim() || "claude-sonnet-5";
   },
+  /**
+   * The personhood verifier. Absent almost everywhere, and the app says so
+   * rather than pretending: with no verifier, resonance at national scale and
+   * above is closed to everyone on the instance. See src/lib/personhood.
+   */
+  get worldIdAppId(): string | null {
+    return process.env.NEXT_PUBLIC_WORLD_ID_APP_ID?.trim() || null;
+  },
+  /**
+   * The action the nullifier is scoped to. Changing it invalidates every proof
+   * already recorded, because the same human hashes differently under a
+   * different action — so it is configuration with a default, not a knob.
+   */
+  get worldIdAction(): string {
+    return process.env.NEXT_PUBLIC_WORLD_ID_ACTION?.trim() || "sovereign-personhood";
+  },
   get siteUrl(): string {
     return (
       process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
