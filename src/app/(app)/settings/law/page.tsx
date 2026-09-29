@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { Card, Page, PageTitle } from "@/components/ui";
 import { requireSession } from "@/lib/session";
+import { createClient } from "@/lib/supabase/server";
+import type { LawRevision } from "@/lib/types";
 import {
   AMENDMENT_RULE,
   RESONANCE_THRESHOLD,
@@ -20,6 +22,19 @@ export const metadata = { title: "Universal Law · Sovereign" };
  */
 export default async function LawPage() {
   await requireSession();
+  const supabase = await createClient();
+
+  // Anything amended since. Revision 1 is the shipped text below and is not
+  // stored — the constitution as it currently reads is the two merged.
+  const { data: revisionRows } = await supabase
+    .from("law_revisions")
+    .select("law_id, revision, text, violation_looks_like, adopted_at, adopted_from")
+    .order("revision", { ascending: false });
+
+  const amended = new Map<string, LawRevision>();
+  for (const r of (revisionRows ?? []) as (LawRevision & { law_id: string })[]) {
+    if (!amended.has(r.law_id)) amended.set(r.law_id, r);
+  }
 
   return (
     <Page>
@@ -49,7 +64,9 @@ export default async function LawPage() {
       </Card>
 
       <ol className="space-y-3">
-        {UNIVERSAL_LAWS.map((law) => (
+        {UNIVERSAL_LAWS.map((law) => {
+          const now = amended.get(law.id);
+          return (
           <li key={law.id}>
             <Card>
               <div className="flex items-baseline gap-3">
@@ -57,10 +74,32 @@ export default async function LawPage() {
                   {law.ordinal}
                 </span>
                 <h2 className="font-serif text-lg text-paper">{law.name}</h2>
+                {now ? (
+                  <span className="smallcaps ml-auto text-[10px] text-paper-faint">
+                    revision {now.revision}
+                  </span>
+                ) : null}
               </div>
               <p className="mt-2 text-[0.95rem] leading-relaxed text-paper-dim">
-                {law.text}
+                {now ? now.text : law.text}
               </p>
+              {now ? (
+                <details className="group mt-3">
+                  <summary className="smallcaps cursor-pointer list-none text-[10px] text-paper-faint hover:text-gold [&::-webkit-details-marker]:hidden">
+                    <span className="group-open:hidden">as first written</span>
+                    <span className="hidden group-open:inline">close</span>
+                  </summary>
+                  <p className="mt-2 border-l border-line pl-3 text-sm leading-relaxed text-paper-faint">
+                    {law.text}
+                  </p>
+                  <Link
+                    href={`/collective/proposals/${now.adopted_from}`}
+                    className="smallcaps mt-2 inline-block text-[10px] text-gold hover:underline"
+                  >
+                    what changed it →
+                  </Link>
+                </details>
+              ) : null}
               <details className="group mt-3">
                 <summary className="smallcaps cursor-pointer list-none text-[10px] text-paper-faint hover:text-gold [&::-webkit-details-marker]:hidden">
                   <span className="group-open:hidden">
@@ -69,12 +108,13 @@ export default async function LawPage() {
                   <span className="hidden group-open:inline">close</span>
                 </summary>
                 <p className="mt-2 border-l border-line pl-3 text-sm leading-relaxed text-paper-faint">
-                  {law.violationLooksLike}
+                  {now ? now.violation_looks_like : law.violationLooksLike}
                 </p>
               </details>
             </Card>
           </li>
-        ))}
+          );
+        })}
       </ol>
 
       <Card className="mt-8">
@@ -85,11 +125,28 @@ export default async function LawPage() {
           {AMENDMENT_RULE}
         </p>
         <p className="mt-3 text-sm leading-relaxed text-paper-faint">
-          Not a threshold — everyone. That mechanism does not exist in this
-          build, so the laws are shipped as code rather than stored as rows a
-          steward could edit. Representing them as editable data would be a lie
-          about what they are.
+          Not a threshold — everyone. Nobody answers yes or no here, so the
+          closest honest reading is that nobody dissented: an amendment needs
+          every single voice at 0.900 or above, not an average of it. One
+          person at 0.2 stops it, and that is the behaviour rather than an
+          inconvenience. A mean would let a strong majority carry a
+          constitution over a minority&rsquo;s objection, which is the thing a
+          constitution exists to stop happening to a minority.
         </p>
+        <p className="mt-3 text-sm leading-relaxed text-paper-faint">
+          The ten are the ten. An amendment rewrites the wording of one
+          existing law — there is no repeal, no eleventh and no merge. It is
+          global by definition, audited against the other nine like anything
+          else, and a violation is as fatal here as it is anywhere. Whatever
+          this law has already refused is put in front of everybody before they
+          answer.
+        </p>
+        <Link
+          href="/settings/law/amend"
+          className="smallcaps mt-4 inline-block text-[11px] text-gold hover:underline"
+        >
+          Propose an amendment →
+        </Link>
       </Card>
 
       <p className="mt-8 text-xs leading-relaxed text-paper-faint">

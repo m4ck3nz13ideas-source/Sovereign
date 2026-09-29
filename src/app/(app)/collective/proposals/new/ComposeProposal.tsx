@@ -100,6 +100,7 @@ export function ComposeProposal({
   defaultAddress,
   unsetScopes,
   takingUp,
+  amend = null,
 }: {
   addresses: { value: string; label: string; detail: string | null }[];
   defaultAddress: string;
@@ -111,13 +112,33 @@ export function ComposeProposal({
    * new proposal records what it came from.
    */
   takingUp: (typeof EMPTY & { id: string }) | null;
+  /**
+   * The Universal Law being rewritten, when this composer was opened from the
+   * constitution rather than from Proposals.
+   *
+   * An amendment is an ordinary proposal in every respect that matters — same
+   * six sections, same sharpening gate, same audit, same sliders. What changes
+   * is that it is global by definition, and that enacting it needs every voice
+   * above the bar rather than a mean. The composer does not get a separate
+   * code path for it, because a special ceremony in a side room is exactly how
+   * constitutions get amended by people who were not watching.
+   */
+  amend?: {
+    lawId: string;
+    lawName: string;
+    currentText: string;
+    currentViolation: string;
+    globalAddress: string;
+  } | null;
 }) {
   const router = useRouter();
   const [form, setForm] = useState(
     takingUp
       ? { ...EMPTY, ...stripId(takingUp), address: defaultAddress }
-      : { ...EMPTY, address: defaultAddress },
+      : { ...EMPTY, address: amend ? amend.globalAddress : defaultAddress },
   );
+  const [newText, setNewText] = useState(amend?.currentText ?? "");
+  const [newViolation, setNewViolation] = useState(amend?.currentViolation ?? "");
   const [restored, setRestored] = useState(false);
   const [sharp, setSharp] = useState<Sharpening | null>(null);
   const [sharpOf, setSharpOf] = useState<string>("");
@@ -191,7 +212,13 @@ export function ComposeProposal({
   function submit() {
     start(async () => {
       setError(null);
-      const r = await submitProposal({ ...form, supersedes: takingUp?.id ?? null });
+      const r = await submitProposal({
+        ...form,
+        supersedes: takingUp?.id ?? null,
+        amendsLaw: amend?.lawId ?? null,
+        amendmentText: newText,
+        amendmentViolation: newViolation,
+      });
       if (!r.ok) {
         setError(r.error);
         return;
@@ -231,6 +258,46 @@ export function ComposeProposal({
           responded, or nobody committed what it needed — the fix goes in the
           text, not in the record. It will be sharpened and audited again.
         </p>
+      ) : null}
+
+      {amend ? (
+        <div className="space-y-3 rounded-card border border-gold-dim bg-gold-wash p-4">
+          <p className="text-[0.95rem] leading-relaxed text-paper">
+            You are rewriting <strong>{amend.lawName}</strong>. It goes through
+            everything an ordinary proposal goes through, and then needs every
+            single voice at 0.900 or above — not an average. One person below
+            the line stops it.
+          </p>
+          <p className="text-[0.8125rem] leading-relaxed text-paper-dim">
+            Start from the current wording below and change what needs
+            changing. The sections underneath are the argument for the change,
+            not the change itself.
+          </p>
+
+          <Field
+            label="The law, as it would read"
+            hint="In full. This replaces the current text exactly as written."
+          >
+            <textarea
+              value={newText}
+              onChange={(e) => setNewText(e.target.value)}
+              rows={4}
+              className={inputClass}
+            />
+          </Field>
+
+          <Field
+            label="What a violation would look like"
+            hint="What the audit runs against. This is the operational half and it matters more than the sentence above."
+          >
+            <textarea
+              value={newViolation}
+              onChange={(e) => setNewViolation(e.target.value)}
+              rows={4}
+              className={inputClass}
+            />
+          </Field>
+        </div>
       ) : null}
 
       <Field

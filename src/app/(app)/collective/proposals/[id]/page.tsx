@@ -16,9 +16,11 @@ import type {
   DeliberationComment,
   LawAssessment,
   LawStanding,
+  AmendmentStanding,
   Contention,
   ContentionEntry,
   NeedStanding,
+  PastRefusal,
   Projection,
   ProjectionStanding,
   Proposal,
@@ -30,6 +32,7 @@ import type {
 } from "@/lib/types";
 
 import { READINESS_THRESHOLD, SECTION_LABELS } from "@/lib/readiness";
+import { UNIVERSAL_LAWS } from "@/lib/universal-law";
 
 import { AiLayer } from "./AiLayer";
 import { CloseButton } from "./CloseButton";
@@ -41,6 +44,7 @@ import { FlagList } from "./FlagList";
 import { Outcome } from "./Outcome";
 import { RunReview } from "./RunReview";
 import { Sharpening } from "./Sharpening";
+import { Amendment } from "./Amendment";
 import { Contended, OpenContention } from "./Contended";
 import { Projections } from "./Projections";
 import { ResonancePanel } from "./ResonancePanel";
@@ -519,6 +523,14 @@ export default async function ProposalPage({
         )}
       </section>
 
+      {/* ----------------------------------------------------- AMENDMENT */}
+      {/* Above everything, including Universal Law itself — because this IS
+          Universal Law, and nothing else on the page matters as much as
+          knowing that is what you are reading. */}
+      {proposal.amends_law ? (
+        <AmendmentSection proposalId={id} lawId={proposal.amends_law} />
+      ) : null}
+
       {/* ---------------------------------------------------- CONTENTION */}
       {/* Before the simulation, because "there is another answer to this
           question" changes how you read everything underneath it. */}
@@ -811,6 +823,60 @@ async function ContentionSection({
   return (
     <section className="mb-10">
       <OpenContention proposalId={proposalId} candidates={candidates} />
+    </section>
+  );
+}
+
+/**
+ * A proposal that rewrites a Universal Law.
+ *
+ * Its own section with its own queries, because an amendment is rare and the
+ * page should pay nothing for it the rest of the time.
+ */
+async function AmendmentSection({
+  proposalId,
+  lawId,
+}: {
+  proposalId: string;
+  lawId: string;
+}) {
+  const supabase = await createClient();
+
+  const [{ data: standingRows }, { data: refusalRows }, { data: currentRows }] =
+    await Promise.all([
+      supabase.rpc("amendment_standing", { p_proposal_id: proposalId }),
+      supabase.rpc("amendment_would_reopen", { p_proposal_id: proposalId }),
+      supabase.rpc("law_text", { p_law_id: lawId }),
+    ]);
+
+  const standing = (
+    Array.isArray(standingRows) ? standingRows[0] : standingRows
+  ) as AmendmentStanding | undefined;
+
+  if (!standing) return null;
+
+  const law = UNIVERSAL_LAWS.find((l) => l.id === lawId);
+  const amended = (Array.isArray(currentRows) ? currentRows[0] : currentRows) as
+    | { text: string }
+    | undefined;
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return (
+    <section className="mb-10">
+      <SectionLabel right={<Tag tone="gold">constitutional</Tag>}>
+        This amends Universal Law
+      </SectionLabel>
+      <Amendment
+        proposalId={proposalId}
+        standing={standing}
+        lawName={law?.name ?? lawId}
+        currentText={amended?.text ?? law?.text ?? ""}
+        refusals={(refusalRows ?? []) as PastRefusal[]}
+        canEnact={Boolean(user)}
+      />
     </section>
   );
 }

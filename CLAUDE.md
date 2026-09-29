@@ -27,7 +27,8 @@ on purpose, in a commit that says so.
    `src/lib/ai/prompts.ts` instead.
 8. **Universal Law is not overridable.** A violation ends a proposal. There is
    no policy permitting a verdict to change and none permitting a delete; the
-   only recourse is a challenge, which re-runs the audit.
+   only recourse is a challenge, which re-runs the audit. The WORDING may be
+   amended — see rule 24 — but no amendment can set a verdict aside.
 9. **Ratification is not activation.** `close_proposal()` stops at `passed`.
    Only `activate_proposal()` creates a project, and only once every need has
    a name against it.
@@ -98,6 +99,18 @@ on purpose, in a commit that says so.
     will not be: read state lives in `chat_marks`, belongs to the reader, and
     the other person has no policy by which to see it. Ending a friendship
     stops new messages and leaves the old ones readable by both.
+24. **An amendment rewrites one law and needs every voice.** The ten are the
+    ten: `enact_amendment()` can only add a revision to an existing `law_id`,
+    and there is no repeal, no eleventh and no merge anywhere in the schema.
+    An amendment is global by construction, audited against the other nine
+    like anything else, and enacted only when the LOWEST single voice is at
+    `amendment_threshold()` or above — not the mean. A mean lets a majority
+    carry a constitution over a minority's objection, which is the thing a
+    constitution exists to stop. Revision 1 is the shipped text in
+    `src/lib/universal-law.ts` and is never a row; every amendment is one, and
+    `law_assessments.law_revision` records which wording produced a verdict.
+    The audit must run against `currentLaws()`, or the whole protocol is
+    decorative.
 
 ## Where things go
 

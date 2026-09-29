@@ -337,8 +337,15 @@ export async function auditAgainstLaw(ctx: {
   groupName: string;
   /** A member's argument that a previous verdict was wrong. */
   challenge?: { law: string; previousVerdict: string; argument: string } | null;
+  /**
+   * The laws as they currently read. Defaults to the shipped text, which is
+   * revision 1 of each — the caller passes the amended set once anything has
+   * been amended, because auditing against superseded wording would make the
+   * amendment protocol decorative.
+   */
+  laws?: typeof UNIVERSAL_LAWS;
 }): Promise<{ readings: LawAuditOutput["readings"]; model: string; prompt: typeof LAW_AUDIT }> {
-  const laws = UNIVERSAL_LAWS.map(
+  const laws = (ctx.laws ?? UNIVERSAL_LAWS).map(
     (l) =>
       `${l.ordinal}. ${l.name}\n   id: ${l.id}\n   "${l.text}"\n   a violation here looks like: ${l.violationLooksLike}`,
   ).join("\n\n");

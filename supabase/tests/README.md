@@ -6,7 +6,7 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Twelve suites, two hundred and fifty-three checks. Every one of them runs as a non-superuser,
+Thirteen suites, two hundred and eighty-two checks. Every one of them runs as a non-superuser,
 so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
@@ -193,6 +193,31 @@ floor. It puts it back at the end.
   both of them — and the thread drops off the conversation list.
 - Nothing said reaches the ledger.
 
+### `13_amendment.sql` — twenty-nine checks
+
+- Revision 1 is never a row; the shipped text is the shipped text.
+- **A street cannot amend the constitution** — an amendment must be global —
+  and it is refused without both new texts.
+- Which law it touches, and the wording, are frozen at submission.
+- The reading list names what this law has already killed, by title.
+- Nothing is enacted before it passes.
+- **Passing as a proposal is not clearing the bar.** Two people at 0.80 and
+  0.78 pass a global proposal and rewrite nothing.
+- **One person at 0.40 among voices at 0.96 and 0.95 stops it.** The bar is on
+  the lowest voice, which is as close as a 0–1 scale gets to "all users must
+  agree" — and the law does not move.
+- Enacting writes revision 2, `law_text()` returns it, only that law moves,
+  and the same amendment cannot be enacted twice.
+- A revision cannot be rewritten in place or deleted.
+- It lands on the public ledger, and the history keeps the attempts that
+  failed as well as the one that worked.
+
+It lowers `scope_rules` for global at the top — a thousand voices and thirty
+days is correct and untestable — and puts it back at the end. It also has to
+verify all three people, because 0011 requires proof of personhood to resonate
+at global scale, which is the right answer: a constitution is not rewritten by
+accounts.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -215,6 +240,7 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0012_people.sql \
   -f supabase/migrations/0013_contention.sql \
   -f supabase/migrations/0014_chat.sql \
+  -f supabase/migrations/0015_amendment.sql \
   -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
@@ -227,7 +253,8 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/tests/09_personhood.sql \
   -f supabase/tests/10_people.sql \
   -f supabase/tests/11_contention.sql \
-  -f supabase/tests/12_chat.sql
+  -f supabase/tests/12_chat.sql \
+  -f supabase/tests/13_amendment.sql
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server
@@ -323,6 +350,31 @@ real one — Supabase provides all of this already.
 - **Ending the friendship stops new messages and keeps the old ones**, for
   both of them — and the thread drops off the conversation list.
 - Nothing said reaches the ledger.
+
+### `13_amendment.sql` — twenty-nine checks
+
+- Revision 1 is never a row; the shipped text is the shipped text.
+- **A street cannot amend the constitution** — an amendment must be global —
+  and it is refused without both new texts.
+- Which law it touches, and the wording, are frozen at submission.
+- The reading list names what this law has already killed, by title.
+- Nothing is enacted before it passes.
+- **Passing as a proposal is not clearing the bar.** Two people at 0.80 and
+  0.78 pass a global proposal and rewrite nothing.
+- **One person at 0.40 among voices at 0.96 and 0.95 stops it.** The bar is on
+  the lowest voice, which is as close as a 0–1 scale gets to "all users must
+  agree" — and the law does not move.
+- Enacting writes revision 2, `law_text()` returns it, only that law moves,
+  and the same amendment cannot be enacted twice.
+- A revision cannot be rewritten in place or deleted.
+- It lands on the public ledger, and the history keeps the attempts that
+  failed as well as the one that worked.
+
+It lowers `scope_rules` for global at the top — a thousand voices and thirty
+days is correct and untestable — and puts it back at the end. It also has to
+verify all three people, because 0011 requires proof of personhood to resonate
+at global scale, which is the right answer: a constitution is not rewritten by
+accounts.
 
 ## Running them against a real Supabase project
 

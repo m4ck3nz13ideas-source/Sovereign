@@ -140,6 +140,13 @@ export interface Proposal {
   summary: string;
   body: string;
   category: string | null;
+  /**
+   * The Universal Law this rewrites, or null. An amendment is global by
+   * definition — a street does not amend the constitution for everybody.
+   */
+  amends_law: string | null;
+  amendment_text: string | null;
+  amendment_violation: string | null;
   scope: GroupScope;
   /** The six sections. `body` is these concatenated, and what was sharpened. */
   intent: string;
@@ -422,6 +429,49 @@ export interface ContentionEntry {
   revealed: boolean;
   /** Whether this is the one you named. Yours is visible to you at any time. */
   mine: boolean;
+}
+
+/**
+ * An amendment to the wording of a Universal Law.
+ *
+ * Revision 1 is the shipped text and is not stored — the first row for a law
+ * is revision 2. Nothing here is ever updated or deleted: superseded wordings
+ * stay, because assessments point at them.
+ */
+export interface LawRevision {
+  revision: number;
+  text: string;
+  violation_looks_like: string;
+  adopted_at: string;
+  adopted_from: string;
+}
+
+/** Where one amendment stands, from `amendment_standing()`. */
+export interface AmendmentStanding {
+  law_id: string;
+  current_revision: number;
+  proposed_text: string;
+  proposed_violation: string;
+  /** Higher than any scale's own threshold. The constitution is harder to change. */
+  threshold: number;
+  alignment: number | null;
+  /** The lowest single voice. This is what the bar is applied to, not the mean. */
+  lowest_voice: number | null;
+  voices: number | null;
+  passed: boolean;
+  enacted: boolean;
+  /** How many past proposals this law has killed. A reading list, not a verdict. */
+  would_reopen: number;
+}
+
+/** Something this law has already refused, for people to read before voting. */
+export interface PastRefusal {
+  proposal_id: string;
+  title: string;
+  summary: string;
+  reasoning: string;
+  law_revision: number;
+  decided_at: string | null;
 }
 
 export type ProjectionDirection = "effect" | "risk";

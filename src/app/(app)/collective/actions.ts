@@ -19,6 +19,7 @@ import type { ContributionKind } from "@/lib/types";
 import { placeAt } from "@/lib/collective";
 import { ledger } from "@/lib/ledger";
 import { requireSession } from "@/lib/session";
+import { UNIVERSAL_LAWS } from "@/lib/universal-law";
 import { createClient } from "@/lib/supabase/server";
 import type {
   CommitmentKind,
@@ -122,6 +123,18 @@ export interface ProposalInput {
   address: string;
   /** The dormant proposal this was written from, if it is a second attempt. */
   supersedes?: string | null;
+  /**
+   * The Universal Law this rewrites, and the new wording.
+   *
+   * An amendment is an ordinary proposal in every other respect — same
+   * sections, same sharpening, same audit, same sliders. The constitution is
+   * not amended by a special ceremony in a side room. What differs is that it
+   * must be global, and that enacting it needs a bar nothing else has to
+   * clear. See 0015_amendment.sql.
+   */
+  amendsLaw?: string | null;
+  amendmentText?: string;
+  amendmentViolation?: string;
 }
 
 /** Where a draft is addressed, resolved once and used by both actions below. */
@@ -282,6 +295,11 @@ export async function submitProposal(input: ProposalInput) {
       scope,
       place,
       supersedes: input.supersedes ?? null,
+      amends_law: input.amendsLaw ?? null,
+      amendment_text: input.amendsLaw ? (input.amendmentText ?? "").trim() : null,
+      amendment_violation: input.amendsLaw
+        ? (input.amendmentViolation ?? "").trim()
+        : null,
       budget_amount: budget,
       term_days: term,
       status: "in_review",
@@ -575,6 +593,43 @@ export async function withdrawProposal(proposalId: string) {
  * Truth Engine. The earlier readings are superseded rather than deleted: an
  * audit that changed its mind should show that it did.
  */
+/**
+ * The ten laws as they currently read.
+ *
+ * Revision 1 is the shipped text in `src/lib/universal-law.ts`; anything a
+ * group has amended since is a row in `law_revisions`. The audit must run
+ * against the current wording or an amendment changes nothing in practice,
+ * which would make the whole of 0015 decorative.
+ */
+async function currentLaws() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("law_revisions")
+    .select("law_id, revision, text, violation_looks_like")
+    .order("revision", { ascending: true });
+
+  const latest = new Map<string, { revision: number; text: string; violation: string }>();
+  for (const r of data ?? []) {
+    latest.set(r.law_id as string, {
+      revision: r.revision as number,
+      text: r.text as string,
+      violation: r.violation_looks_like as string,
+    });
+  }
+
+  return UNIVERSAL_LAWS.map((l) => {
+    const amended = latest.get(l.id);
+    return amended
+      ? {
+          ...l,
+          text: amended.text,
+          violationLooksLike: amended.violation,
+          revision: amended.revision,
+        }
+      : { ...l, revision: 1 };
+  });
+}
+
 export async function runLawAudit(proposalId: string, challengeId?: string) {
   const supabase = await createClient();
 
@@ -609,6 +664,10 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
     }
   }
 
+  // Against the wording in force, not the wording as shipped.
+  const laws = await currentLaws();
+  const revisionOf = new Map(laws.map((l) => [l.id as string, l.revision]));
+
   try {
     const { readings, model, prompt } = await auditAgainstLaw({
       proposal: {
@@ -622,6 +681,7 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
       },
       groupName: group.name,
       challenge,
+      laws,
     });
 
     // Supersede rather than delete, so a changed verdict leaves a trail.
@@ -637,6 +697,7 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
         law_id: r.law_id,
         verdict: r.verdict,
         reasoning: r.reasoning,
+        law_revision: revisionOf.get(r.law_id) ?? 1,
         prompt_id: prompt.id,
         prompt_version: prompt.version,
         model,
@@ -1407,5 +1468,26 @@ export async function standDown(proposalId: string, reason: string) {
 
   revalidatePath(`/collective/proposals/${proposalId}`);
   revalidatePath("/collective/proposals");
+  return { ok: true as const };
+}
+
+/**
+ * Enact an amendment that has passed and cleared the bar.
+ *
+ * Ratification is not enactment, the same way ratification is not activation.
+ * The database checks the higher threshold itself rather than trusting that
+ * whoever closed it applied one.
+ */
+export async function enactAmendment(proposalId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("enact_amendment", {
+    p_proposal_id: proposalId,
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+
+  revalidatePath(`/collective/proposals/${proposalId}`);
+  revalidatePath("/settings/law");
   return { ok: true as const };
 }

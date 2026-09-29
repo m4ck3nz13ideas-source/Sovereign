@@ -27,7 +27,12 @@ create or replace function test_propose(
   p_seed     text,
   p_budget   numeric default null,
   p_term     integer default null,
-  p_readiness numeric default 0.820
+  p_readiness numeric default 0.820,
+  -- An amendment carries three more fields. They go in on the insert rather
+  -- than afterwards, because 0015 freezes them the moment the row exists.
+  p_amends_law text default null,
+  p_amendment_text text default null,
+  p_amendment_violation text default null
 ) returns uuid
 language plpgsql set search_path = public, extensions as $$
 declare
@@ -60,10 +65,12 @@ begin
 
   insert into proposals (group_id, author_id, title, summary, body,
                          intent, change, constraints, risks, alternatives,
-                         scope, place, budget_amount, term_days)
+                         scope, place, budget_amount, term_days,
+                         amends_law, amendment_text, amendment_violation)
   values (p_group, p_author, p_title, p_summary, v_body,
           v_intent, v_change, v_constraints, v_risks, v_alternatives,
-          p_scope, p_place, p_budget, p_term)
+          p_scope, p_place, p_budget, p_term,
+          p_amends_law, p_amendment_text, p_amendment_violation)
   returning id into v_id;
 
   return v_id;
