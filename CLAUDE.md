@@ -92,6 +92,12 @@ on purpose, in a commit that says so.
     `stand_down_proposal()` needs twenty characters and attributes them, and
     it is the only thing that releases the next answer in a contended set.
     The record keeps saying it passed; what changes is that it stops waiting.
+23. **A chat reaches nothing.** `messages` touch no proposal, no decision and
+    no ledger, and nothing said in one is evidence of anything. There are no
+    read receipts, typing indicators, last-seen or online status, and there
+    will not be: read state lives in `chat_marks`, belongs to the reader, and
+    the other person has no policy by which to see it. Ending a friendship
+    stops new messages and leaves the old ones readable by both.
 
 ## Where things go
 

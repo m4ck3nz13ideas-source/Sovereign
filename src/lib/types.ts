@@ -335,6 +335,33 @@ export interface PersonStanding {
   friendship: FriendshipState;
 }
 
+/**
+ * One message in a private conversation.
+ *
+ * Reaches no proposal, no decision and no ledger. There is no `read_at` and
+ * there is not going to be: read state belongs to the reader, and the other
+ * person has no way to see it.
+ */
+export interface Message {
+  id: string;
+  author_id: string;
+  mine: boolean;
+  body: string;
+  created_at: string;
+}
+
+/** A thread, from `my_conversations()`. One per friend, said in or not. */
+export interface Conversation {
+  profile_id: string;
+  display_name: string;
+  handle: string | null;
+  last_body: string | null;
+  last_at: string | null;
+  last_was_mine: boolean | null;
+  /** New since you last looked. Your own count, invisible to them. */
+  unread: number;
+}
+
 /** A pending friendship, either direction, from `friendship_requests()`. */
 export interface FriendshipRequest {
   profile_id: string;

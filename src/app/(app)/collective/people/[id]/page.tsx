@@ -113,6 +113,15 @@ export default async function PersonPage({
           friendship={standing.friendship}
         />
 
+        {standing.you_are_friends ? (
+          <Link
+            href={`/individual/chats/${id}`}
+            className="smallcaps inline-block text-[11px] text-gold hover:underline"
+          >
+            Say something →
+          </Link>
+        ) : null}
+
         {profile?.purpose ? (
           <section>
             <SectionLabel>Purpose</SectionLabel>

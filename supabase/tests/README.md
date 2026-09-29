@@ -6,7 +6,7 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Eleven suites, two hundred and thirty-three checks. Every one of them runs as a non-superuser,
+Twelve suites, two hundred and fifty-three checks. Every one of them runs as a non-superuser,
 so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
@@ -177,6 +177,22 @@ floor. It puts it back at the end.
   once the preferred one has activated, it cannot activate at all, because the
   money is spent and the question is answered.
 
+### `12_chat.sql` — twenty checks
+
+- Strangers cannot start talking, and **following alone is not enough** —
+  a conversation needs both people to have agreed.
+- Your own message does not sit in your own unread count; theirs does, for
+  them, until they mark it read.
+- **The sender cannot tell whether it was read.** The read marker is the
+  reader's own and there is no policy exposing it, and `messages` has no
+  `read_at`, `delivered_at`, `seen_at` or `typing` column.
+- A third person can read none of it, cannot write into somebody's thread,
+  and cannot put words in another person's mouth.
+- You can unsay your own message; you cannot delete theirs.
+- **Ending the friendship stops new messages and keeps the old ones**, for
+  both of them — and the thread drops off the conversation list.
+- Nothing said reaches the ledger.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -198,6 +214,7 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0011_personhood.sql \
   -f supabase/migrations/0012_people.sql \
   -f supabase/migrations/0013_contention.sql \
+  -f supabase/migrations/0014_chat.sql \
   -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
@@ -209,7 +226,8 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/tests/08_projection.sql \
   -f supabase/tests/09_personhood.sql \
   -f supabase/tests/10_people.sql \
-  -f supabase/tests/11_contention.sql
+  -f supabase/tests/11_contention.sql \
+  -f supabase/tests/12_chat.sql
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server
@@ -289,6 +307,22 @@ real one — Supabase provides all of this already.
 - The less-preferred one cannot activate ahead of the preferred one — and
   once the preferred one has activated, it cannot activate at all, because the
   money is spent and the question is answered.
+
+### `12_chat.sql` — twenty checks
+
+- Strangers cannot start talking, and **following alone is not enough** —
+  a conversation needs both people to have agreed.
+- Your own message does not sit in your own unread count; theirs does, for
+  them, until they mark it read.
+- **The sender cannot tell whether it was read.** The read marker is the
+  reader's own and there is no policy exposing it, and `messages` has no
+  `read_at`, `delivered_at`, `seen_at` or `typing` column.
+- A third person can read none of it, cannot write into somebody's thread,
+  and cannot put words in another person's mouth.
+- You can unsay your own message; you cannot delete theirs.
+- **Ending the friendship stops new messages and keeps the old ones**, for
+  both of them — and the thread drops off the conversation list.
+- Nothing said reaches the ledger.
 
 ## Running them against a real Supabase project
 

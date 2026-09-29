@@ -8,7 +8,9 @@ import { PillLink, Rail } from "@/components/ui";
  * The strip of sub-tabs inside a top-level tab.
  *
  * INDIVIDUAL — the overview's five (Profile, AI, Values, Drafts, Vault) plus
- * Journal and Ideas, which are the life_OS screens and stay.
+ * Journal and Ideas, which are the life_OS screens and stay, and Chats, which
+ * is private by nature and so belongs on this side of the app rather than the
+ * collective one.
  *
  * COLLECTIVE — the overview's five, with Feed promoted out to Home.
  *
@@ -21,6 +23,7 @@ export const INDIVIDUAL_TABS = [
   { href: "/individual/profile", label: "Profile" },
   { href: "/individual/ai", label: "AI" },
   { href: "/individual/values", label: "Values" },
+  { href: "/individual/chats", label: "Chats" },
   { href: "/individual/journal", label: "Journal" },
   { href: "/individual/ideas", label: "Ideas" },
   { href: "/individual/drafts", label: "Drafts" },
