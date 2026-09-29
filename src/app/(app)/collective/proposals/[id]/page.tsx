@@ -16,6 +16,8 @@ import type {
   DeliberationComment,
   LawAssessment,
   LawStanding,
+  Contention,
+  ContentionEntry,
   NeedStanding,
   Projection,
   ProjectionStanding,
@@ -39,6 +41,7 @@ import { FlagList } from "./FlagList";
 import { Outcome } from "./Outcome";
 import { RunReview } from "./RunReview";
 import { Sharpening } from "./Sharpening";
+import { Contended, OpenContention } from "./Contended";
 import { Projections } from "./Projections";
 import { ResonancePanel } from "./ResonancePanel";
 import { WithdrawButton } from "./WithdrawButton";
@@ -155,6 +158,7 @@ export default async function ProposalPage({
     { data: debateRows },
     { data: projectionRows },
     { data: projectionStandingRows },
+    { data: contentionRows },
     { data: summaryRow },
   ] = await Promise.all([
     supabase
@@ -216,6 +220,7 @@ export default async function ProposalPage({
       .eq("proposal_id", id)
       .order("created_at", { ascending: true }),
     supabase.rpc("projection_standing", { p_proposal_id: id }),
+    supabase.rpc("contention_for", { p_proposal_id: id }),
     supabase
       .from("debate_summaries")
       .select("*")
@@ -325,6 +330,10 @@ export default async function ProposalPage({
   const hasRead = Boolean(readRow);
   const open = isOpen(proposal.status);
   const projections = (projectionRows ?? []) as unknown as Projection[];
+  const contention = (
+    Array.isArray(contentionRows) ? contentionRows[0] : contentionRows
+  ) as Contention | undefined;
+
   const projectionStanding = (
     Array.isArray(projectionStandingRows)
       ? projectionStandingRows[0]
@@ -509,6 +518,11 @@ export default async function ProposalPage({
           <RunReview proposalId={id} />
         )}
       </section>
+
+      {/* ---------------------------------------------------- CONTENTION */}
+      {/* Before the simulation, because "there is another answer to this
+          question" changes how you read everything underneath it. */}
+      <ContentionSection proposalId={id} contention={contention} open={open} />
 
       {/* ------------------------------------------------ IMPACT SIMULATION */}
       {/* After the review and before the sliders, because this is the part
@@ -705,5 +719,98 @@ export default async function ProposalPage({
         ) : null}
       </section>
     </Page>
+  );
+}
+
+/**
+ * The contended set, or the offer to declare one.
+ *
+ * Split out because it needs its own two queries and the page function is
+ * long enough. The standing is fetched here rather than passed down, so the
+ * proposal page pays nothing for it when there is no contention.
+ */
+async function ContentionSection({
+  proposalId,
+  contention,
+  open,
+}: {
+  proposalId: string;
+  contention: Contention | undefined;
+  open: boolean;
+}) {
+  const supabase = await createClient();
+
+  if (contention) {
+    const [{ data: entryRows }, { data: proposal }] = await Promise.all([
+      supabase.rpc("contention_standing", {
+        p_contention_id: contention.contention_id,
+      }),
+      supabase
+        .from("proposals")
+        .select("status, author_id")
+        .eq("id", proposalId)
+        .maybeSingle(),
+    ]);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    return (
+      <section className="mb-10">
+        <SectionLabel
+          right={contention.resolved_at ? <Tag>settled</Tag> : `${contention.members}`}
+        >
+          Two answers to one question
+        </SectionLabel>
+        <Contended
+          proposalId={proposalId}
+          contention={contention}
+          entries={(entryRows ?? []) as ContentionEntry[]}
+          canStandDown={proposal?.author_id === user?.id}
+          status={proposal?.status ?? ""}
+        />
+      </section>
+    );
+  }
+
+  if (!open) return null;
+
+  // Anything else still open at the same address, not already in a set.
+  const { data: mine } = await supabase
+    .from("proposals")
+    .select("group_id, scope, place")
+    .eq("id", proposalId)
+    .maybeSingle();
+
+  if (!mine) return null;
+
+  let q = supabase
+    .from("proposals")
+    .select("id, title")
+    .is("closed_at", null)
+    .neq("id", proposalId)
+    .eq("scope", mine.scope)
+    .limit(12);
+
+  q = mine.group_id ? q.eq("group_id", mine.group_id) : q.is("group_id", null);
+  if (mine.place) q = q.eq("place", mine.place);
+
+  const [{ data: others }, { data: taken }] = await Promise.all([
+    q,
+    supabase.from("contention_members").select("proposal_id"),
+  ]);
+
+  const spoken = new Set((taken ?? []).map((t) => t.proposal_id as string));
+  const candidates = (others ?? [])
+    .filter((o) => !spoken.has(o.id as string))
+    .map((o) => ({ id: o.id as string, title: o.title as string }));
+
+  if (!candidates.length) return null;
+
+  return (
+    <section className="mb-10">
+      <OpenContention proposalId={proposalId} candidates={candidates} />
+    </section>
   );
 }

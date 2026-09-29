@@ -364,6 +364,39 @@ export interface PeopleFeedEvent {
   happened_at: string;
 }
 
+/**
+ * A named set of proposals that cannot all happen.
+ *
+ * It decides the ORDER in which proposals that already passed go looking for
+ * resources. It never decides whether any of them passed — that was settled by
+ * `close_proposal()` on each one's own terms and nothing here reaches back
+ * into it.
+ */
+export interface Contention {
+  contention_id: string;
+  question: string;
+  note: string | null;
+  members: number;
+  /** How many people have named a first choice. Never which one, until it resolves. */
+  responded: number;
+  resolved_at: string | null;
+}
+
+/** One member of a contended set, from `contention_standing()`. */
+export interface ContentionEntry {
+  proposal_id: string;
+  title: string;
+  status: ProposalStatus;
+  passed: boolean;
+  /** Null until every member has closed — a running total is a bandwagon. */
+  preferences: number | null;
+  /** Null until it resolves, and only for the ones that passed. */
+  order_position: number | null;
+  revealed: boolean;
+  /** Whether this is the one you named. Yours is visible to you at any time. */
+  mine: boolean;
+}
+
 export type ProjectionDirection = "effect" | "risk";
 export type ProjectionVerdict = "held" | "missed" | "unclear";
 

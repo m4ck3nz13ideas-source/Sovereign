@@ -1328,3 +1328,84 @@ export async function markProjection(
   revalidatePath("/collective/proposals", "page");
   return { ok: true as const };
 }
+
+/* ---------------------------------------------------------------------------
+   CONTENTION
+
+   A preference orders, it never passes. Nothing in here consults a preference
+   to decide an outcome — `close_proposal()` settled that on each proposal's
+   own terms. All of this decides is which of the survivors goes first.
+--------------------------------------------------------------------------- */
+
+/** Declare that two open proposals are two answers to one question. */
+export async function openContention(input: {
+  question: string;
+  a: string;
+  b: string;
+  note?: string;
+}) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("open_contention", {
+    p_question: input.question,
+    p_proposal_a: input.a,
+    p_proposal_b: input.b,
+    p_note: input.note ?? null,
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+
+  revalidatePath(`/collective/proposals/${input.a}`);
+  revalidatePath(`/collective/proposals/${input.b}`);
+  return { ok: true as const };
+}
+
+/** Name your first choice among them. Separate from how you resonated on each. */
+export async function preferProposal(contentionId: string, proposalId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("set_preference", {
+    p_contention_id: contentionId,
+    p_proposal_id: proposalId,
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+
+  revalidatePath(`/collective/proposals/${proposalId}`);
+  return { ok: true as const };
+}
+
+export async function clearPreference(contentionId: string, proposalId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("clear_preference", {
+    p_contention_id: contentionId,
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+
+  revalidatePath(`/collective/proposals/${proposalId}`);
+  return { ok: true as const };
+}
+
+/**
+ * Say a passed proposal is not going ahead after all.
+ *
+ * Not a failure and not a deletion — the record keeps saying it passed. What
+ * changes is that it stops waiting, which is the signal the next answer to the
+ * same question needs before it can take its turn.
+ */
+export async function standDown(proposalId: string, reason: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("stand_down_proposal", {
+    p_proposal_id: proposalId,
+    p_reason: reason,
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+
+  revalidatePath(`/collective/proposals/${proposalId}`);
+  revalidatePath("/collective/proposals");
+  return { ok: true as const };
+}

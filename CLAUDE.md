@@ -82,6 +82,16 @@ on purpose, in a commit that says so.
     off the ledger. Resonance is excluded on purpose: "four people you follow
     have responded" is the bandwagon rule 3 exists to prevent, with a friendly
     face on it.
+21. **A preference orders, it never passes.** A contention decides which of
+    the proposals that ALREADY PASSED goes looking for resources first.
+    Nothing consults `preferences` to decide an outcome — `close_proposal()`
+    settled that on each proposal's own terms and a contention cannot reach
+    back into it. Counts stay hidden until every member has closed, like
+    resonance averages and for the same reason.
+22. **A passed proposal that is not going ahead says so in writing.**
+    `stand_down_proposal()` needs twenty characters and attributes them, and
+    it is the only thing that releases the next answer in a contended set.
+    The record keeps saying it passed; what changes is that it stops waiting.
 
 ## Where things go
 
