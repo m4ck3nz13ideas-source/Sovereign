@@ -15,12 +15,65 @@ The deployed build talks to the same Supabase project the local one does.
 There is no separate production database until you make one, and nothing
 below creates it for you.
 
-### If you are deploying the database you already have
+### First, find out what is actually in there
 
-Migrations `0010` through `0017` exist in the repository and have **not** been
-applied. Everything built since the last deploy — predictions, personhood,
-people, contention, chats, amendment, the guardian, the mirror — is in them.
-The deployed app will call functions that do not exist until they are run.
+Do not assume the live database is where the repository thinks it is. Ours
+was five migrations further behind than anyone believed — it had the tables
+from `0001` and the decision rule from `0003`, and nothing from `0005` onward,
+so it had never had the subsidiarity engine, the activation step, the
+readiness gate or the debate layer. Nothing looked broken, because all the
+development had been happening against a local database.
+
+The error that revealed it named one missing function and surfaced two
+thousand lines further into the file than the first statement that should
+have failed, which is a good reason not to read a migration error as a map.
+Ask the database directly instead:
+
+```sql
+with want(name) as (values
+  ('can_reach_proposal'), ('can_steward_proposal'), ('in_scope'),
+  ('is_group_member'), ('place_key'), ('bind_proposal_readiness'),
+  ('dormant_proposals'), ('activate_proposal'), ('alignment_shape'))
+select w.name,
+       coalesce(
+         (select string_agg(p.oid::regprocedure::text, '  |  ')
+            from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = w.name),
+         '>>> MISSING <<<') as signature
+  from want w
+ order by 1;
+```
+
+Those nine come from `0002` through `0009`, one or two each. What is missing
+tells you where the database really stops.
+
+If it stops anywhere before the end, and the database holds nothing you would
+miss, the honest move is `supabase/reset.sql` followed by every migration in
+order rather than an incremental patch: `0004` and `0005` predate the
+convention of writing migrations to be safely re-runnable, so a partial state
+that includes some of either is not something you can paper over. Row counts
+per table, before deciding:
+
+```sql
+select 'public.' || table_name as tbl,
+       (xpath('/row/cnt/text()',
+              query_to_xml(format('select count(*) as cnt from public.%I', table_name),
+                           false, true, '')))[1]::text::int as row_count
+  from information_schema.tables
+ where table_schema = 'public' and table_type = 'BASE TABLE'
+ order by row_count desc, tbl;
+```
+
+Auth users live in the `auth` schema, which `reset.sql` does not touch, so
+resetting costs you your profile rows and not your ability to sign in.
+
+### If the database really is current up to 0009
+
+Migrations `0010` through `0017` are the ones that carry everything built
+since — predictions, personhood, people, contention, chats, amendment, the
+guardian, the mirror. The deployed app calls functions that do not exist
+until they are run.
 
 Supabase dashboard → **SQL Editor** → paste each file, in order, one at a
 time, waiting for each to say success:
@@ -148,30 +201,49 @@ it is only reachable from the machine it names.
 
 ## 4. The domain
 
-The apex `mackiavelli.co.uk` currently points at GitHub Pages, and there is a
-`CNAME` file in the repository root that says so. Pointing the apex at Vercel
-means taking it off Pages first, and that is a separate decision from
-deploying this.
+This install runs at `www.mackiavelli.co.uk`. Two records' worth of work and
+three ways to be misled about the result.
 
-The cheap answer is a subdomain, which needs one record and touches nothing
-that already works:
-
-- Vercel → project → **Settings → Domains** → add `sovereign.mackiavelli.co.uk`
-- GoDaddy → DNS → add a **CNAME** record, host `sovereign`, value
-  `cname.vercel-dns.com`
-
-Vercel issues the certificate within a few minutes of the record resolving.
-GoDaddy's propagation is usually minutes and occasionally an hour.
-
-Then, and only then:
-
-- Set `NEXT_PUBLIC_SITE_URL=https://sovereign.mackiavelli.co.uk` on Production
-- Change **Site URL** in Supabase to the same
-- Add `https://sovereign.mackiavelli.co.uk/**` to the redirect list
+- Vercel → project → **Settings → Domains** → add `www.mackiavelli.co.uk`
+- GoDaddy → DNS → **CNAME**, host `www`, value `cname.vercel-dns.com`
+- Set `NEXT_PUBLIC_SITE_URL=https://www.mackiavelli.co.uk` on Production
+- Change **Site URL** in Supabase to the same, and add
+  `https://www.mackiavelli.co.uk/**` to the redirect list
 - Redeploy
 
-The `CNAME` file in the repository is inert as far as Vercel is concerned —
-it only means something to GitHub Pages. It can stay until the apex moves.
+**Adding the domain does not attach it to a build.** A domain added *after*
+the most recent production deployment sits on the project verified and
+unaliased, and serves a 404 to everybody. Vercel's own domains page shows it
+as fine, because from Vercel's point of view it is. Either redeploy after
+adding the domain, or assign it to the current deployment explicitly. This
+cost an hour, misdiagnosed as DNS the whole time.
+
+**Environment variables that begin `NEXT_PUBLIC_` are compiled into the
+bundle.** Changing one in the dashboard does nothing to the build already
+serving. Redeploy, every time. Related: check the *spelling* of what is
+already there. Ours had `NEXT_PUB_SUPABASE_URL` sitting alongside the real
+one, which is not a variable, does nothing, and looks entirely correct in a
+list.
+
+**A stale DNS answer looks exactly like a broken deploy.** GitHub Pages
+returns a 404 for every path it does not serve, so a half-propagated cutover
+gives you the sign-in screen on one request and a GitHub 404 on the next,
+from the same URL. Before touching anything, check what the record actually
+resolves to from outside your own machine — `dns.google/resolve?name=…&type=CNAME`
+in a browser will tell you — and remember that your own laptop is the most
+stubbornly cached resolver in the chain. `sudo dscacheutil -flushcache;
+sudo killall -HUP mDNSResponder`, then a private window, then your phone on
+mobile data.
+
+There is no longer a `CNAME` file in this repository. There was, naming the
+apex, which is what tells GitHub Pages to claim the domain; it is gone so
+that GitHub stops answering for a name Vercel is serving. Turn Pages off
+under the repository's **Settings → Pages** as well — the file is only half
+of it.
+
+The apex `mackiavelli.co.uk` is still unclaimed here. Pointing it at Vercel
+too, with an A record to `76.76.21.21` and a redirect to `www`, is a separate
+five minutes whenever it matters.
 
 ---
 
@@ -196,10 +268,14 @@ other and is worth fixing before it is not. See `docs/roadmap.md`.
 ## Checklist
 
 ```
-[ ] 0010–0017 applied, in order, no errors
+[ ] asked the database what it actually has, rather than assuming
+[ ] every migration applied, in order, no errors
 [ ] scope_rules local floor raised
-[ ] NEXT_PUBLIC_SUPABASE_URL and _ANON_KEY set in Vercel
-[ ] deployed, and the sign-in screen loads rather than /setup
+[ ] NEXT_PUBLIC_SUPABASE_URL and _ANON_KEY set in Vercel, spelled right
+[ ] redeployed AFTER the last environment variable change
+[ ] domain added, and aliased to a deployment rather than merely verified
+[ ] the sign-in screen loads rather than /setup, from a machine that has
+    never visited the domain before
 [ ] Supabase Site URL set to the deployed origin
 [ ] Redirect URLs include the deployed origin and localhost
 [ ] signed in with a magic link on the deployed site, end to end

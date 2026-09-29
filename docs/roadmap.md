@@ -8,9 +8,11 @@ Not "getting feedback on the UI". A real decision — something the group would
 have had to make anyway, that someone will have to carry out, where being wrong
 costs something.
 
-Nothing below this line matters until that has happened. As of now it has not:
-the whole thing runs on one machine with one account, and a great deal of what
-has been built since assumes other people exist.
+Nothing below this line matters until that has happened. As of now it has not.
+It is at least now possible: the app is deployed at `www.mackiavelli.co.uk`
+against a database that finally has every migration in it, so the obstacle is
+no longer that there is nowhere to send anybody. It is that nobody has been
+sent, and a great deal of what has been built assumes other people exist.
 
 ## How to tell whether it worked
 
