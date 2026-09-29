@@ -6,7 +6,7 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Fourteen suites, two hundred and ninety-four checks. Every one of them runs as a non-superuser,
+Fifteen suites, three hundred and eight checks. Every one of them runs as a non-superuser,
 so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
@@ -229,6 +229,19 @@ accounts.
   the absences that keep it a guardian rather than a handler.
 - Forgetting is real, and it is the only thing in this schema that is.
 
+### `15_mirror.sql` — fourteen checks
+
+- Nothing is read from no responses.
+- Four cold answers on proposals flagged for one law, against four warm ones
+  on clean proposals, reads as a clear negative divergence.
+- A law never found in tension does not appear at all.
+- **One response is not a pattern** — below the floor the count is reported
+  and the numbers are null.
+- **Nobody else can read any of it**, and neither function takes an argument,
+  which the suite asserts against `pg_proc` so that one cannot quietly grow
+  a profile id later.
+- Nothing about it is stored: no table anywhere has `mirror` in its name.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -253,6 +266,7 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0014_chat.sql \
   -f supabase/migrations/0015_amendment.sql \
   -f supabase/migrations/0016_guardian.sql \
+  -f supabase/migrations/0017_mirror.sql \
   -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
@@ -267,7 +281,8 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/tests/11_contention.sql \
   -f supabase/tests/12_chat.sql \
   -f supabase/tests/13_amendment.sql \
-  -f supabase/tests/14_guardian.sql
+  -f supabase/tests/14_guardian.sql \
+  -f supabase/tests/15_mirror.sql
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server
@@ -399,6 +414,19 @@ accounts.
   `alignment`, `profile_model`, `inferred_values` or `sentiment` column** —
   the absences that keep it a guardian rather than a handler.
 - Forgetting is real, and it is the only thing in this schema that is.
+
+### `15_mirror.sql` — fourteen checks
+
+- Nothing is read from no responses.
+- Four cold answers on proposals flagged for one law, against four warm ones
+  on clean proposals, reads as a clear negative divergence.
+- A law never found in tension does not appear at all.
+- **One response is not a pattern** — below the floor the count is reported
+  and the numbers are null.
+- **Nobody else can read any of it**, and neither function takes an argument,
+  which the suite asserts against `pg_proc` so that one cannot quietly grow
+  a profile id later.
+- Nothing about it is stored: no table anywhere has `mirror` in its name.
 
 ## Running them against a real Supabase project
 

@@ -498,6 +498,35 @@ export interface GuardianNote {
   created_at: string;
 }
 
+/**
+ * One law, read back to you from your own responses.
+ *
+ * Not a score and not a judgement: `divergence` has no good sign. Backing
+ * something the audit flagged is not a failing — a tension is explicitly not a
+ * violation and the audit is sometimes wrong — and holding back from something
+ * clean is not virtue. What it says is "this law moves you", never "you are
+ * aligned with this law".
+ *
+ * Nowhere is it stored, nobody else can read it, and there is no version of
+ * the function that takes somebody else's id.
+ */
+export interface LawMirror {
+  law_id: string;
+  /** Proposals you responded to where this law was in tension or violation. */
+  responses: number;
+  /** Null below the floor — four responses is not a pattern. */
+  your_mean: number | null;
+  your_baseline: number | null;
+  divergence: number | null;
+  enough: boolean;
+}
+
+export interface MirrorStanding {
+  responses: number;
+  laws_read: number;
+  floor_at: number;
+}
+
 export type ProjectionDirection = "effect" | "risk";
 export type ProjectionVerdict = "held" | "missed" | "unclear";
 

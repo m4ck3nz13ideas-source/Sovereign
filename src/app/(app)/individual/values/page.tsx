@@ -4,7 +4,7 @@ import { Card, Gutter, Screen, SectionLabel, Tag } from "@/components/ui";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { UNIVERSAL_LAWS } from "@/lib/universal-law";
-import type { ProfileValue } from "@/lib/types";
+import type { LawMirror, MirrorStanding, ProfileValue } from "@/lib/types";
 
 export const metadata = { title: "Values · Sovereign" };
 
@@ -27,20 +27,31 @@ export default async function ValuesPage() {
   const { userId } = await requireSession();
   const supabase = await createClient();
 
-  const [{ data: values }, { count: responses }] = await Promise.all([
+  const [{ data: values }, { data: mirrorRows }, { data: standingRows }] =
+    await Promise.all([
     supabase
       .from("profile_values")
       .select("*")
       .eq("profile_id", userId)
       .order("position"),
-    supabase
-      .from("resonance_votes")
-      .select("proposal_id", { count: "exact", head: true })
-      .eq("profile_id", userId),
+    supabase.rpc("my_law_mirror"),
+    supabase.rpc("my_mirror_standing"),
   ]);
 
   const mine = (values ?? []) as ProfileValue[];
-  const answered = responses ?? 0;
+
+  // Sorted by how far each law moves them, largest first — and by absolute
+  // size, because a law that pulls them warmer is exactly as interesting as
+  // one that pulls them cooler. Ranking by signed value would be the screen
+  // quietly deciding which direction is the good one.
+  const mirror = ((mirrorRows ?? []) as LawMirror[])
+    .slice()
+    .sort((a, b) => Math.abs(b.divergence ?? 0) - Math.abs(a.divergence ?? 0));
+  const standing = (
+    Array.isArray(standingRows) ? standingRows[0] : standingRows
+  ) as MirrorStanding | undefined;
+  const read = mirror.filter((m) => m.enough);
+  const thin = mirror.filter((m) => !m.enough);
 
   return (
     <Screen>
@@ -142,21 +153,81 @@ export default async function ValuesPage() {
             Where you and the audit differ
           </SectionLabel>
 
-          <Card>
-            <p className="text-[0.9375rem] leading-relaxed text-paper">
-              {answered < 5
-                ? `A reading of your own responses against the ten laws — where you have backed something the audit found in tension, and where you have held back from something it found clean. It needs more to read: you have responded to ${answered} ${answered === 1 ? "proposal" : "proposals"}, and five is the floor before a pattern means anything.`
-                : `A reading of your ${answered} responses against the ten laws is possible now. It is not built yet — it is the next thing on this screen.`}
+          {read.length ? (
+            <div className="space-y-2">
+              {read.map((m) => {
+                const law = UNIVERSAL_LAWS.find((l) => l.id === m.law_id);
+                const d = m.divergence ?? 0;
+                return (
+                  <Card key={m.law_id}>
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h3 className="display text-[1.125rem] text-paper">
+                        {law?.name ?? m.law_id}
+                      </h3>
+                      <span className="smallcaps text-[10px] text-paper-faint">
+                        {m.responses} of yours
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-paper-dim">
+                      Where the audit found this in tension you answered{" "}
+                      <span className="text-paper">{m.your_mean?.toFixed(2)}</span> on
+                      average, against{" "}
+                      <span className="text-paper">{m.your_baseline?.toFixed(2)}</span>{" "}
+                      across everything you have answered —{" "}
+                      {Math.abs(d) < 0.05 ? (
+                        "which is no difference at all. This one does not seem to move you either way."
+                      ) : (
+                        <>
+                          {Math.abs(d).toFixed(2)}{" "}
+                          {d < 0 ? "cooler" : "warmer"}.
+                        </>
+                      )}
+                    </p>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card>
+              <p className="text-[0.9375rem] leading-relaxed text-paper">
+                {standing && standing.responses > 0
+                  ? `Nothing to read yet. You have responded to ${standing.responses} ${standing.responses === 1 ? "proposal" : "proposals"}, and a law needs ${standing.floor_at} of yours where the audit found it in tension before there is a pattern rather than a coincidence.`
+                  : "Nothing to read yet. It is built from proposals you have responded to where the audit found a law in tension — so it fills in as you use the thing, and not before."}
+              </p>
+            </Card>
+          )}
+
+          {thin.length ? (
+            <p className="mt-3 text-sm leading-relaxed text-paper-faint">
+              {thin.length === 1
+                ? "One other law has come up"
+                : `${thin.length} other laws have come up`}{" "}
+              but not often enough to read:{" "}
+              {thin
+                .map(
+                  (m) =>
+                    `${UNIVERSAL_LAWS.find((l) => l.id === m.law_id)?.name ?? m.law_id} (${m.responses})`,
+                )
+                .join(", ")}
+              .
             </p>
-            <p className="mt-3 border-t border-line pt-3 text-sm leading-relaxed text-paper-faint">
-              When it exists it will be visible to you and to nobody else, it
-              will not be stored as a score, and it will never weight your
-              resonance. Sovereign does not measure virtue. It can help you
-              notice when what you say you hold and what you have been doing
-              have come apart, which is a different thing and is yours to do
-              something about.
-            </p>
-          </Card>
+          ) : null}
+
+          <p className="mt-3 text-sm leading-relaxed text-paper-faint">
+            This is not a score and neither direction is the good one. Backing
+            something the audit flagged is not a failing — a tension is not a
+            violation and the audit is sometimes wrong — and holding back from
+            something clean is not virtue. What it says is that a law moves
+            you, never that you are aligned with it.
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-paper-faint">
+            Nowhere is any of it stored, nobody else can read it, there is no
+            function that will show it to anybody about you, and it weights
+            nothing anywhere. Sovereign does not measure virtue. It can help
+            you notice when what you say you hold and what you have been doing
+            have come apart, which is a different thing and is yours to do
+            something about.
+          </p>
         </section>
 
         {/* ----------------------------------------------------- COMPARISON */}

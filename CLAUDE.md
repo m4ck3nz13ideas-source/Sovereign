@@ -121,6 +121,15 @@ on purpose, in a commit that says so.
     in this schema that can be forgotten, because nobody else is entitled to
     it. If a behavioural profile ever appears here, this has become the
     surveillance product it was built not to be.
+26. **The mirror is derived, private, and has no good direction.**
+    `my_law_mirror()` computes a reading from a person's own resonance votes
+    and is never stored — there is no table. It takes no argument, and must
+    not grow one: a function with a profile id is one mistake away from being
+    a tool for sorting people. It reports nothing below `mirror_floor()`
+    responses on a law, because four is not a pattern. `divergence` has no
+    good sign and no screen may imply one — backing something the audit
+    flagged is not a failing, and holding back from something clean is not
+    virtue.
 
 ## Where things go
 
