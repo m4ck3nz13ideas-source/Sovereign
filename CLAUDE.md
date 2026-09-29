@@ -131,6 +131,20 @@ on purpose, in a commit that says so.
     flagged is not a failing, and holding back from something clean is not
     virtue.
 
+27. **Onboarding is a gate, not an invitation.** `requireSession()` redirects
+    to `/onboarding` until `profiles.onboarded_at` is set, and every screen in
+    the shell calls it. The gate is not cosmetic: values are the rubric each
+    proposal is scored against, so somebody who has named none is scored on
+    none, and no screen would say why. Only `/onboarding` itself passes
+    `allowUnonboarded`. Checking that a profile *row* exists is not the same
+    check and never fires — `handle_new_user` writes one on sign-up, so the
+    row is always there and `onboarded_at` is the only thing that tells you
+    whether a person has arrived. That same function is why `requireSession()`
+    writes a profile when it finds none rather than redirecting: an auth user
+    can outlive the row, which is what happens when the public schema is
+    reset, and redirecting somebody to the screen that needs the row it is
+    missing is a loop with no exit.
+
 ## Where things go
 
 - `src/lib/ai/` — the AI layer. `prompts.ts` holds versioned rubrics;

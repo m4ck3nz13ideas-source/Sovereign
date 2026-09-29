@@ -16,7 +16,9 @@ export const metadata = { title: "Welcome · Sovereign" };
  * have named nothing gets scored on nothing.
  */
 export default async function OnboardingPage() {
-  const { profile } = await requireSession();
+  // The one screen that may be seen before onboarding is finished — everywhere
+  // else redirects here until it is.
+  const { profile } = await requireSession({ allowUnonboarded: true });
 
   if (profile.onboarded_at) redirect("/write");
 
