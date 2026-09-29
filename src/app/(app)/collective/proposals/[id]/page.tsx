@@ -17,6 +17,8 @@ import type {
   LawAssessment,
   LawStanding,
   NeedStanding,
+  Projection,
+  ProjectionStanding,
   Proposal,
   ProposalFlag,
   ProposalReadiness,
@@ -37,6 +39,7 @@ import { FlagList } from "./FlagList";
 import { Outcome } from "./Outcome";
 import { RunReview } from "./RunReview";
 import { Sharpening } from "./Sharpening";
+import { Projections } from "./Projections";
 import { ResonancePanel } from "./ResonancePanel";
 import { WithdrawButton } from "./WithdrawButton";
 
@@ -150,6 +153,8 @@ export default async function ProposalPage({
     { data: commitmentRows },
     { data: readinessRow },
     { data: debateRows },
+    { data: projectionRows },
+    { data: projectionStandingRows },
     { data: summaryRow },
   ] = await Promise.all([
     supabase
@@ -205,6 +210,12 @@ export default async function ProposalPage({
       .eq("proposal_id", id)
       .maybeSingle(),
     supabase.rpc("debate_standing", { p_proposal_id: id }),
+    supabase
+      .from("projections")
+      .select("*")
+      .eq("proposal_id", id)
+      .order("created_at", { ascending: true }),
+    supabase.rpc("projection_standing", { p_proposal_id: id }),
     supabase
       .from("debate_summaries")
       .select("*")
@@ -313,6 +324,12 @@ export default async function ProposalPage({
   const unanswered = flags.filter((f) => !f.resolved_at);
   const hasRead = Boolean(readRow);
   const open = isOpen(proposal.status);
+  const projections = (projectionRows ?? []) as unknown as Projection[];
+  const projectionStanding = (
+    Array.isArray(projectionStandingRows)
+      ? projectionStandingRows[0]
+      : projectionStandingRows
+  ) as ProjectionStanding | null;
 
   return (
     <Page>
@@ -491,6 +508,31 @@ export default async function ProposalPage({
         ) : (
           <RunReview proposalId={id} />
         )}
+      </section>
+
+      {/* ------------------------------------------------ IMPACT SIMULATION */}
+      {/* After the review and before the sliders, because this is the part
+          you are actually being asked to agree with: not whether it sounds
+          good, but whether you believe these things will be true. */}
+      <section className="mb-10">
+        <SectionLabel
+          right={
+            projectionStanding?.due_now
+              ? `${projectionStanding.due_now} to mark`
+              : projectionStanding?.total
+                ? `${projectionStanding.total}`
+                : undefined
+          }
+        >
+          What this will do
+        </SectionLabel>
+        <Projections
+          proposalId={id}
+          projections={projections}
+          standing={projectionStanding}
+          open={open}
+          decided={!open}
+        />
       </section>
 
       {/* ----------------------------------------------------- HUMAN LAYER */}

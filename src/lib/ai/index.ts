@@ -8,6 +8,7 @@ import { MockProvider } from "./mock";
 import {
   DEBATE_SUMMARY,
   DECISION_RATIONALE,
+  IMPACT_SIMULATION,
   LAW_AUDIT,
   PROPOSAL_REVIEW,
   PROPOSAL_SHARPEN,
@@ -28,6 +29,8 @@ import {
   reviewSchema,
   sharpenJsonSchema,
   sharpenSchema,
+  simulationJsonSchema,
+  simulationSchema,
   SHARPEN_SECTIONS,
   synthesisJsonSchema,
   synthesisSchema,
@@ -36,6 +39,7 @@ import {
   type ReflectionOutput,
   type ReviewOutput,
   type SharpenOutput,
+  type SimulationOutput,
   type SynthesisOutput,
 } from "./schemas";
 
@@ -399,6 +403,86 @@ export interface RationaleContext {
   reviewSummary: string | null;
   comments: { author: string; body: string }[];
   flags: { label: string; resolution: string | null }[];
+}
+
+/**
+ * The impact simulation.
+ *
+ * Given the proposal and what the reviewer already found, propose dated claims
+ * about what will be true afterwards. Nothing this returns is stored: the
+ * screen shows them as candidates and a person decides which go on the record,
+ * because a prediction nobody chose to make is not one the group owns.
+ */
+export async function simulateImpact(ctx: {
+  proposal: {
+    title: string;
+    summary: string;
+    body: string;
+    scope: string;
+    place: string | null;
+    budget: string | null;
+    termDays: number | null;
+  };
+  /** What the reviewer already said, so the simulation adds rather than repeats. */
+  reviewSummary: string | null;
+  risks: { title: string; severity: string; note: string }[];
+  /** How comparable past decisions actually went. The only evidence there is. */
+  past: { title: string; expected: string | null; actual: string | null; lesson: string | null }[];
+}): Promise<{
+  result: SimulationOutput;
+  model: string;
+  prompt: typeof IMPACT_SIMULATION;
+}> {
+  const input = `THE PROPOSAL
+title: ${ctx.proposal.title}
+in one line: ${ctx.proposal.summary}
+addressed to: ${ctx.proposal.place ? `${ctx.proposal.place} (${ctx.proposal.scope})` : ctx.proposal.scope}
+budget: ${ctx.proposal.budget ?? "none stated"}
+term: ${ctx.proposal.termDays ? `${ctx.proposal.termDays} days` : "none stated"}
+
+${ctx.proposal.body}
+
+WHAT THE REVIEWER FOUND
+${ctx.reviewSummary ?? "(no review on file)"}
+
+RISKS ALREADY NAMED
+${
+  ctx.risks.length
+    ? ctx.risks.map((r) => `- [${r.severity}] ${r.title}: ${r.note}`).join("\n")
+    : "(none)"
+}
+
+HOW COMPARABLE DECISIONS HERE ACTUALLY WENT
+${
+  ctx.past.length
+    ? ctx.past
+        .map(
+          (d) =>
+            `- ${d.title}\n  expected: ${d.expected ?? "not recorded"}\n  actually: ${d.actual ?? "not yet known"}${d.lesson ? `\n  lesson: ${d.lesson}` : ""}`,
+        )
+        .join("\n")
+    : "(nothing comparable has closed here yet)"
+}
+
+Do not repeat a risk the reviewer has already named unless you can make it
+checkable and dated, which is the thing this adds.`;
+
+  const { data, model } = await provider().complete({
+    prompt: IMPACT_SIMULATION,
+    input,
+    schema: simulationJsonSchema as unknown as Record<string, unknown>,
+    schemaName: "record_simulation",
+    maxTokens: 2000,
+  });
+
+  const parsed = simulationSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new AiError(
+      `The simulation did not match the expected shape: ${parsed.error.message}`,
+    );
+  }
+
+  return { result: parsed.data, model, prompt: IMPACT_SIMULATION };
 }
 
 export async function writeRationale(

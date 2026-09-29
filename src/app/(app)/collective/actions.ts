@@ -8,6 +8,7 @@ import {
   draftBody,
   reviewProposal,
   sharpenDraft,
+  simulateImpact,
   summariseDebate,
   writeRationale,
   type Draft,
@@ -19,7 +20,12 @@ import { placeAt } from "@/lib/collective";
 import { ledger } from "@/lib/ledger";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
-import type { CommitmentKind, GroupScope } from "@/lib/types";
+import type {
+  CommitmentKind,
+  GroupScope,
+  RelatedDecision,
+  ReviewRisk,
+} from "@/lib/types";
 
 /* ---------------------------------------------------------------------------
    The scale selector
@@ -1185,5 +1191,148 @@ export async function activateProposal(proposalId: string) {
   revalidatePath(`/collective/proposals/${proposalId}`);
   revalidatePath("/collective/projects");
   revalidatePath("/collective/proposals");
+  return { ok: true as const };
+}
+
+/* ---------------------------------------------------------------------------
+   IMPACT SIMULATION
+
+   Three actions and a hard line between them. `runSimulation` returns
+   candidates and stores nothing. `putOnRecord` is what makes a claim a fact,
+   and only a person presses it. `markProjection` is what happens when the
+   horizon passes.
+
+   The split matters: a prediction the group never chose to make is not one the
+   group owns, and a panel that silently saved whatever the model produced
+   would make everyone accountable to sentences nobody read.
+--------------------------------------------------------------------------- */
+
+/** Propose candidates. Nothing is written — see putOnRecord. */
+export async function runSimulation(proposalId: string) {
+  const supabase = await createClient();
+
+  const { data: proposal } = await supabase
+    .from("proposals")
+    .select("title, summary, body, scope, place, budget_amount, budget_currency, term_days")
+    .eq("id", proposalId)
+    .maybeSingle();
+
+  if (!proposal) return { ok: false as const, error: "No such proposal." };
+
+  const [{ data: review }, { data: related }] = await Promise.all([
+    supabase
+      .from("proposal_reviews")
+      .select("summary, risks, values_alignment")
+      .eq("proposal_id", proposalId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase.rpc("related_decisions_for", {
+      p_proposal_id: proposalId,
+      p_values: [] as string[],
+      p_limit: 4,
+    }),
+  ]);
+
+  try {
+    const { result, model, prompt } = await simulateImpact({
+      proposal: {
+        title: proposal.title,
+        summary: proposal.summary,
+        body: proposal.body,
+        scope: proposal.scope,
+        place: proposal.place,
+        budget: proposal.budget_amount
+          ? `${proposal.budget_amount} ${proposal.budget_currency}`
+          : null,
+        termDays: proposal.term_days,
+      },
+      reviewSummary: review?.summary ?? null,
+      risks: ((review?.risks ?? []) as ReviewRisk[]).map((r) => ({
+        title: r.title,
+        severity: r.severity,
+        note: r.note,
+      })),
+      past: ((related ?? []) as RelatedDecision[]).map((d) => ({
+        title: d.title,
+        expected: d.expected_outcome,
+        actual: d.actual_outcome,
+        lesson: d.lesson,
+      })),
+    });
+
+    return {
+      ok: true as const,
+      projections: result.projections,
+      note: result.note,
+      prompt: { id: prompt.id, version: prompt.version },
+      model,
+    };
+  } catch (e) {
+    return {
+      ok: false as const,
+      error: e instanceof Error ? e.message : "The simulation could not be run.",
+    };
+  }
+}
+
+/**
+ * Put one claim on the record.
+ *
+ * `source` is whose WORDS these are, and the rule is simple: if the person
+ * changed the sentence, the sentence is theirs. A model does not get credit
+ * for a projection somebody rewrote, and a person does not get to hide behind
+ * one they did not touch.
+ */
+export async function putOnRecord(input: {
+  proposalId: string;
+  direction: "effect" | "risk";
+  statement: string;
+  horizonDays: number;
+  confidence: number | null;
+  source: "ai" | "human";
+  promptId?: string | null;
+  promptVersion?: string | null;
+  model?: string | null;
+}) {
+  const supabase = await createClient();
+
+  const ai = input.source === "ai";
+  const { error } = await supabase.rpc("record_projection", {
+    p_proposal_id: input.proposalId,
+    p_direction: input.direction,
+    p_statement: input.statement,
+    p_horizon_days: input.horizonDays,
+    p_confidence: input.confidence,
+    p_source: input.source,
+    p_prompt_id: ai ? (input.promptId ?? null) : null,
+    p_prompt_version: ai ? (input.promptVersion ?? null) : null,
+    p_model: ai ? (input.model ?? null) : null,
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+
+  revalidatePath(`/collective/proposals/${input.proposalId}`);
+  return { ok: true as const };
+}
+
+/** Mark one against what happened. Once, with a reason, permanently. */
+export async function markProjection(
+  projectionId: string,
+  verdict: "held" | "missed" | "unclear",
+  note: string,
+) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("resolve_projection", {
+    p_projection_id: projectionId,
+    p_verdict: verdict,
+    p_note: note,
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+
+  revalidatePath("/collective/impact");
+  revalidatePath("/collective/proposals", "page");
   return { ok: true as const };
 }

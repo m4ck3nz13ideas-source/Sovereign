@@ -5,8 +5,15 @@ import { Card, Empty, Page, ScreenHead, SectionLabel } from "@/components/ui";
 import { addressOptions, requireAddress } from "@/lib/address";
 import { money, shortDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
-import type { ContributionRecord, Project, Reflection } from "@/lib/types";
+import type {
+  ContributionRecord,
+  DueProjection,
+  ForecastRecord,
+  Project,
+  Reflection,
+} from "@/lib/types";
 
+import { DueList } from "./DueList";
 import { LedgerCheck } from "./LedgerCheck";
 
 export const metadata = { title: "Impact · Sovereign" };
@@ -28,8 +35,13 @@ export default async function ImpactPage() {
     .from("projects")
     .select("*, proposals!inner(scope, group_id)");
 
-  const [{ data: projectRows }, { data: reflectionRows }, { data: record }] =
-    await Promise.all([
+  const [
+    { data: projectRows },
+    { data: reflectionRows },
+    { data: record },
+    { data: dueRows },
+    { data: forecastRows },
+  ] = await Promise.all([
       address.kind === "group"
         ? projectQuery.eq("group_id", address.group.id)
         : projectQuery.is("group_id", null).eq("proposals.scope", address.scope),
@@ -47,7 +59,17 @@ export default async function ImpactPage() {
             p_group_id: address.group.id,
           })
         : Promise.resolve({ data: null }),
-    ]);
+      supabase.rpc("due_projections", {
+      p_group_id: address.kind === "group" ? address.group.id : null,
+      p_scope: address.kind === "place" ? address.scope : null,
+        p_limit: 20,
+      }),
+      supabase.rpc("forecast_record", {
+      p_scope: address.kind === "place" ? address.scope : null,
+      p_place: address.kind === "place" ? address.place : null,
+      p_group_id: address.kind === "group" ? address.group.id : null,
+    }),
+  ]);
 
   const projects = (projectRows ?? []) as unknown as Project[];
   const reflections = (reflectionRows ?? []).filter((r) => {
@@ -65,6 +87,9 @@ export default async function ImpactPage() {
   const mine = (Array.isArray(record) ? record[0] : record) as
     | ContributionRecord
     | undefined;
+
+  const due = (dueRows ?? []) as DueProjection[];
+  const forecast = (forecastRows ?? []) as ForecastRecord[];
 
   const completed = projects.filter((p) => p.status === "completed").length;
   const committed = projects.reduce((n, p) => n + Number(p.budget_committed), 0);
@@ -94,6 +119,58 @@ export default async function ImpactPage() {
           <Stat label="Spent" value={money(spent)} />
         </div>
       </section>
+
+      {/* --------------------------------------------------- WAITING TO BE MARKED */}
+      {/* First, because this is the step that normally never happens. A group
+          that predicts and decides and never goes back has turned its own
+          predictions into decoration after the fact. */}
+      {due.length ? (
+        <section className="mb-10">
+          <SectionLabel right={`${due.length}`}>Waiting to be marked</SectionLabel>
+          <p className="mb-3 text-[0.8125rem] leading-relaxed text-paper-faint">
+            These were predicted before the decision and their dates have
+            passed. Say how each went. A project cannot be completed while one
+            of its own predictions is sitting here.
+          </p>
+          <DueList items={due} />
+        </section>
+      ) : null}
+
+      {/* --------------------------------------------- HOW THE PREDICTIONS WENT */}
+      {forecast.length ? (
+        <section className="mb-10">
+          <SectionLabel>How the predictions went</SectionLabel>
+          <div className="grid grid-cols-2 gap-3">
+            {forecast.map((f) => (
+              <div
+                key={f.source}
+                className="rounded-card border border-line bg-surface-soft px-4 py-3.5"
+              >
+                <p className="font-serif text-2xl text-paper">
+                  {f.hit_rate === null ? "—" : `${Math.round(f.hit_rate * 100)}%`}
+                </p>
+                <p className="smallcaps mt-0.5 text-[10px] text-paper-faint">
+                  {f.source === "ai" ? "written by a model" : "written by people"}
+                </p>
+                <p className="mt-2 text-[0.8125rem] leading-relaxed text-paper-dim">
+                  {f.held} held, {f.missed} missed
+                  {f.unclear ? `, ${f.unclear} unclear` : ""}
+                  {f.mean_confidence !== null
+                    ? ` · said ${f.mean_confidence.toFixed(2)} on average`
+                    : ""}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-paper-faint">
+            Whose words, not whose fault. Nobody is named here and there is no
+            function that will tell you somebody else&rsquo;s record. Compare
+            the hit rate against the average confidence rather than against
+            100%: being right six times in ten and saying 0.6 is better
+            calibration than being right eight times and always saying 0.95.
+          </p>
+        </section>
+      ) : null}
 
       <section className="mb-10">
         <SectionLabel right={lessons.length ? `${lessons.length}` : undefined}>

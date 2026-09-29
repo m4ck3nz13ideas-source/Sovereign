@@ -301,6 +301,79 @@ export interface PersonhoodProof {
   revoked_at: string | null;
 }
 
+export type ProjectionDirection = "effect" | "risk";
+export type ProjectionVerdict = "held" | "missed" | "unclear";
+
+/**
+ * A dated, falsifiable claim about what a proposal will do.
+ *
+ * Frozen before the vote, never editable, never deletable, and marked against
+ * reality when the horizon passes. `source` says whose words they are — the
+ * model's or a person's — and `created_by` is always whoever put them on the
+ * record.
+ */
+export interface Projection {
+  id: string;
+  proposal_id: string;
+  direction: ProjectionDirection;
+  statement: string;
+  /** Days from the decision, not from when it was written. */
+  horizon_days: number;
+  confidence: number | null;
+  source: "ai" | "human";
+  created_by: string;
+  prompt_id: string | null;
+  prompt_version: string | null;
+  model: string | null;
+  verdict: ProjectionVerdict | null;
+  verdict_note: string | null;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  created_at: string;
+}
+
+/** A row from `projection_standing()`. */
+export interface ProjectionStanding {
+  total: number;
+  effects: number;
+  risks: number;
+  resolved: number;
+  held: number;
+  missed: number;
+  unclear: number;
+  /** Come due and not yet marked. This is what blocks a project completing. */
+  due_now: number;
+  soonest_due: string | null;
+}
+
+/** A row from `due_projections()`: something waiting to be marked. */
+export interface DueProjection {
+  projection_id: string;
+  proposal_id: string;
+  title: string;
+  direction: ProjectionDirection;
+  statement: string;
+  source: "ai" | "human";
+  confidence: number | null;
+  due_at: string;
+  days_overdue: number;
+}
+
+/**
+ * A row from `forecast_record()`. Never a person: whose WORDS they were.
+ * There is no function that returns somebody else's record, on purpose.
+ */
+export interface ForecastRecord {
+  source: "ai" | "human";
+  marked: number;
+  held: number;
+  missed: number;
+  unclear: number;
+  /** held / (held + missed). Null until something has been settled either way. */
+  hit_rate: number | null;
+  mean_confidence: number | null;
+}
+
 /** A row from `personhood_standing()`: what one scale asks of you. */
 export interface PersonhoodStanding {
   scope: GroupScope;

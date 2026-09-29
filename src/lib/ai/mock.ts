@@ -33,6 +33,8 @@ export class MockProvider implements AiProvider {
         return { data: this.lawAudit(input), model: "mock" };
       case "record_review":
         return { data: this.review(input, text), model: "mock" };
+      case "record_simulation":
+        return { data: this.simulation(input), model: "mock" };
       case "record_rationale":
         return { data: this.rationale(text), model: "mock" };
       case "record_reflection":
@@ -115,6 +117,47 @@ export class MockProvider implements AiProvider {
           : polarization === "converging"
             ? `Most of it is people replying to each other, which is what a working argument looks like from the outside.`
             : `Nothing structural stands out.`),
+    };
+  }
+
+  /**
+   * The offline simulation.
+   *
+   * It abstains, and the abstention is the point.
+   *
+   * A projection is a claim with a date on it that somebody will be marked
+   * against. Inventing one from a regular expression would produce exactly the
+   * thing this whole feature exists to prevent: a confident sentence that
+   * looks like a reading and is not. So the offline reader proposes nothing of
+   * its own and instead lifts the author's OWN risk sentences out of the
+   * draft, verbatim, as candidates — the author already wrote them, and
+   * turning something already written into something dated and checkable is a
+   * human's job anyway.
+   *
+   * Everything it returns is a candidate. Nothing is stored until a person
+   * presses a button, here or with a real model behind it.
+   */
+  private simulation(input: string) {
+    const risks = (input.match(/## What could go wrong\n([\s\S]*?)(?=\n## |\n\nWHAT THE REVIEWER|$)/)?.[1] ?? "")
+      .split(/(?<=\.)\s+/)
+      .map((t) => t.trim())
+      .filter((t) => t.length >= 20 && t.length <= 240)
+      .slice(0, 3);
+
+    return {
+      projections: risks.map((statement) => ({
+        direction: "risk" as const,
+        statement,
+        horizon_days: 90,
+        confidence: 0.5,
+      })),
+      note:
+        "No model read this proposal — ANTHROPIC_API_KEY is not set, so the offline reader answered. " +
+        "It will not invent a prediction: a claim with a date on it that nobody actually thought is the " +
+        "exact thing this panel exists to keep out. What it has done is lift the risks the author already " +
+        "wrote, unchanged, as candidates. The dates on them are placeholders and the confidence is a " +
+        (risks.length ? "shrug — set both yourself before putting any of them on the record." :
+          "shrug. It found nothing in the draft it could lift, so there is nothing here. Write your own."),
     };
   }
 

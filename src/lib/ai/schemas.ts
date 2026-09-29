@@ -104,6 +104,23 @@ export const debateSchema = z.object({
 
 export type DebateOutput = z.infer<typeof debateSchema>;
 
+export const simulationSchema = z.object({
+  projections: z
+    .array(
+      z.object({
+        direction: z.enum(["effect", "risk"]),
+        statement: z.string().min(20).max(240),
+        horizon_days: z.number().int().min(1).max(3650),
+        confidence: z.number().min(0).max(1),
+      }),
+    )
+    .max(10),
+  /** What it could not make checkable, said plainly rather than padded out. */
+  note: z.string(),
+});
+
+export type SimulationOutput = z.infer<typeof simulationSchema>;
+
 export const rationaleSchema = z.object({
   rationale: z.string().min(1),
 });
@@ -294,6 +311,46 @@ export const debateJsonSchema = {
       description: "A reading of the argument, never of anyone's vote.",
     },
     reading: { type: "string" },
+  },
+} as const;
+
+export const simulationJsonSchema = {
+  type: "object",
+  required: ["projections", "note"],
+  properties: {
+    projections: {
+      type: "array",
+      maxItems: 10,
+      description:
+        "Dated, checkable claims. At least one effect and one risk. A claim that cannot be settled on its due date does not belong here.",
+      items: {
+        type: "object",
+        required: ["direction", "statement", "horizon_days", "confidence"],
+        properties: {
+          direction: {
+            type: "string",
+            enum: ["effect", "risk"],
+            description: "What it is meant to do, or what it might cost.",
+          },
+          statement: {
+            type: "string",
+            description:
+              "One sentence, specific enough that two people who disagree about everything else could agree whether it happened.",
+          },
+          horizon_days: {
+            type: "integer",
+            description:
+              "Days from the decision. The shortest at which this could actually be settled.",
+          },
+          confidence: scoreSchema,
+        },
+      },
+    },
+    note: {
+      type: "string",
+      description:
+        "What could not be made checkable, or an empty string. Not a summary and not a recommendation.",
+    },
   },
 } as const;
 
