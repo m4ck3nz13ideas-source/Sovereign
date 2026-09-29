@@ -6,7 +6,7 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Thirteen suites, two hundred and eighty-two checks. Every one of them runs as a non-superuser,
+Fourteen suites, two hundred and ninety-four checks. Every one of them runs as a non-superuser,
 so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
@@ -218,6 +218,17 @@ verify all three people, because 0011 requires proof of personhood to resonate
 at global scale, which is the right answer: a constitution is not rewritten by
 accounts.
 
+### `14_guardian.sql` — twelve checks
+
+- The guardian is given the values *you* wrote down, and only yours.
+- **Nobody else can read a note, write one in your name, or delete yours.**
+- Nothing it produces reaches the ledger, and `proposals` grew no column for
+  it.
+- **`guardian_notes` has no `verdict`, `score`, `recommendation`,
+  `alignment`, `profile_model`, `inferred_values` or `sentiment` column** —
+  the absences that keep it a guardian rather than a handler.
+- Forgetting is real, and it is the only thing in this schema that is.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -241,6 +252,7 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0013_contention.sql \
   -f supabase/migrations/0014_chat.sql \
   -f supabase/migrations/0015_amendment.sql \
+  -f supabase/migrations/0016_guardian.sql \
   -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
@@ -254,7 +266,8 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/tests/10_people.sql \
   -f supabase/tests/11_contention.sql \
   -f supabase/tests/12_chat.sql \
-  -f supabase/tests/13_amendment.sql
+  -f supabase/tests/13_amendment.sql \
+  -f supabase/tests/14_guardian.sql
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server
@@ -375,6 +388,17 @@ days is correct and untestable — and puts it back at the end. It also has to
 verify all three people, because 0011 requires proof of personhood to resonate
 at global scale, which is the right answer: a constitution is not rewritten by
 accounts.
+
+### `14_guardian.sql` — twelve checks
+
+- The guardian is given the values *you* wrote down, and only yours.
+- **Nobody else can read a note, write one in your name, or delete yours.**
+- Nothing it produces reaches the ledger, and `proposals` grew no column for
+  it.
+- **`guardian_notes` has no `verdict`, `score`, `recommendation`,
+  `alignment`, `profile_model`, `inferred_values` or `sentiment` column** —
+  the absences that keep it a guardian rather than a handler.
+- Forgetting is real, and it is the only thing in this schema that is.
 
 ## Running them against a real Supabase project
 

@@ -45,6 +45,7 @@ import { Outcome } from "./Outcome";
 import { RunReview } from "./RunReview";
 import { Sharpening } from "./Sharpening";
 import { Amendment } from "./Amendment";
+import { AskGuardian } from "./AskGuardian";
 import { Contended, OpenContention } from "./Contended";
 import { Projections } from "./Projections";
 import { ResonancePanel } from "./ResonancePanel";
@@ -631,6 +632,15 @@ export default async function ProposalPage({
           openQuestions={debate?.open_questions ?? 0}
           openConcerns={debate?.open_concerns ?? 0}
         />
+      </section>
+
+      {/* ------------------------------------------------------- GUARDIAN */}
+      {/* Under the sliders on purpose. A private reader that appeared above
+          the proposal would be getting between somebody and the thing itself,
+          which is the opposite of what it is for. */}
+      <section className="mb-10">
+        <SectionLabel>Before you answer</SectionLabel>
+        <AskGuardian proposalId={id} />
       </section>
 
       {/* --------------------------------------------------------- OUTCOME */}

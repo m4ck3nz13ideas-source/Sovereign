@@ -8,6 +8,7 @@ import { MockProvider } from "./mock";
 import {
   DEBATE_SUMMARY,
   DECISION_RATIONALE,
+  GUARDIAN,
   IMPACT_SIMULATION,
   LAW_AUDIT,
   PROPOSAL_REVIEW,
@@ -27,6 +28,8 @@ import {
   reflectionSchema,
   reviewJsonSchema,
   reviewSchema,
+  guardianJsonSchema,
+  guardianSchema,
   sharpenJsonSchema,
   sharpenSchema,
   simulationJsonSchema,
@@ -35,6 +38,7 @@ import {
   synthesisJsonSchema,
   synthesisSchema,
   type DebateOutput,
+  type GuardianOutput,
   type LawAuditOutput,
   type ReflectionOutput,
   type ReviewOutput,
@@ -490,6 +494,59 @@ checkable and dated, which is the thing this adds.`;
   }
 
   return { result: parsed.data, model, prompt: IMPACT_SIMULATION };
+}
+
+/**
+ * One person's guardian, reading one proposal against what they wrote down.
+ *
+ * Note what is NOT a parameter: their journal, their drafts, how they voted
+ * before, what they have read, who they know. The context is the proposal and
+ * their own stated values, and widening it is a decision somebody should have
+ * to make on purpose rather than by adding a field here.
+ */
+export async function askGuardian(ctx: {
+  proposal: { title: string; summary: string; body: string; scope: string; place: string | null };
+  /** Their own words, from their own values screen. Nothing inferred. */
+  values: { name: string; definition: string | null }[];
+  /** True when this is their own draft rather than somebody else's proposal. */
+  ownDraft: boolean;
+}): Promise<{ result: GuardianOutput; model: string; prompt: typeof GUARDIAN }> {
+  const values = ctx.values.length
+    ? ctx.values
+        .map((v) => `- ${v.name}${v.definition ? `: ${v.definition}` : ""}`)
+        .join("\n")
+    : "(they have not written any down — ask about the proposal on its own terms and do not guess at what they value)";
+
+  const input = `WHAT THEY WROTE DOWN THAT THEY VALUE
+${values}
+
+${ctx.ownDraft ? "THEIR OWN DRAFT" : "THE PROPOSAL"}
+title: ${ctx.proposal.title}
+in one line: ${ctx.proposal.summary}
+addressed to: ${ctx.proposal.place ?? ctx.proposal.scope}
+
+${ctx.proposal.body}
+
+${
+  ctx.ownDraft
+    ? "This is theirs and not yet submitted. The useful questions are the ones somebody else will ask them."
+    : "This is somebody else's and they are deciding how to respond to it."
+}`;
+
+  const { data, model } = await provider().complete({
+    prompt: GUARDIAN,
+    input,
+    schema: guardianJsonSchema as unknown as Record<string, unknown>,
+    schemaName: "record_guardian",
+    maxTokens: 1500,
+  });
+
+  const parsed = guardianSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new AiError(`The guardian did not match the expected shape: ${parsed.error.message}`);
+  }
+
+  return { result: parsed.data, model, prompt: GUARDIAN };
 }
 
 export async function writeRationale(

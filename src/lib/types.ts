@@ -474,6 +474,30 @@ export interface PastRefusal {
   decided_at: string | null;
 }
 
+/**
+ * A private note from your own guardian.
+ *
+ * Owner-only, with no share path anywhere. It reaches no proposal, no decision
+ * and no ledger, and it stores no model of you — what the guardian knows is
+ * what you wrote in your own values, which you can edit or delete.
+ *
+ * Note the absence of a verdict, a score and a recommendation. Those are not
+ * missing fields; a guardian that had them would be a handler.
+ */
+export interface GuardianNote {
+  id: string;
+  kind: "prepare" | "draft";
+  proposal_id: string | null;
+  title: string | null;
+  /** Questions for you to answer to yourself. Never for anybody else. */
+  questions: string[];
+  /** Where something you wrote down is not addressed. Empty is a good answer. */
+  gaps: { value: string; note: string }[];
+  reading: string | null;
+  model: string;
+  created_at: string;
+}
+
 export type ProjectionDirection = "effect" | "risk";
 export type ProjectionVerdict = "held" | "missed" | "unclear";
 

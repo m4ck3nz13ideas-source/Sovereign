@@ -121,6 +121,14 @@ export const simulationSchema = z.object({
 
 export type SimulationOutput = z.infer<typeof simulationSchema>;
 
+export const guardianSchema = z.object({
+  questions: z.array(z.string().min(1)).max(6),
+  gaps: z.array(z.object({ value: z.string(), note: z.string() })).max(6),
+  reading: z.string(),
+});
+
+export type GuardianOutput = z.infer<typeof guardianSchema>;
+
 export const rationaleSchema = z.object({
   rationale: z.string().min(1),
 });
@@ -350,6 +358,42 @@ export const simulationJsonSchema = {
       type: "string",
       description:
         "What could not be made checkable, or an empty string. Not a summary and not a recommendation.",
+    },
+  },
+} as const;
+
+export const guardianJsonSchema = {
+  type: "object",
+  required: ["questions", "gaps", "reading"],
+  properties: {
+    questions: {
+      type: "array",
+      maxItems: 6,
+      description:
+        "Three to six questions for this person to answer to themselves. Never a recommendation wearing a question mark — could a thoughtful person read it and still arrive at either answer?",
+      items: { type: "string" },
+    },
+    gaps: {
+      type: "array",
+      maxItems: 6,
+      description:
+        "Where something they wrote down is not addressed by the proposal. Empty is a good answer — never invent one to seem thorough.",
+      items: {
+        type: "object",
+        required: ["value", "note"],
+        properties: {
+          value: { type: "string", description: "Their value, in their own words." },
+          note: {
+            type: "string",
+            description: "What is missing. Not whether that is bad.",
+          },
+        },
+      },
+    },
+    reading: {
+      type: "string",
+      description:
+        "One paragraph, to them. Describe, do not advise, and end without a conclusion.",
     },
   },
 } as const;

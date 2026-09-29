@@ -111,6 +111,16 @@ on purpose, in a commit that says so.
     `law_assessments.law_revision` records which wording produced a verdict.
     The audit must run against `currentLaws()`, or the whole protocol is
     decorative.
+25. **The guardian never speaks first, has no opinion, and learns nothing.**
+    Every `guardian_notes` row exists because somebody pressed something. It
+    is given a proposal and `guardian_context()` — the values they wrote
+    down — and nothing else: not their journal, drafts, votes, reads or
+    graph. Widen that in the function, visibly, or not at all. It holds no
+    verdict, score or recommendation, it reaches no proposal, decision or
+    ledger, and it is owner-only with no share path. It is also the one thing
+    in this schema that can be forgotten, because nobody else is entitled to
+    it. If a behavioural profile ever appears here, this has become the
+    surveillance product it was built not to be.
 
 ## Where things go
 
