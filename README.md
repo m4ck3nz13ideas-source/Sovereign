@@ -242,6 +242,14 @@ supabase/migrations/0006_scope.sql          places, scales, the subsidiarity eng
 supabase/migrations/0007_readiness.sql      the six sections, and the gate on submitting
 supabase/migrations/0008_discovery.sql      the feed, dormant proposals, lineage
 supabase/migrations/0009_debate.sql         typed contributions, summaries, polarization
+supabase/migrations/0010_projection.sql     dated predictions, frozen and marked
+supabase/migrations/0011_personhood.sql     one person, one nullifier, no name
+supabase/migrations/0012_people.sql         follow, friendship, the social feed
+supabase/migrations/0013_contention.sql     two answers that cannot both happen
+supabase/migrations/0014_chat.sql           private conversation between friends
+supabase/migrations/0015_amendment.sql      the tenth law made operable
+supabase/migrations/0016_guardian.sql       a private reader that never speaks first
+supabase/migrations/0017_mirror.sql         where you and the audit differ
 ```
 
 `scope_rules` ships with local set to one voice and no waiting period, so a
@@ -297,8 +305,9 @@ is removable.
 
 ### Deploying
 
-Vercel, with the same environment variables. Add the deployed URL to Supabase's
-redirect list. There is nothing else.
+Vercel, with the same environment variables, plus the deployed URL added to
+Supabase's redirect list — without which magic links fail silently. The order
+matters and the database goes first: **[docs/deploying.md](docs/deploying.md)**.
 
 ---
 

@@ -8,6 +8,10 @@ Not "getting feedback on the UI". A real decision — something the group would
 have had to make anyway, that someone will have to carry out, where being wrong
 costs something.
 
+Nothing below this line matters until that has happened. As of now it has not:
+the whole thing runs on one machine with one account, and a great deal of what
+has been built since assumes other people exist.
+
 ## How to tell whether it worked
 
 V1 works if any of these happens:
@@ -20,6 +24,10 @@ V1 works if any of these happens:
 3. **A strong proposal gained support without politics.** Nobody had to lobby.
 4. **A group changed direction because of something the review surfaced.** The
    AI layer earned its place rather than decorating the page.
+5. **Somebody came back and marked a prediction.** The impact simulation is the
+   one feature whose value is entirely in the second visit. If nobody ever
+   returns to say how it went, it is decoration however good the sentences
+   were.
 
 If none of these holds after several real proposals, the answer is not more
 features. It is one of two things:
@@ -34,16 +42,46 @@ features. It is one of two things:
 
 Tune those against real decisions before building anything below.
 
+## Built since this document was last honest
+
+These were on the list or absent from it, and now exist. Migrations `0010`
+through `0017`.
+
+- **Impact simulation.** Dated, falsifiable predictions, frozen before the
+  vote, marked against reality afterwards, with a forecasting record split by
+  whose words they were. A project cannot complete while one that has come due
+  is unmarked.
+- **Proof of personhood.** A per-application nullifier and nothing else.
+  Required to resonate only where `scope_rules.require_personhood` says so —
+  off locally, on from national up. The browser half is not wired; see
+  *Outstanding* below.
+- **People.** Follow (one-way, public) and friendship (mutual, asked for),
+  public profiles, and a social feed read off the ledger. No directory, no
+  follower counts, and the graph touches eligibility nowhere.
+- **Contention.** Two proposals that cannot both happen, and a first choice
+  that orders the survivors without ever passing anything.
+- **Chats.** Private conversation between friends. No read receipts.
+- **Amendment.** The tenth law made operable: the wording of one existing law,
+  global, audited against the other nine, enacted only when every single voice
+  is at 0.900 or above.
+- **The guardian.** A private reader that never speaks first, has no opinion
+  about a decision, and stores no model of anybody.
+- **The mirror.** A private reading of your own responses against the ten laws,
+  derived rather than stored, with no good direction.
+
+## Outstanding, and small
+
+- **The World ID browser step.** The server half is finished and tested. The
+  client widget needs an app registered at the World Developer Portal, and
+  IDKit v4 has a different request shape from the v2 endpoint the adapter
+  targets. Until it is connected, national scale and above are closed to
+  everyone equally, which is the correct behaviour rather than a workaround.
+- **Doc drift.** `docs/architecture.md` and `docs/data-model.md` still describe
+  an older shape in places, and `README.md`'s tour of the screens predates the
+  last four features. `CLAUDE.md`, this file, `docs/design-system.md`,
+  `docs/deploying.md` and `supabase/tests/README.md` are current.
+
 ## What would earn a place next, and what must be true first
-
-### Amendments as first-class objects
-Today an amendment is a comment, and a failed proposal is rewritten from
-scratch. That is deliberate — it keeps the record honest about what was
-actually decided. But if groups keep resubmitting near-identical proposals, a
-proper amendment with its own resonance would be worth having.
-
-*Earns its place when:* more than a third of proposals in a group are
-rewrites of a previous one.
 
 ### A shared group rubric
 Every member's values currently union into one list. At eight people that is
@@ -53,26 +91,23 @@ individual values kept private and used only for the member's own reflection.
 *Earns its place when:* a group's rubric exceeds roughly a dozen entries, or
 members report that the scores are meaningless because the list is not theirs.
 
+### Detecting a contention rather than being told
+Contention records a clash somebody noticed; it cannot find one. Two proposals
+wanting the same £900 look identical to Postgres. Overlap through
+`proposal_needs` would be a real signal.
+
+*Earns its place when:* a group has missed a clash that cost them — and not
+before, because a wrong guess here tells people two unrelated proposals are
+alternatives, which is worse than saying nothing.
+
 ### Vault sync
-Pipeline is already file-shaped: `source_path` is preserved, markdown imports
+Ideas is already file-shaped: `source_path` is preserved, markdown imports
 update rather than duplicate, and concepts export as `.md` with frontmatter.
 The remaining work is a sync adapter — most likely a git-backed vault, since
 that avoids asking a hosted web app to hold a filesystem handle.
 
-*Earns its place when:* someone is actually using Pipeline enough that manual
+*Earns its place when:* someone is actually using Ideas enough that manual
 import is the thing slowing them down.
-
-### Real identity
-Invite-trust has no uniqueness guarantee: one person can hold two invited
-accounts. Self-declared place has none either — anyone can type a street they
-have never been to. For a group who know each other, and for a street where
-the neighbours are the check, that is the honest level of assurance. It stops
-being adequate the moment the outcome is worth gaming, which at national scale
-is immediately.
-
-*Earns its place when:* decisions allocate money that someone outside would
-want to influence, or anyone proposes taking a national result seriously. The
-`IdentityProver` interface is where this goes; nothing above it changes.
 
 ### An unforgeable readiness score
 The sharpening is recorded by the author, so the database can check that a
@@ -116,11 +151,29 @@ contract.
 
 ## What is deliberately not on this list
 
-**Notifications, streaks, screen-time features, engagement metrics.** The
-`personalised_social_app.pdf` describes a wellness layer, and the parts of it
-that matter are already load-bearing here in the negative: no counters framed
-as debts, no algorithmic feed, no reason to open the app that isn't a reason
-you already had. Adding a streak would undo that.
+**Notifications, streaks, screen-time features, engagement metrics.** The parts
+of a wellness layer that matter are already load-bearing here in the negative:
+no counters framed as debts, no algorithmic feed, no reason to open the app
+that isn't a reason you already had. Adding a streak would undo that.
+
+**Resonance in the social feed.** "Four people you follow have responded to
+this" is the single most effective engagement mechanic there is and it is the
+bandwagon that hiding live averages exists to prevent, wearing a friendly face.
+Whether somebody voted is not news; what they built is.
+
+**Read receipts, typing indicators, online status.** Each one is a mechanism
+for making somebody anxious about not replying. Read state exists and belongs
+to the reader.
+
+**A directory, a people search, or people-you-may-know.** A governance instance
+with a browsable index of everyone on it has built a target rather than a
+feature. A handle is an address; if somebody wants to be found they hand it
+out.
+
+**Any score on a person.** No follower count, no success rate, no forecast
+leaderboard, no alignment number visible to anybody but its owner. "Written 12,
+passed 3" is a record; "25%" is a score, and the distance between them is one
+division.
 
 **Letting a concern block a proposal.** It would look like rigour and it would
 be a veto. The mechanism that fails a proposal is the review flag, which is the
@@ -134,22 +187,18 @@ on what stands in the way, and that is the only ordering here that is not a
 judgement about whose proposal matters more. An "interesting" or "popular" cut
 would need engagement to exist, and the moment it exists people write for it.
 
-**Public profiles, cross-group discovery, a global feed.** A post reaches your
-group or your street, and nothing wider. Sovereign works because the circle is
-small enough that people know each other. A discovery surface turns it into a
-network, and a network has a moderation problem from the first day — which also
-means the place feed above local is exactly where this will first need an
-answer.
+**A guardian that recommends, or that learns.** Both are one sentence away at
+any time, and both would turn a counsel into a handler. See rule 25.
 
 **Tiered transparency.** Three tiers of pseudonymity is a serious piece of
 cryptographic design in service of a problem this does not have. Everyone in
 the group already knows who everyone is.
 
-**Taking a national or global result seriously.** The scales exist and the
-loop runs at all five, but with self-declared identity and self-declared place
-anything above regional is a straw poll. `min_voices` rises steeply to make
-that harder to forget, and the honest position is that these scales are there
-so the shape is right, not so the numbers are.
+**Taking a national or global result seriously — yet.** The scales exist and
+the loop runs at all five. Personhood now closes the sybil hole from national
+scale up, which is the part that made those numbers meaningless; self-declared
+place is still self-declared, so a gazetteer is the remaining gap. `min_voices`
+rises steeply to make all of that harder to forget.
 
 ## If you only do one thing
 
