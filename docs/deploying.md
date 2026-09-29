@@ -199,7 +199,38 @@ it is only reachable from the machine it names.
 
 ---
 
-## 4. The domain
+## 4. Email, and why the third sign-in fails
+
+Supabase's built-in email service sends **two messages per hour**. Not two
+per user — two, for the whole project. Supabase are explicit that it exists
+for development and is not meant for production, and it is best-effort even
+within that.
+
+Since the only way into this application is a magic link, that number is the
+number of people who can reach it per hour, and you will hit it while testing
+your own sign-in. The error is `email rate limit exceeded`, it is returned at
+the send step rather than the link step, and it resets on a rolling hour.
+
+So a custom SMTP provider is not a later refinement here. It is the thing
+standing between the deploy and anybody using it.
+
+**Project Settings → Authentication → SMTP Settings.** Resend, Postmark,
+SendGrid, AWS SES, Brevo and ZeptoMail all work; Resend is the least
+ceremony and its free tier is far beyond anything this needs. You will need
+a sender address on a domain you control, which means DKIM and SPF records
+at the registrar — the same GoDaddy DNS panel as the `www` record, and the
+provider gives you the exact values to paste.
+
+Sending as something like `sovereign@mackiavelli.co.uk` also means the link
+arrives from the same name as the site it points at, which matters more than
+it sounds when you are asking three people to trust a governance application
+they have never heard of.
+
+Once SMTP is configured, Supabase applies a fresh limit of 30 messages per
+hour, adjustable under **Authentication → Rate Limits**. Raise it to
+something sane before an invite goes out, not after.
+
+## 5. The domain
 
 This install runs at `www.mackiavelli.co.uk`. Two records' worth of work and
 three ways to be misled about the result.
@@ -247,7 +278,7 @@ five minutes whenever it matters.
 
 ---
 
-## 5. What is still not wired, and will not be by deploying
+## 6. What is still not wired, and will not be by deploying
 
 **The World ID browser step.** The server half is finished and tested; the
 client widget needs an app registered at the World Developer Portal, and IDKit
@@ -278,6 +309,8 @@ other and is worth fixing before it is not. See `docs/roadmap.md`.
     never visited the domain before
 [ ] Supabase Site URL set to the deployed origin
 [ ] Redirect URLs include the deployed origin and localhost
+[ ] custom SMTP configured — the built-in sender does two an hour, which is
+    two people an hour, for an application you can only enter by email
 [ ] signed in with a magic link on the deployed site, end to end
 [ ] written one proposal on it that you would have written anyway
 ```
