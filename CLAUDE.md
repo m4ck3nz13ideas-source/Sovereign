@@ -65,6 +65,23 @@ on purpose, in a commit that says so.
     `scope_rules.require_personhood` says so, never for reading, writing or
     objecting, and never inside a group. Only the person can revoke their own.
     Every decision records `verified_voices` whether the scale asked or not.
+18. **The graph never touches eligibility.** Following and friendship decide
+    whose work reaches your feed and who you can talk to. Nothing else. If you
+    find yourself reading `follows` or `friendships` to answer a question about
+    who may resonate, read, or reach a proposal, stop — `can_reach_proposal()`
+    is the only answer to that, and the moment the graph gets a vote this is a
+    different product.
+19. **There is no directory and no counts on people.** `find_person()` matches
+    an exact handle and nothing else: no prefix search, no listing, no people
+    you may know. Nobody can read anybody else's follow graph. No screen shows
+    a follower count, and `person_standing()` returns counts of finished acts
+    with no ratio anywhere — "written 12, passed 3" is a record, "25%" is a
+    score.
+20. **The social feed carries acts, not participation.** `people_feed()` lists
+    submissions, decisions, projects and marked predictions, in time order,
+    off the ledger. Resonance is excluded on purpose: "four people you follow
+    have responded" is the bandwagon rule 3 exists to prevent, with a friendly
+    face on it.
 
 ## Where things go
 
@@ -78,6 +95,9 @@ on purpose, in a commit that says so.
   nowhere in the schema to put it. With nothing configured the adapter refuses
   rather than pretending — unlike the AI layer's mock, a fake personhood proof
   IS the thing being proved.
+- `src/app/(app)/collective/people/` — the graph: follow, friendship, the
+  handle lookup and the public profile. Its `actions.ts` is imported from the
+  profile screen too, because the handle belongs to the same feature.
 - `src/lib/collective.ts` — pure helpers for the collective screens. A
   `"use server"` file may only export async functions, so anything synchronous
   belongs here rather than in `actions.ts`.

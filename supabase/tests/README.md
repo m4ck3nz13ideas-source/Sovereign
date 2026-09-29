@@ -6,7 +6,7 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Nine suites, a hundred and eighty-one checks. Every one of them runs as a non-superuser,
+Ten suites, two hundred and eleven checks. Every one of them runs as a non-superuser,
 so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
@@ -146,6 +146,20 @@ floor. It puts it back at the end.
 - A group asks for nothing: it already has a register.
 - The decision records how many of its voices were verified.
 
+### `10_people.sql` — thirty checks
+
+- A handle has a shape, and an exact one finds a person.
+- **A partial handle finds nobody** — there is no directory.
+- A stranger on another street is invisible until there is a reason.
+- Following makes them readable, is not mutual, and is not friendship.
+- **Nobody can read anybody else's follow graph.**
+- You cannot accept your own friend request; asking back counts as accepting.
+- One row per pair, whichever way round it was asked.
+- **Friendship gives no access to a private journal and no say in a decision**
+  — a friend on another street still cannot read or resonate on the proposal.
+- The feed carries a friend's submitted proposal, carries nothing from a place
+  you are not in, and **never reports who resonated on what**.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -165,6 +179,7 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0009_debate.sql \
   -f supabase/migrations/0010_projection.sql \
   -f supabase/migrations/0011_personhood.sql \
+  -f supabase/migrations/0012_people.sql \
   -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
@@ -174,7 +189,8 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/tests/06_discovery.sql \
   -f supabase/tests/07_debate.sql \
   -f supabase/tests/08_projection.sql \
-  -f supabase/tests/09_personhood.sql
+  -f supabase/tests/09_personhood.sql \
+  -f supabase/tests/10_people.sql
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server
@@ -223,6 +239,20 @@ real one — Supabase provides all of this already.
 - An expired proof stops counting on its own.
 - A group asks for nothing: it already has a register.
 - The decision records how many of its voices were verified.
+
+### `10_people.sql` — thirty checks
+
+- A handle has a shape, and an exact one finds a person.
+- **A partial handle finds nobody** — there is no directory.
+- A stranger on another street is invisible until there is a reason.
+- Following makes them readable, is not mutual, and is not friendship.
+- **Nobody can read anybody else's follow graph.**
+- You cannot accept your own friend request; asking back counts as accepting.
+- One row per pair, whichever way round it was asked.
+- **Friendship gives no access to a private journal and no say in a decision**
+  — a friend on another street still cannot read or resonate on the proposal.
+- The feed carries a friend's submitted proposal, carries nothing from a place
+  you are not in, and **never reports who resonated on what**.
 
 ## Running them against a real Supabase project
 

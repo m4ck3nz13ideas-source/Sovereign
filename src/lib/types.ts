@@ -301,6 +301,69 @@ export interface PersonhoodProof {
   revoked_at: string | null;
 }
 
+/** How you are tied to somebody. Neither tie affects what either of you may decide. */
+export type Tie = "following" | "friend";
+
+/** Where a friendship has got to, in the words the screens use. */
+export type FriendshipState = "none" | "you asked" | "they asked" | "friends";
+
+/** A person, as `find_person()` or `my_people()` returns them. */
+export interface Person {
+  profile_id: string;
+  display_name: string;
+  handle: string | null;
+  tie?: Tie;
+}
+
+/**
+ * A public profile, from `person_standing()`.
+ *
+ * What they have done, never what they think. No ratio and no percentage:
+ * "written 12, passed 3" is a record, "25% success" is a score, and the
+ * difference between those is one division and the whole design.
+ */
+export interface PersonStanding {
+  proposals_written: number;
+  proposals_passed: number;
+  projects_finished: number;
+  predictions_marked: number;
+  questions_answered: number;
+  joined_at: string;
+  you_follow: boolean;
+  you_are_friends: boolean;
+  they_follow_you: boolean;
+  friendship: FriendshipState;
+}
+
+/** A pending friendship, either direction, from `friendship_requests()`. */
+export interface FriendshipRequest {
+  profile_id: string;
+  display_name: string;
+  handle: string | null;
+  direction: "you asked" | "they asked";
+  asked_at: string;
+}
+
+/**
+ * One thing somebody you know actually did, from `people_feed()`.
+ *
+ * Read straight off the ledger, ordered by time and nothing else. Resonance
+ * is deliberately absent: "four people you follow have responded to this" is a
+ * bandwagon with a friendly face.
+ */
+export interface PeopleFeedEvent {
+  event_id: string;
+  actor_id: string;
+  actor_name: string;
+  actor_handle: string | null;
+  kind: string;
+  subject_type: string;
+  subject_id: string;
+  title: string | null;
+  tie: Tie;
+  happened_at: string;
+}
+
 export type ProjectionDirection = "effect" | "risk";
 export type ProjectionVerdict = "held" | "missed" | "unclear";
 

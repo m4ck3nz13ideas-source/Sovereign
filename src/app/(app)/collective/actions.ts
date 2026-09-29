@@ -291,18 +291,10 @@ export async function submitProposal(input: ProposalInput) {
 
   if (error) return { ok: false as const, error: error.message };
 
-  await ledger().record({
-    groupId,
-    kind: "proposal.submitted",
-    subjectType: "proposal",
-    subjectId: proposal.id,
-    payload: {
-      title: input.title.trim(),
-      scope,
-      place,
-      ...(input.supersedes ? { supersedes: input.supersedes } : {}),
-    },
-  });
+  // The submission is recorded by a trigger on `proposals`, not from here.
+  // Every other decisive act is written by the function that performs it, and
+  // this was the last one that depended on the application remembering — which
+  // is not what a tamper-evident record is. See 0012_people.sql.
 
   revalidatePath("/collective/proposals");
 

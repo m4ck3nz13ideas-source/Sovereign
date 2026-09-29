@@ -13,6 +13,7 @@ import type {
 } from "@/lib/types";
 
 import { BioEditor } from "./BioEditor";
+import { HandleEditor } from "./HandleEditor";
 import { FaithBanner } from "./FaithBanner";
 import { PassionsPanel } from "./PassionsPanel";
 import { StatementPanel } from "./StatementPanel";
@@ -97,6 +98,13 @@ export default async function ProfilePage() {
         bio={profile.bio}
         email={null}
       />
+
+      <section className="mt-8">
+        <SectionLabel right={profile.handle ? <Tag>@{profile.handle}</Tag> : undefined}>
+          Your handle
+        </SectionLabel>
+        <HandleEditor handle={profile.handle} />
+      </section>
 
       <Divider />
 

@@ -18,10 +18,12 @@ import type {
   DormantProposal,
   Entry,
   Post,
+  PeopleFeedEvent,
   SignalEvent,
 } from "@/lib/types";
 
 import { Attention, Dormant, Signal } from "./Discover";
+import { People } from "./People";
 import { FeedItem } from "./FeedItem";
 import { ReadyToShare } from "./ReadyToShare";
 
@@ -61,6 +63,7 @@ export default async function HomePage() {
     { data: attention },
     { data: dormant },
     { data: signal },
+    { data: people },
   ] = await Promise.all([
     supabase
       .from("entries")
@@ -82,11 +85,13 @@ export default async function HomePage() {
     address
       ? supabase.rpc("signal_feed", { ...args, p_limit: 12 })
       : Promise.resolve({ data: [] }),
+    supabase.rpc("people_feed", { p_limit: 30 }),
   ]);
 
   const queue = (attention ?? []) as AttentionItem[];
   const sleeping = (dormant ?? []) as DormantProposal[];
   const events = (signal ?? []) as SignalEvent[];
+  const theirs = (people ?? []) as PeopleFeedEvent[];
 
   const here =
     address?.kind === "group"
@@ -200,6 +205,27 @@ export default async function HomePage() {
             <Signal events={events} />
           </Gutter>
         </div>
+
+        {/* ----------------------------------------------------- WHO YOU KNOW */}
+        {/* What the people you follow and are friends with have done. Time
+            order, no counts, no reactions, and resonance deliberately absent —
+            see People.tsx for why that last one is the whole design. */}
+        <section className="pt-2">
+          <Gutter>
+            <SectionLabel
+              right={
+                <Link href="/collective/people" className="text-gold">
+                  people
+                </Link>
+              }
+            >
+              What people you know are doing
+            </SectionLabel>
+          </Gutter>
+          <Gutter>
+            <People events={theirs} />
+          </Gutter>
+        </section>
 
         {/* --------------------------------------------------------- PEOPLE */}
         <section>
