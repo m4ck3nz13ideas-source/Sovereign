@@ -57,6 +57,20 @@ export const env = {
   get worldIdAction(): string {
     return process.env.NEXT_PUBLIC_WORLD_ID_ACTION?.trim() || "sovereign-personhood";
   },
+  /**
+   * The origin this install is actually reached at, ONLY when it has been set
+   * explicitly. No VERCEL_URL fallback, deliberately.
+   *
+   * Sign-in redirects have to use this one. The per-deployment `*.vercel.app`
+   * host that VERCEL_URL names sits behind Vercel Authentication on a project
+   * with deployment protection on, so sending somebody there after they click
+   * a magic link lands them on a login wall belonging to a different company.
+   * An unset value means "use the request's own origin", which is right in
+   * development and right behind a correctly configured proxy.
+   */
+  get publicSiteUrl(): string | null {
+    return process.env.NEXT_PUBLIC_SITE_URL?.trim() || null;
+  },
   get siteUrl(): string {
     return (
       process.env.NEXT_PUBLIC_SITE_URL?.trim() ||

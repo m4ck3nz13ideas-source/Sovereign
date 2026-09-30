@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { Button, Field, inputClass } from "@/components/ui";
+import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm({ next }: { next?: string }) {
@@ -15,7 +16,13 @@ export function LoginForm({ next }: { next?: string }) {
     setState("sending");
 
     const supabase = createClient();
-    const redirect = new URL("/auth/callback", window.location.origin);
+
+    // The same rule as the callback: the configured origin wins, and the
+    // window's own is the fallback. A link built from a preview host sends the
+    // person back to the preview, which is correct there and wrong everywhere
+    // else — and the address in the email is the one thing nobody can correct
+    // afterwards.
+    const redirect = new URL("/auth/callback", env.publicSiteUrl ?? window.location.origin);
     if (next) redirect.searchParams.set("next", next);
 
     const { error } = await supabase.auth.signInWithOtp({

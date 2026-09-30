@@ -24,6 +24,98 @@ update profiles set display_name = 'Ann'  where id = '11111111-1111-1111-1111-11
 update profiles set display_name = 'Ben'  where id = '22222222-2222-2222-2222-222222222222';
 update profiles set display_name = 'Cara' where id = '33333333-3333-3333-3333-333333333333';
 
+-- ---------------------------------------------------------------------------
+-- The account lifecycle, before anything else.
+--
+-- Everything below this assumes a profile exists for each of those three, and
+-- nothing anywhere asserted that it does. The row comes from handle_new_user()
+-- on auth.users — signing in for the first time is what creates it, and if
+-- that trigger is ever dropped the whole app silently stops working for every
+-- new person while continuing to work perfectly for everybody already in.
+-- ---------------------------------------------------------------------------
+do $lifecycle$
+declare
+  ann uuid := '11111111-1111-1111-1111-111111111111';
+  n int; nm text;
+  passes int := 0; fails int := 0;
+begin
+  -- The trigger itself exists and is wired to the right table.
+  select count(*)::int into n
+    from pg_trigger t join pg_class c on c.oid = t.tgrelid
+    join pg_namespace ns on ns.oid = c.relnamespace
+   where ns.nspname = 'auth' and c.relname = 'users'
+     and t.tgname = 'on_auth_user_created' and not t.tgisinternal;
+  if n = 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: the signup trigger is not on auth.users — new people would get no profile';
+  end if;
+
+  -- Signing up wrote one.
+  select count(*)::int into n from profiles where id = ann;
+  if n = 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: signing up did not create a profile'; end if;
+
+  -- A brand new account gets a usable name without being asked for one, from
+  -- the local part of the address.
+  insert into auth.users (id, email)
+  values ('44444444-4444-4444-4444-444444444444', 'dervla@example.com');
+
+  select display_name into nm from profiles
+   where id = '44444444-4444-4444-4444-444444444444';
+  if nm = 'dervla' then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: a new profile was named "%" rather than from the address', nm; end if;
+
+  -- And it has not onboarded, which is the gate requireSession() reads.
+  select count(*)::int into n from profiles
+   where id = '44444444-4444-4444-4444-444444444444' and onboarded_at is null;
+  if n = 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: a brand new profile is already marked onboarded'; end if;
+
+  -- Signing in again must not reset anybody. The trigger fires on insert only
+  -- and conflicts do nothing, so a returning person keeps their name, their
+  -- place and the fact that they have already been through onboarding.
+  update profiles
+     set display_name = 'Dervla Ní Fhlannagáin', onboarded_at = now(),
+         place_local = 'Somewhere'
+   where id = '44444444-4444-4444-4444-444444444444';
+
+  begin
+    insert into auth.users (id, email)
+    values ('44444444-4444-4444-4444-444444444444', 'dervla@example.com');
+  exception when others then null;  -- the pkey refusing is itself correct
+  end;
+
+  select display_name into nm from profiles
+   where id = '44444444-4444-4444-4444-444444444444';
+  if nm = 'Dervla Ní Fhlannagáin' then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: signing in again overwrote a returning person''s name with "%"', nm; end if;
+
+  select count(*)::int into n from profiles
+   where id = '44444444-4444-4444-4444-444444444444' and onboarded_at is not null;
+  if n = 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: signing in again sent a returning person back through onboarding'; end if;
+
+  select count(*)::int into n from profiles where id = '44444444-4444-4444-4444-444444444444';
+  if n = 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: % profile rows for one account', n; end if;
+
+  -- And a person may write their own row, which is what lets the app repair a
+  -- missing one rather than bouncing somebody between two screens forever.
+  select count(*)::int into n
+    from pg_policies
+   where schemaname = 'public' and tablename = 'profiles' and cmd = 'INSERT';
+  if n = 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: % insert policies on profiles — a profile lost to a schema reset could not be rebuilt', n;
+  end if;
+
+  delete from auth.users where id = '44444444-4444-4444-4444-444444444444';
+
+  raise notice '';
+  raise notice '  Account lifecycle: % passed, % failed', passes, fails;
+  if fails > 0 then
+    raise exception '% checks failed', fails;
+  end if;
+end $lifecycle$;
+
 set role app;
 
 do $$

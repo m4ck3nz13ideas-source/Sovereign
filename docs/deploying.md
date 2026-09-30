@@ -251,6 +251,15 @@ as fine, because from Vercel's point of view it is. Either redeploy after
 adding the domain, or assign it to the current deployment explicitly. This
 cost an hour, misdiagnosed as DNS the whole time.
 
+**`NEXT_PUBLIC_SITE_URL` is not optional on a deployed install**, whatever it
+looks like. Sign-in redirects are built from it, and the fallback — the origin
+the request arrived on — can resolve to the per-deployment `*.vercel.app` host
+behind a proxy. On a project with deployment protection enabled that host is
+behind Vercel's own login, so somebody who clicked a perfectly valid magic link
+lands on a sign-in page belonging to another company while holding a working
+session they cannot see. `VERCEL_URL` names exactly that host, which is why
+nothing here falls back to it.
+
 **Environment variables that begin `NEXT_PUBLIC_` are compiled into the
 bundle.** Changing one in the dashboard does nothing to the build already
 serving. Redeploy, every time. Related: check the *spelling* of what is
@@ -313,7 +322,10 @@ other and is worth fixing before it is not. See `docs/roadmap.md`.
 [ ] Redirect URLs include the deployed origin and localhost
 [ ] custom SMTP configured — the built-in sender does two an hour, which is
     two people an hour, for an application you can only enter by email
+[ ] NEXT_PUBLIC_SITE_URL set on Production, and redeployed since
 [ ] signed in with a magic link on the deployed site, end to end
+[ ] signed out, closed the browser, and signed back in — a second sign-in is
+    the one that proves the account persisted rather than the session
 [ ] written one proposal on it that you would have written anyway
 ```
 
