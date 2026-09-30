@@ -6,7 +6,7 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Nineteen suites, four hundred and seventy-one checks. Every one of them runs as a
+Twenty-one suites, five hundred and sixty-seven checks. Every one of them runs as a
 non-superuser, so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
@@ -387,58 +387,103 @@ And the absences:
 - Both triggers exist. Without the freeze, every assertion about history above
   is decoration.
 
+### `20_witness.sql` — fifty checks
+
+A feed selects; the only question is where. These hold the selecting at the
+door and keep it from reappearing afterwards as a ranking.
+
+- **Nothing is published unread**: no reading at all, a reading below the
+  floor, a reading of *different* words, and somebody else's reading of the
+  same words are all refused.
+- A reading is **spent**: one reading admits one post, and the second attempt
+  fails.
+- The words do not move afterwards, and the suite checks both things that stop
+  them — `posts` has no update policy, so a member's update matches no row and
+  raises nothing (the assertion is that the text is unchanged, not that an
+  error was thrown), and `freeze_post()` refuses even with the policy out of
+  the way.
+- A `javascript:` url, an invented media kind, and a link with nothing saying
+  what it is are all refused — the last one because `media_kind in (...)` alone
+  is NULL when the kind is missing, and a check constraint passes on NULL.
+- Reach is the 0001 policy widened by the graph: the street sees it, another
+  street does not, and following brings it into view.
+- **A keep is private.** The author cannot read one on their own post,
+  `i_kept()` does not leak somebody else's, nobody can write one in another
+  person's name, and no SELECT policy on `post_reactions` omits `auth.uid()`.
+- The reader's own filter narrows their feed and nobody else's; an empty filter
+  means everything; muting stops arrival without removing reach; and **the
+  muted person cannot find out** — neither `feed_mutes` nor `feed_settings` is
+  readable by anybody else.
+
+And the absences:
+
+- `posts` has no `likes`, `reactions`, `score`, `rank`, `views`, `shares`,
+  `boost`, `pinned`, `trending`, `reach`, `impressions`, `hot`, `popularity` or
+  `engagement` column, and `post_reactions` has nothing beyond who and when.
+- `witness_feed()` has nothing in it to rank by, orders by `happened_at desc`,
+  and does not mention resonance.
+- `person_standing()` does not count posting, and no decision function reads
+  any of these tables.
+- **Nothing totals a person's readings.** No function name joins witness or
+  first_hand to score, average, total, standing, rank, rating or quality — that
+  would be a rating of a writer rather than a judgement about a draft.
+- All three triggers exist. Without them every assertion above is decoration.
+
+### `21_sov.sql` — forty-six checks
+
+- Answering a flag, marking a prediction and finishing a project mint 15, 10
+  and 100 — and the schedule the app shows is the one that issued.
+- **Submitting a proposal mints nothing**, and neither does being followed.
+  Paying for the start of something is the one behaviour this must not buy.
+- Nobody mints themselves anything, and nobody writes an ordinary-looking
+  transfer by hand: `sov_entries` has no insert policy at all.
+- Every issuance names the act that earned it.
+- A transfer needs a recipient, a positive amount, a twenty-character reason
+  and a balance that covers it — a negative transfer is a withdrawal from
+  somebody else and is refused as one.
+- **Sending does not change what somebody earned.** The whole reason there are
+  two figures: sending 40 does not un-answer a flag. And receiving does not
+  count as Proof of Alignment.
+- Nobody reads anybody else's entries. What somebody put behind a project is
+  visible to whoever can reach it, because that is a commitment to a group;
+  another street can neither back it nor read its backing.
+- Conservation, checked as the owner because no member can read both sides: the
+  transfer entries sum to zero, and so do the backing entries.
+
+And the absences, which are most of the suite:
+
+- No decision function mentions SOV — `close_proposal`, `cast_resonance`,
+  `can_reach_proposal`, `activate_proposal`, `alignment_shape`,
+  `resonance_summary`, `bind_proposal_readiness` and `amendment_threshold` are
+  all read. The franchise is not for sale.
+- No price, rate, exchange, fee, bid, ask, yield or interest column, and no
+  function that converts, sells, trades, cashes or redeems.
+- **No league table, and not merely by omission**: no SELECT policy omits
+  `auth.uid()`, so there is nothing to sort. Neither reading function takes an
+  id, for the reason `my_law_mirror()` does not.
+- No write policies at all on `sov_entries`, no stored balance column on
+  `profiles`, `projects` or `groups`, and both the minting trigger and the
+  mint-once index still exist.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
 
 ```bash
 createdb sovereign_test
-psql -d sovereign_test -v ON_ERROR_STOP=1 \
-  -f supabase/tests/00_supabase_shim.sql \
-  -f supabase/migrations/0001_schema.sql \
-  -f supabase/migrations/0002_rls.sql \
-  -f supabase/migrations/0003_functions.sql \
-  -f supabase/migrations/0004_universal_law.sql \
-  -f supabase/migrations/0005_activation.sql \
-  -f supabase/migrations/0006_scope.sql \
-  -f supabase/migrations/0007_readiness.sql \
-  -f supabase/migrations/0008_discovery.sql \
-  -f supabase/migrations/0009_debate.sql \
-  -f supabase/migrations/0010_projection.sql \
-  -f supabase/migrations/0011_personhood.sql \
-  -f supabase/migrations/0012_people.sql \
-  -f supabase/migrations/0013_contention.sql \
-  -f supabase/migrations/0014_chat.sql \
-  -f supabase/migrations/0015_amendment.sql \
-  -f supabase/migrations/0016_guardian.sql \
-  -f supabase/migrations/0017_mirror.sql \
-  -f supabase/migrations/0018_accession.sql \
-  -f supabase/migrations/0019_inquiry.sql \
-  -f supabase/migrations/0020_ask.sql \
-  -f supabase/migrations/0021_accession_required.sql \
-  -f supabase/migrations/0022_search_mine.sql \
-  -f supabase/migrations/0023_lexicon.sql \
-  -f supabase/migrations/0024_lineage.sql \
-  -f supabase/tests/00b_support.sql \
-  -f supabase/tests/01_rules.sql \
-  -f supabase/tests/02_universal_law.sql \
-  -f supabase/tests/03_activation.sql \
-  -f supabase/tests/04_scope.sql \
-  -f supabase/tests/05_readiness.sql \
-  -f supabase/tests/06_discovery.sql \
-  -f supabase/tests/07_debate.sql \
-  -f supabase/tests/08_projection.sql \
-  -f supabase/tests/09_personhood.sql \
-  -f supabase/tests/10_people.sql \
-  -f supabase/tests/11_contention.sql \
-  -f supabase/tests/12_chat.sql \
-  -f supabase/tests/13_amendment.sql \
-  -f supabase/tests/14_guardian.sql \
-  -f supabase/tests/15_mirror.sql \
-  -f supabase/tests/16_accession.sql \
-  -f supabase/tests/17_inquiry.sql \
-  -f supabase/tests/18_lexicon.sql \
-  -f supabase/tests/19_lineage.sql
+
+# Every migration, then every suite. Globs, never a list: CI named its files
+# once, the list stopped at 0003 while the schema went to 0026, and it passed
+# for months while checking almost nothing.
+ARGS=(-f supabase/tests/00_supabase_shim.sql)
+for m in supabase/migrations/*.sql; do ARGS+=(-f "$m"); done
+ARGS+=(-f supabase/tests/00b_support.sql)
+for t in supabase/tests/[0-9][0-9]_*.sql; do
+  case "$t" in *00_supabase_shim*|*00b_support*) continue;; esac
+  ARGS+=(-f "$t")
+done
+
+psql -d sovereign_test -v ON_ERROR_STOP=1 "${ARGS[@]}"
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server
@@ -595,3 +640,16 @@ SQL editor.
 Every rule in the table in `docs/architecture.md` should have one. If you add a
 rule to a `SECURITY DEFINER` function, add the case that proves it refuses —
 the useful assertion is almost always that something is *not* allowed.
+
+Three things that will bite, all learned the hard way:
+
+- **End the file with `reset role;`.** They run in one psql session, so a suite
+  that leaves `app` set makes the next one fail on its own `insert into
+  auth.users`. 18 and 19 both omitted it and the documented run order was
+  broken.
+- **Pick test identities nobody else uses.** One database, one run: a uuid
+  prefix another suite already inserts fails on the primary key.
+- **`set_config(..., true)` is transaction-local, and each `DO` block is its own
+  transaction.** A suite split across more than one block has to say who it is
+  again at the top of each, or `auth.uid()` is null and RLS hides everything —
+  which looks exactly like a failing rule.

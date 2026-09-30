@@ -210,7 +210,7 @@ class BookkeepingTreasury implements Treasury {
   }
 
   describe() {
-    return "A contribution ledger, not a wallet. It records what the group committed and what it spent, in ordinary money, and moves nothing. There is no token and no balance to hold.";
+    return "A contribution ledger, not a wallet. It records what the group committed and what it spent, in ordinary money, and moves nothing. SOV is a separate, simulated unit and is not this — a project's budget is in pounds and always will be.";
   }
 }
 
@@ -219,4 +219,93 @@ let treasuryInstance: Treasury | null = null;
 export function treasury(): Treasury {
   if (!treasuryInstance) treasuryInstance = new BookkeepingTreasury();
   return treasuryInstance;
+}
+
+/* ---------------------------------------------------------------------------
+   Coordination — SOV
+
+   The Overview's third layer, simulated. Everything below routes through 0026's
+   functions rather than touching `sov_entries`, because the table has no insert
+   policy at all: a client cannot mint, move or backdate anything, and the only
+   way in is a security definer function that checks the balance first.
+
+   The two figures are not interchangeable and no screen may add them up.
+   `minted` is what somebody has been issued for finished acts and only goes up.
+   `balance` is what they hold now and moves when they send or back something.
+   The moment SOV became transferable a balance stopped being a claim about the
+   person holding it — see the header on 0026.
+
+   A chain adapter would replace this and nothing above it would change. What it
+   must never grow, here or there: a price, a conversion, a rank, or a read of
+   somebody else's holding.
+--------------------------------------------------------------------------- */
+
+export interface SovStanding {
+  balance: number;
+  minted: number;
+  sent: number;
+  received: number;
+  backing: number;
+}
+
+export interface SovEntry {
+  id: string;
+  amount: number;
+  kind: "mint" | "transfer" | "backing";
+  reason: string;
+  other_name: string | null;
+  project_title: string | null;
+  happened_at: string;
+}
+
+export interface Coordination {
+  /** Your own two figures. There is no version of this that takes an id. */
+  standing(): Promise<SovStanding>;
+  /** Your own entries, most recent first. */
+  entries(limit?: number): Promise<SovEntry[]>;
+  /** The Proof of Alignment schedule, as everybody can read it. */
+  schedule(): Promise<{ kind: string; amount: number; rationale: string }[]>;
+  /** True where this is a simulation. The UI says so wherever a figure appears. */
+  readonly simulated: boolean;
+  describe(): string;
+}
+
+class SimulatedSov implements Coordination {
+  readonly simulated = true;
+
+  async standing() {
+    const supabase = await createClient();
+    const { data } = await supabase.rpc("my_sov");
+    const row = Array.isArray(data) ? data[0] : data;
+    return {
+      balance: Number(row?.balance ?? 0),
+      minted: Number(row?.minted ?? 0),
+      sent: Number(row?.sent ?? 0),
+      received: Number(row?.received ?? 0),
+      backing: Number(row?.backing ?? 0),
+    };
+  }
+
+  async entries(limit = 50) {
+    const supabase = await createClient();
+    const { data } = await supabase.rpc("my_sov_entries", { p_limit: limit });
+    return (data ?? []) as SovEntry[];
+  }
+
+  async schedule() {
+    const supabase = await createClient();
+    const { data } = await supabase.rpc("sov_schedule");
+    return (data ?? []) as { kind: string; amount: number; rationale: string }[];
+  }
+
+  describe() {
+    return "Simulated. There is no chain, no wallet, no key and no counterparty outside this database, and none of it is worth anything. It is here to find out whether the mechanism is any good while that is still cheap to change. It buys no part of any decision: everyone's resonance counts the same, and the tests fail if a decision function so much as mentions it.";
+  }
+}
+
+let sovInstance: Coordination | null = null;
+
+export function coordination(): Coordination {
+  if (!sovInstance) sovInstance = new SimulatedSov();
+  return sovInstance;
 }

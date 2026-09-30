@@ -242,6 +242,50 @@ on purpose, in a commit that says so.
     goes near a person — "two later attempts exist" is a fact about a proposal,
     "this author gets rewritten a lot" is a score.
 
+32. **A post is read once at the door and never scored afterwards.** A feed
+    selects — even time order is a selection — so the only question is where the
+    selecting happens, and this puts it at the door: `bind_post_witness()`
+    refuses a post without a `post_witness` reading of that exact body at or
+    above `post_floor()`, the reading is spent on one post, and `freeze_post()`
+    fixes the words afterwards. The reading asks whether a post is FIRST-HAND,
+    not whether it is positive: the first thing a positivity gate keeps out is
+    somebody honestly reporting that a project failed, and those reports are
+    what the reviewer reads back on the next proposal. The number never appears
+    on a published post and nothing totals it per author — that would be a
+    rating of a writer, and `20_witness.sql` fails if a function name suggests
+    one. `posts` has no likes, reactions, score, rank, views, shares, boost,
+    pinned, trending, reach, impressions or engagement column, `witness_feed()`
+    orders by `happened_at desc` with no second key, and resonance stays out of
+    it for the reason rule 20 keeps it out of `people_feed()`. A reaction is now
+    a KEEP: private to the person who made it, no count, no notification, and no
+    policy by which an author learns of one. Posting reaches no decision and
+    appears nowhere in `person_standing()` — the moment it does, this rewards
+    posting. What the reader controls is their own: `feed_settings` and
+    `feed_mutes` narrow one person's feed and are invisible to everybody else,
+    including the muted person, permanently.
+
+33. **SOV is minted by finished acts, buys nothing, and is two figures rather
+    than one.** `mint_for_act()` fires off `ledger_events` against the
+    `sov_issuance` schedule — a project completed, a flag answered, a prediction
+    marked — so issuance is a consequence of an act rather than a claim about
+    one, and `sov_mint_once` means a replayed event pays once. Nothing mints for
+    posting, following, being kept or turning up. `sov_entries` has no insert,
+    update or delete policy at all, like `ledger_events`: every write goes
+    through a security definer function that checks the balance first, and a
+    balance is a sum of entries rather than a column anybody can set. MINTED and
+    BALANCE are separate functions and no screen adds them up — minted is the
+    Proof of Alignment record and only goes up; balance moves, and the moment
+    SOV became transferable a balance stopped proving anything about the person
+    holding it. It touches no decision: `close_proposal()`, `cast_resonance()`,
+    `can_reach_proposal()`, `activate_proposal()`, `alignment_shape()`,
+    `resonance_summary()` and `amendment_threshold()` are read by `21_sov.sql`
+    and must not mention it, everyone's resonance counts the same, and backing a
+    project is deliberately not counted by `activate_proposal()` — a project
+    cannot be started by somebody buying it. Nobody can read anybody else's
+    holding, which is what makes a league table impossible rather than merely
+    absent. There is no price, conversion, market or fee column and no function
+    named for one. It is a SIMULATION and every surface that shows it says so.
+
 ## Where things go
 
 - `src/lib/ai/` — the AI layer. `prompts.ts` holds versioned rubrics;
@@ -288,6 +332,31 @@ npm run check     # typecheck, lint, build
 The build must pass with no environment variables set. `src/lib/env.ts` reads
 configuration through getters for exactly this reason: a missing key should
 produce a readable message at request time, not a failed build.
+
+And the database rules, which `npm run check` does not cover — every migration,
+then every suite, both by glob:
+
+```bash
+createdb sovereign_test
+ARGS=(-f supabase/tests/00_supabase_shim.sql)
+for m in supabase/migrations/*.sql; do ARGS+=(-f "$m"); done
+ARGS+=(-f supabase/tests/00b_support.sql)
+for t in supabase/tests/[0-9][0-9]_*.sql; do
+  case "$t" in *00_supabase_shim*|*00b_support*) continue;; esac
+  ARGS+=(-f "$t")
+done
+psql -d sovereign_test -v ON_ERROR_STOP=1 "${ARGS[@]}"
+```
+
+**Globs, never a list.** CI named its files once, the list stopped at 0003
+while the schema went to 0026, and it passed for months while checking almost
+nothing — then failed on a commit that had nothing to do with the reason. Two
+regressions had gone in behind it in the meantime.
+
+Two things that will bite when you add a suite: it must end with `reset role;`,
+or the next suite runs as `app` and cannot create its own users; and its test
+identities must not collide with another suite's, because they all share one
+database in one run.
 
 ## Copy
 
