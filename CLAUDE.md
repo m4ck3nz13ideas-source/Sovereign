@@ -193,6 +193,28 @@ on purpose, in a commit that says so.
     and a `security definer` function carries its own check because the policy
     does not apply to it.
 
+30. **A word has readings, never a definition.** `terms` is a word a group has
+    noticed it uses; `term_readings` is what one person takes it to mean, one
+    row per person per revision. `terms` has no definition, canonical, agreed
+    or official column and must not grow one — a glossary is a decision about
+    a word, and it overwrites the only information here, which is that half
+    the group thought otherwise. `term_readings` has no vote, score,
+    endorsement or agreement column: a reading is not a candidate. **Nothing
+    anywhere computes whether two readings match**, and this is the absence
+    easiest to undo by accident — a similarity figure over two people's
+    sentences puts a number on meaning, is wrong in ways nobody can audit, and
+    on screen looks exactly like a fact. `voices` counts who has written one
+    and says nothing about whether they agree; the readings sit next to each
+    other and the members read them. Readings are append-only for the same
+    reason acceptances are (rule 28): a silent edit would let the discovery
+    that two people meant different things be tidied away, and that discovery
+    is the feature. No term is attached to a proposal, because matching a word
+    against proposal text is a guess and a wrong guess tells people a decision
+    turned on a definition it never mentioned. Nothing in `close_proposal()`,
+    `cast_resonance()` or `can_reach_proposal()` may read these tables. It is
+    groups only: a place has no register (rule 15), so there is nobody for a
+    word at a place to belong to.
+
 ## Where things go
 
 - `src/lib/ai/` — the AI layer. `prompts.ts` holds versioned rubrics;

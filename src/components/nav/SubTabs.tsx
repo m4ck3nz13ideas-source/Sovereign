@@ -12,7 +12,9 @@ import { PillLink, Rail } from "@/components/ui";
  * is private by nature and so belongs on this side of the app rather than the
  * collective one.
  *
- * COLLECTIVE — the overview's five, with Feed promoted out to Home.
+ * COLLECTIVE — the overview's five, with Feed promoted out to Home, and Words:
+ * what the group means by its language, which is the one thing here that is not
+ * a record of something it decided.
  *
  * A rail rather than a fixed tab bar because seven does not fit across a phone
  * and a dropdown hides where you are. A rail shows the shape of the space and
@@ -36,6 +38,7 @@ export const COLLECTIVE_TABS = [
   { href: "/collective/projects", label: "Projects" },
   { href: "/collective/impact", label: "Impact" },
   { href: "/collective/decisions", label: "Decisions" },
+  { href: "/collective/lexicon", label: "Words" },
   { href: "/collective/people", label: "People" },
 ];
 

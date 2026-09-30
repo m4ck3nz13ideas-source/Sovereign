@@ -61,7 +61,7 @@ writing. It is the only screen with no backlog on it.
 The rest of Home is the attention queue — **ordered by what is blocked, not by
 what is new** — under a selector for which scale you are looking at.
 
-### Collective — proposals, debate, projects, impact, decisions, people
+### Collective — proposals, debate, projects, impact, decisions, words, people
 
 The governance cycle from the whitepaper, in full:
 
@@ -82,9 +82,10 @@ next proposal arrives.
 
 Alongside that: **predictions** made before the vote and marked against reality
 afterwards, **contention** for two proposals that cannot both happen, an
-**amendment** path for the wording of a law, and **people** — follow and
-friendship, which decide whose work reaches your feed and touch eligibility
-nowhere.
+**amendment** path for the wording of a law, **words** — what the group takes
+its own language to mean, which is the one screen here that records nothing it
+decided — and **people** — follow and friendship, which decide whose work
+reaches your feed and touch eligibility nowhere.
 
 ---
 
@@ -140,6 +141,18 @@ While a proposal is open the votes stay hidden, so polarization there is read
 from the **argument** instead: whether people are still addressing each other,
 or have started restating positions at each other. The summary says which, and
 says plainly that it is a reading of the thread and not of anyone's resonance.
+
+**And dispersion cannot see a group that means two things.** Two members both
+resonate at 0.90 on "shared workshop access". One means a rota; the other means
+a key each. The numbers are identical, so nothing the ledger holds can tell
+them apart — the disagreement is upstream of everything this system measures.
+So a group can raise a word and each member writes what they take it to mean,
+and the readings sit next to each other: no agreed definition, no vote on a
+reading, and **nothing that computes whether two readings match**. A similarity
+figure over two people's sentences would put a number on meaning, be wrong in
+ways nobody could audit, and look on screen exactly like a fact. Readings are
+append-only, so the moment a group finds out it meant two things cannot be
+tidied away afterwards.
 
 **The feed is ordered by what is blocked, not by what is new.** Home
 opens on what is actually waiting on you, with the reason attached — not
@@ -283,6 +296,7 @@ supabase/migrations/0019_inquiry.sql        what the ways of knowing hold, never
 supabase/migrations/0020_ask.sql            the fourth tab: finding, and asking on its own
 supabase/migrations/0021_accession_required.sql  you cannot arrive without agreeing
 supabase/migrations/0022_search_mine.sql    searching your own half, kept apart
+supabase/migrations/0023_lexicon.sql        what the group means by its words
 ```
 
 `scope_rules` ships with local set to one voice and no waiting period, so a
@@ -364,16 +378,17 @@ rather than a failed build.
 
 The rules that define this product live in Postgres, so that is where they are
 tested. `supabase/tests/` runs against any local Postgres as a non-superuser,
-so row-level security actually applies, and checks a hundred and twenty-eight
-things across seven suites — that a member cannot read another member's journal, that
-resonance is refused before the review is read, that two unanswered flags fail
+so row-level security actually applies, and checks four hundred and forty-one
+things across eighteen suites — that a member cannot read another member's
+journal, that resonance is refused before the review is read, that two unanswered flags fail
 a proposal whatever the numbers say, that a project cannot complete without a
 reflection, that an edited ledger row is detected, that someone in Totnes
 cannot read or answer a proposal addressed to Hackney, and that an author
 cannot re-aim a proposal once it is out, that an unsharpened draft is refused
 and a sharpening of one text cannot be spent on another, that a proposal
-people read and declined is never offered back as dormant, and that four people
-split two against two are not recorded as a consensus. See
+people read and declined is never offered back as dormant, that four people
+split two against two are not recorded as a consensus, and that nothing
+anywhere computes how much two people's readings of the same word agree. See
 `supabase/tests/README.md` for how to run it.
 
 ```bash

@@ -387,6 +387,49 @@ concern or a projection.
 the screen says so every time it renders one. The mock adapter **refuses** to
 produce a survey at all rather than inventing one.
 
+### `terms`, `term_readings`
+A word a group has noticed it uses, and what each member takes it to mean. The
+collective interior: everything else under Collective records what the group
+*decided*, and this is the only thing that records what it *means*.
+
+**A word has readings, never a definition.** `terms` has no definition,
+canonical, agreed, official, preferred or consensus column and nowhere to put
+one — a glossary is a decision about a word, and it overwrites the only
+information here, which is that half the group thought otherwise.
+`term_readings` has no vote, score, endorsement or agreement column: a reading
+is not a candidate.
+
+**Nothing computes whether two readings match.** `group_lexicon().voices`
+counts who has written one and says nothing about how close they are. A word
+three people read three ways and a word three people read identically are the
+same row. This is the absence easiest to undo by accident and the one to guard:
+a similarity figure over two people's sentences puts a number on meaning, is
+wrong in ways nobody can audit, and on screen looks exactly like a fact.
+
+Append-only, for the same reason `law_acceptances` is. One row per person per
+term per revision, primary key across all three, no update policy and no delete
+policy. Meaning does change, and somebody who has understood something better
+writes a new revision rather than editing the old one — a silent edit would let
+the moment a group discovered it meant two things be tidied away, and that
+moment is the feature. `terms` has no update policy either: renaming a word
+changes what every existing reading was answering.
+
+Group-visible, which is the one place in this schema where somebody's own words
+are readable by others by default. That is deliberate and it is why nothing
+else about a person is: a reading exists in order to be read by the people you
+are deciding with. `readings_for()`, `group_lexicon()` and `reading_history()`
+are `security definer` and each carries its own `is_group_member()` check,
+because the policy does not apply to them.
+
+Groups only — `group_id` is not null. A place has no register, so there is
+nobody for a word at a place to belong to.
+
+No term is attached to a proposal, decision or project. Matching a word against
+proposal text is a guess, and a wrong guess tells people a decision turned on a
+definition it never mentioned. Nothing in `close_proposal()`,
+`cast_resonance()` or `can_reach_proposal()` reads either table: looking a word
+up counts towards nothing.
+
 ## Projects and Impact
 
 ### `projects`
@@ -525,6 +568,7 @@ friendship stops new messages and leaves the old ones readable by both.
 | `mirror_floor`, `my_law_mirror`, `my_mirror_standing` | Derived, private, no argument, nothing below four |
 | `accept_universal_law`, `my_law_accession`, `accession_standing` | Ten laws, the revision stamped here, and no way to edit it after |
 | `record_inquiry`, `inquiries_for`, `positions_for` | Two lenses minimum, no ranking anywhere, and it counts towards nothing |
+| `raise_term`, `write_reading`, `group_lexicon`, `readings_for`, `reading_history` | Readings, never a definition, and nothing measures whether they agree |
 
 ## Indexes
 

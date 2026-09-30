@@ -92,6 +92,7 @@ supabase/migrations/0019_inquiry.sql       what the ways of knowing hold, never 
 supabase/migrations/0020_ask.sql           the fourth tab: finding, and asking on its own
 supabase/migrations/0021_accession_required.sql you cannot arrive without agreeing
 supabase/migrations/0022_search_mine.sql   searching your own half, kept apart
+supabase/migrations/0023_lexicon.sql       what the group means by its words
 ```
 
 In order, and one at a time. `0011` alters `scope_rules`, `0012` alters
@@ -108,7 +109,7 @@ supabase db push
 ### If you want a separate production project
 
 Better, and it costs one more free-tier project. Make a new Supabase project,
-run **all seventeen** migrations into it, and use its URL and anon key in
+run **all twenty-three** migrations into it, and use its URL and anon key in
 Vercel while `.env.local` keeps pointing at the old one. Nothing you do while
 building then touches the instance other people are using.
 

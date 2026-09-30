@@ -1008,12 +1008,51 @@ export interface Position {
 
 /** One row of `search_collective()`. */
 export interface SearchHit {
-  kind: "proposal" | "decision" | "project";
+  kind: "proposal" | "decision" | "project" | "term";
   id: string;
   title: string;
   line: string | null;
   status: string | null;
   happened: string | null;
+}
+
+/**
+ * One word a group has noticed it uses, and how many people have written what
+ * they take it to mean. One row of `group_lexicon()`.
+ *
+ * There is no agreement figure here and there is not going to be one. A word
+ * three people have read three ways and a word three people have read
+ * identically are the same row: `voices` is 3 in both cases, and telling them
+ * apart is reading, not arithmetic.
+ */
+export interface Term {
+  id: string;
+  term: string;
+  voices: number;
+  yours: boolean;
+  raised_at: string;
+  last_read: string | null;
+}
+
+/** One person's current reading of a word. One row of `readings_for()`. */
+export interface Reading {
+  profile_id: string;
+  display_name: string;
+  handle: string | null;
+  body: string;
+  revision: number;
+  /** They have changed their wording at least once. The old wording is kept. */
+  revised: boolean;
+  written_at: string;
+  first_at: string;
+  mine: boolean;
+}
+
+/** An earlier wording, from `reading_history()`. */
+export interface ReadingRevision {
+  revision: number;
+  body: string;
+  written_at: string;
 }
 
 /** One row of `search_mine()`. Yours alone — nobody else can read any of it. */

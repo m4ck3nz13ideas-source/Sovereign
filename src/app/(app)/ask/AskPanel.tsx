@@ -24,7 +24,20 @@ const KIND_WORD: Record<SearchHit["kind"], string> = {
   proposal: "Proposal",
   decision: "Decided",
   project: "Project",
+  term: "A word here",
 };
+
+/**
+ * Where a hit goes. Three of the four kinds are all views of a proposal and
+ * share its page; a word is not a proposal and has one of its own, so this is a
+ * switch rather than one template string. Getting it wrong is how a search
+ * result silently stops working.
+ */
+function hitHref(hit: SearchHit): string {
+  return hit.kind === "term"
+    ? `/collective/lexicon/${hit.id}`
+    : `/collective/proposals/${hit.id}`;
+}
 
 const MINE_WORD: Record<MineHit["kind"], string> = {
   entry: "Written",
@@ -115,7 +128,7 @@ export function AskPanel({ mine }: { mine: MyInquiry[] }) {
                 {shared.map((h) => (
                   <Link
                     key={`${h.kind}-${h.id}`}
-                    href={`/collective/proposals/${h.id}`}
+                    href={hitHref(h)}
                     className="press block border-b border-line-soft py-3"
                   >
                     <p className="smallcaps text-[10px] text-paper-faint">

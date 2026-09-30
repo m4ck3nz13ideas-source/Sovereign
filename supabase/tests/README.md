@@ -6,8 +6,8 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Fifteen suites, three hundred and eight checks. Every one of them runs as a non-superuser,
-so row-level security actually applies — a test that passes as the owner proves
+Eighteen suites, four hundred and forty-one checks. Every one of them runs as a
+non-superuser, so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
 ### `01_rules.sql` — twenty-five checks
@@ -264,7 +264,7 @@ accounts.
   original wording survives** — because it is a true record of what that
   person actually read.
 
-### `17_inquiry.sql` — thirty-five checks
+### `17_inquiry.sql` — thirty-nine checks
 
 - **A survey of one is refused**, and so is an empty one, and so are two
   positions that come from the same lens — the floor is two *distinct* ways of
@@ -300,6 +300,56 @@ accounts.
   invisible to somebody outside the address, and a one-character or blank
   query returns nothing rather than the world.
 
+### `18_lexicon.sql` — fifty checks
+
+Most of this suite is absences, because a glossary is one line of DDL away at
+any time and the failure would be silent: everything would still work, and the
+one thing the feature carries — that two people mean different things — would
+have been overwritten by whoever edited last.
+
+- Only a member raises a word in a group, and only a member writes a reading.
+- **The same word twice is the same word.** `Shared`, `  shared ` and `shared`
+  are one row, because two people reaching for it independently is the signal
+  rather than a collision — and the second one lands on the page where the
+  first one's reading already is.
+- Two people write two different things and **both survive**: nothing merged
+  them, nothing picked one, and `voices` is 2.
+- Writing again is a **revision, not an edit**: the current reading is the new
+  one, there is still one row per person on screen, and the first wording comes
+  back from `reading_history()` verbatim. A reading that has not been revised
+  is not marked as having been.
+- Append-only in the policies as well as in practice: no update or delete
+  policy on either table, asserted against `pg_policies`, and a direct
+  `update`, `delete` or rename does not take.
+- Nobody writes in anybody else's name, and `write_reading()` takes no revision
+  argument — a caller that could name one could overwrite one.
+- **Outside the group, nothing**: not the readings, not the revisions, not the
+  lexicon, and not the two tables read directly. The three read functions are
+  `security definer`, which is exactly how two functions in this schema have
+  already leaked, so the suite also asserts each one still mentions
+  `is_group_member`.
+- Ask finds a word by the word and by **what somebody said about it**, and the
+  search line counts the readings rather than quoting one — quoting one is
+  picking a winner in the one place this schema refuses to.
+
+And the absences, each of which would be a small reasonable-looking addition:
+
+- `terms` has no `definition`, `meaning`, `canonical`, `agreed`, `official`,
+  `preferred`, `consensus` or `summary` column.
+- `term_readings` has no `votes`, `score`, `rank`, `weight`, `helpful`,
+  `endorsed`, `accepted`, `agrees`, `agreement`, `confidence`, `status` or
+  `verdict` column.
+- **Nothing measures whether two readings agree.** No function named for it
+  exists, and the source of `group_lexicon()` and `readings_for()` is read and
+  must not mention similarity, divergence, consensus or agreement. This is the
+  sharpest one: a figure here would be wrong in a way nobody could audit while
+  looking, on screen, exactly like a fact.
+- The lexicon reaches no decision: the source of `close_proposal`,
+  `cast_resonance`, `can_reach_proposal`, `activate_proposal`,
+  `alignment_shape` and `bind_proposal_readiness` is read and must not mention
+  either table.
+- No term is attached to a proposal, decision or project.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -325,6 +375,12 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0015_amendment.sql \
   -f supabase/migrations/0016_guardian.sql \
   -f supabase/migrations/0017_mirror.sql \
+  -f supabase/migrations/0018_accession.sql \
+  -f supabase/migrations/0019_inquiry.sql \
+  -f supabase/migrations/0020_ask.sql \
+  -f supabase/migrations/0021_accession_required.sql \
+  -f supabase/migrations/0022_search_mine.sql \
+  -f supabase/migrations/0023_lexicon.sql \
   -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
@@ -342,7 +398,8 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/tests/14_guardian.sql \
   -f supabase/tests/15_mirror.sql \
   -f supabase/tests/16_accession.sql \
-  -f supabase/tests/17_inquiry.sql
+  -f supabase/tests/17_inquiry.sql \
+  -f supabase/tests/18_lexicon.sql
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server

@@ -47,7 +47,7 @@ Tune those against real decisions before building anything below.
 ## Built since this document was last honest
 
 These were on the list or absent from it, and now exist. Migrations `0010`
-through `0022`.
+through `0023`.
 
 - **Impact simulation.** Dated, falsifiable predictions, frozen before the
   vote, marked against reality afterwards, with a forecasting record split by
@@ -86,6 +86,21 @@ through `0022`.
   positions and cannot return an answer: two lenses minimum, no ranking column
   anywhere, and the offline adapter refuses rather than inventing a survey of
   human thought.
+- **Words — the collective interior.** A group can raise a word it uses, and
+  each member writes what they take it to mean. It came out of holding the app
+  against Wilber's quadrants and finding that three were built and the fourth
+  was not there at all: everything under Collective records what the group
+  *decided*, and nothing recorded what it *means*. The gap is not decorative —
+  two members can both resonate at 0.9 on "shared workshop access" while one
+  means a rota and the other means a key each, and `alignment_shape()` cannot
+  see it, because dispersion measures the spread of numbers and those two
+  numbers are the same number. There is no agreed definition, no vote on a
+  reading, and **nothing that computes whether two readings match**: a figure
+  on meaning would be wrong in ways nobody could audit and would look, on
+  screen, exactly like a fact. Readings are append-only, so the moment a group
+  discovers it meant two things cannot be tidied away afterwards. Groups only,
+  because a place has no register.
+
 - **Onboarding, and accession.** Four steps — who you are and where, the ten
   laws read and agreed to, your own values, passions and beliefs, then a walk
   through what the thing does. The agreement records which *revision* of each
@@ -105,6 +120,19 @@ through `0022`.
   actually built. The next feature is the one that makes that false again.
 
 ## What would earn a place next, and what must be true first
+
+### A word raised from where it was used
+Words are raised by hand, from memory, on their own screen. The obvious next
+step is to raise one *while reading the proposal that turned on it* — select
+the word, and it is in the lexicon with the proposal as the reason it came up.
+That is a link from a term to a proposal, which `0023` deliberately does not
+have, so it would need to be a link recording *where somebody raised it* rather
+than a claim that the decision turned on the definition. The distinction is the
+whole design, and getting it wrong tells people a decision hinged on a word it
+never mentioned.
+
+*Earns its place when:* a group has raised words at all, and the complaint is
+that they had to come back and remember them.
 
 ### A shared group rubric
 Every member's values currently union into one list. At eight people that is
