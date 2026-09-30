@@ -1,0 +1,463 @@
+<title>Sovereign Quadrants</title>
+
+<!-- Layout: a phone-width app shell — sticky head, scrolling body, five-item
+     bar pinned to the bottom. Palette and type follow docs/design-system.md so
+     this reads as the same product rather than a mockup of a different one. -->
+<style>
+  :root {
+    --ink:          #ffffff;
+    --ink-raised:   #ffffff;
+    --surface:      #f2f2f2;
+    --surface-soft: #f8f8f8;
+    --line:         #e3e3e3;
+    --line-soft:    #ededed;
+    --veil:         #ffffffd4;
+    --paper:        #000000;
+    --paper-dim:    #575757;
+    --paper-faint:  #8a8a8a;
+    --gold:         #b25c00;
+    --gold-wash:    #b25c001f;
+    --alarm:        #c8102e;
+
+    --display: "Playfair Display", Georgia, "Times New Roman", serif;
+    --body: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #000000; --ink-raised: #0c0c0c; --surface: #161616;
+      --surface-soft: #0f0f0f; --line: #262626; --line-soft: #1a1a1a;
+      --veil: #000000d9; --paper: #ffffff; --paper-dim: #a8a8a8;
+      --paper-faint: #737373; --gold: #ff9500; --gold-wash: #ff950014;
+      --alarm: #ff453a; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #000000; --ink-raised: #0c0c0c; --surface: #161616;
+    --surface-soft: #0f0f0f; --line: #262626; --line-soft: #1a1a1a;
+    --veil: #000000d9; --paper: #ffffff; --paper-dim: #a8a8a8;
+    --paper-faint: #737373; --gold: #ff9500; --gold-wash: #ff950014;
+    --alarm: #ff453a; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--ink); color: var(--paper);
+    font-family: var(--body); font-size: 15px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .display { font-family: var(--display); letter-spacing: -0.015em; line-height: 1.15; }
+  .caps {
+    font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--paper-faint);
+  }
+
+  /* ---------------------------------------------------------------- shell */
+  .phone {
+    max-width: 430px; margin: 0 auto; min-height: 100%;
+    display: flex; flex-direction: column;
+    border-inline: 1px solid var(--line-soft);
+  }
+  header {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+    background: var(--veil); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line-soft);
+    padding: 12px 16px 10px;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  }
+  header .who { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  header h1 { margin: 0; font-size: 17px; }
+  main { flex: 1; padding: 18px 16px 104px; }
+
+  /* ------------------------------------------------------------- tab bar */
+  nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 6;
+    background: var(--veil); backdrop-filter: blur(14px);
+    border-top: 1px solid var(--line);
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+  .bar {
+    max-width: 430px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(5, 1fr); align-items: center;
+  }
+  .tab {
+    appearance: none; background: none; border: 0; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px 2px; min-height: 44px; color: var(--paper-faint);
+    font-family: var(--body); transition: color .12s, transform .12s;
+  }
+  .tab:active { transform: scale(0.94); }
+  .tab .glyph { font-family: var(--display); font-size: 16px; line-height: 1; }
+  .tab .name { font-size: 10px; letter-spacing: 0.05em; }
+  .tab[aria-selected="true"] { color: var(--paper); }
+  .tab[aria-selected="true"] .glyph { color: var(--gold); }
+  .tab.centre .glyph {
+    width: 30px; height: 30px; border-radius: 999px;
+    border: 1px solid var(--line); display: grid; place-items: center;
+    font-size: 15px; background: var(--surface);
+  }
+  .tab.centre[aria-selected="true"] .glyph {
+    background: var(--gold-wash); border-color: var(--gold);
+  }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+
+  /* ------------------------------------------------------------ elements */
+  .quad {
+    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+    padding-bottom: 10px; margin-bottom: 16px; border-bottom: 1px solid var(--line-soft);
+  }
+  .quad .sign { font-family: var(--display); font-size: 26px; color: var(--gold); line-height: 1; }
+  .quad .lab { font-size: 13px; color: var(--paper-dim); }
+  .lede { color: var(--paper-dim); margin: 0 0 18px; }
+
+  .label { margin: 22px 0 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .row {
+    padding: 12px 0; border-bottom: 1px solid var(--line-soft);
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .row .body { min-width: 0; flex: 1; }
+  .row p { margin: 0; }
+  .row .sub { color: var(--paper-faint); font-size: 13px; margin-top: 2px; }
+  .card {
+    border: 1px solid var(--line); background: var(--surface-soft);
+    border-radius: 10px; padding: 14px; margin-bottom: 10px;
+  }
+  .card p { margin: 0; }
+  .chip {
+    display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: var(--surface); color: var(--paper-dim); border: 1px solid var(--line);
+  }
+  .bar-track { height: 4px; background: var(--surface); border-radius: 2px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--gold); }
+  .nums { font-variant-numeric: tabular-nums; }
+
+  /* the traced proposal */
+  .trace {
+    border-color: var(--gold); background: var(--gold-wash);
+  }
+  .trace-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 6px;
+  }
+  .toggle {
+    appearance: none; cursor: pointer; font-family: var(--body); font-size: 12px;
+    background: var(--surface); color: var(--paper-dim);
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px;
+    white-space: nowrap;
+  }
+  .toggle[aria-pressed="true"] {
+    background: var(--gold-wash); border-color: var(--gold); color: var(--gold);
+  }
+
+  /* search */
+  .ask { display: flex; gap: 8px; margin-bottom: 6px; }
+  .ask input {
+    flex: 1; min-width: 0; font-family: var(--body); font-size: 15px;
+    background: var(--surface-soft); color: var(--paper);
+    border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px;
+  }
+  .ask button {
+    appearance: none; cursor: pointer; font-family: var(--body); font-size: 14px;
+    background: var(--gold); color: var(--ink); border: 0;
+    border-radius: 999px; padding: 0 16px; min-height: 44px;
+  }
+  .lenses { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 16px; }
+  .lens {
+    appearance: none; cursor: pointer; font-family: var(--body); font-size: 12px;
+    background: var(--surface); color: var(--paper-dim);
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px;
+  }
+  .lens[aria-pressed="true"] { background: var(--gold-wash); border-color: var(--gold); color: var(--gold); }
+  .pos { padding: 16px 0; border-bottom: 1px solid var(--line-soft); }
+  .pos .lensname { color: var(--gold); }
+  .pos .claim { margin: 8px 0 0; }
+  .pos .why { margin: 6px 0 0; color: var(--paper-dim); }
+  .pos .hint { margin: 6px 0 0; color: var(--paper-faint); font-size: 13px; }
+  .disclaim { color: var(--paper-faint); font-size: 13px; margin-top: 16px; }
+
+  .verdict {
+    margin-top: 26px; border-top: 1px solid var(--line); padding-top: 16px;
+    color: var(--paper-dim);
+  }
+  .verdict h2 { font-family: var(--display); font-size: 17px; margin: 0 0 8px; color: var(--paper); }
+  .verdict p { margin: 0 0 10px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500&display=swap">
+
+<div class="phone">
+  <header>
+    <div class="who">
+      <h1 class="display" id="screenName">Inner</h1>
+      <span class="caps" id="screenQuad">Upper-Left · interior-individual</span>
+    </div>
+    <button class="toggle" id="traceBtn" aria-pressed="false" type="button">Trace one proposal</button>
+  </header>
+
+  <main id="screen"></main>
+
+  <nav>
+    <div class="bar" role="tablist" aria-label="Quadrants">
+      <button class="tab" role="tab" data-k="inner"  aria-selected="true"><span class="glyph">I</span><span class="name">Inner</span></button>
+      <button class="tab" role="tab" data-k="acts"   aria-selected="false"><span class="glyph">It</span><span class="name">Acts</span></button>
+      <button class="tab centre" role="tab" data-k="ask" aria-selected="false"><span class="glyph">⌕</span><span class="name">Ask</span></button>
+      <button class="tab" role="tab" data-k="shared" aria-selected="false"><span class="glyph">We</span><span class="name">Shared</span></button>
+      <button class="tab" role="tab" data-k="works"  aria-selected="false"><span class="glyph">Its</span><span class="name">Works</span></button>
+    </div>
+  </nav>
+</div>
+
+<script>
+  // One worked example running through the whole thing: the ladder proposal
+  // from the test suites. It appears in all four quadrants on purpose — that
+  // is the thing this prototype is for finding out.
+  const LADDER = "One ladder between six houses";
+
+  const SCREENS = {
+    inner: {
+      name: "Inner",
+      quad: "Upper-Left · interior-individual",
+      lede: "What you believe, what you are working out, what you have not said to anybody. Private in the database rather than by promise.",
+      blocks: [
+        { label: "From four days ago", rows: [
+          { t: "“Keep saying yes to things I then resent. Why.”", s: "Ready to sit with this?" },
+        ]},
+        { label: "Your values", rows: [
+          { t: "Reciprocity", s: "What is taken is replenished." },
+          { t: "Plain speech", s: "Say the cost out loud." },
+          { t: "Restraint", s: "Not every gap needs filling by me." },
+        ]},
+        { label: "The guardian", trace: true, rows: [
+          { t: "On " + LADDER, s: "“Who stores it, and what happens when they move?” — one question, asked because you pressed something.", card: true },
+        ]},
+        { label: "Where you and the audit differ", rows: [
+          { t: "Stewardship of Earth", s: "Nine responses · you run cooler here than elsewhere. Neither direction is the good one.", bar: 0.34 },
+        ]},
+      ],
+    },
+    acts: {
+      name: "Acts",
+      quad: "Upper-Right · exterior-individual",
+      lede: "What you actually did, as distinct from what you hold. Observable, countable, and carrying no ratio anywhere.",
+      blocks: [
+        { label: "Your record", rows: [
+          { t: "Written 12 · passed 3", s: "A record. Not a rate — the distance between those is one division." },
+          { t: "Projects finished 2 · predictions marked 7", s: "" },
+        ]},
+        { label: "On this one", trace: true, rows: [
+          { t: "You responded to " + LADDER, s: "Alignment 0.72 · confidence 0.61 · willingness 0.80. Cast eleven days ago.", card: true },
+          { t: "You committed £40 and a Saturday", s: "Honoured.", card: true },
+        ]},
+        { label: "Coming due", rows: [
+          { t: "“No shed damp damage by the end of March.”", s: "Yours. Due in 19 days, unmarked." },
+        ]},
+      ],
+    },
+    shared: {
+      name: "Shared",
+      quad: "Lower-Left · interior-collective",
+      lede: "What this group means by the words it uses. The part that has no screen in the app as built — which is what the lens found.",
+      blocks: [
+        { label: "The ten, as agreed", rows: [
+          { t: "Agreed 14 March", s: "All ten at revision 1. Subsidiarity has since moved to revision 2 — you have not read the new wording." },
+        ]},
+        { label: "What the row weighs", rows: [
+          { t: "Reciprocity", s: "Named by 5 of 6. Invoked in 9 of the last 12 reviews.", bar: 0.83 },
+          { t: "Plain speech", s: "Named by 4 of 6. Invoked in 7.", bar: 0.66 },
+          { t: "Craft", s: "Named by 2 of 6. Invoked twice, both by the same author.", bar: 0.33 },
+        ]},
+        { label: "Where the row disagrees with itself", trace: true, rows: [
+          { t: "On " + LADDER, s: "Two people read “shared” as owned together. Three read it as lent in turn. Nobody has said so out loud.", card: true },
+        ]},
+      ],
+    },
+    works: {
+      name: "Works",
+      quad: "Lower-Right · exterior-collective",
+      lede: "The systems and the objects. Proposals, projects, resources, the ledger — what the group has actually built and committed.",
+      blocks: [
+        { label: "Waiting on you", rows: [
+          { t: "Mend the alley gate", s: "You have not read the review." },
+          { t: "Verge planting, second attempt", s: "A tension unanswered since Tuesday." },
+        ]},
+        { label: "Running", trace: true, rows: [
+          { t: LADDER, s: "Passed at 0.71 · executing · £186 of £240 committed · 2 of 3 hands named.", card: true },
+        ]},
+        { label: "Closed", rows: [
+          { t: "Move the Thursday session to a paid room", s: "Completed. Expected 15 attending, got 9. The room was never the problem." },
+        ]},
+      ],
+    },
+  };
+
+  const LENSES = [
+    ["empirical", "The literature", "the scientific and statistical record"],
+    ["practice", "Practice", "what people who do this work do"],
+    ["scripture", "Scripture", "religious and wisdom texts"],
+    ["philosophy", "Philosophy", "argued philosophical positions"],
+    ["testimony", "Testimony", "people the question lands on"],
+  ];
+
+  const POSITIONS = {
+    empirical: {
+      claim: "Shared-tool arrangements survive where one household is named as keeper, and fail where custody rotates.",
+      why: "The commons literature repeatedly finds monitoring cost rather than goodwill to be the binding constraint on small shared assets. Diffuse responsibility predicts disappearance within a year.",
+      hint: "Ostrom, Governing the Commons",
+    },
+    practice: {
+      claim: "Tool libraries put the item with whoever has the driest shed and the least objection to being knocked on.",
+      why: "Operators consistently report that storage volunteers, not borrowers, are the scarce input. Schemes die when the keeper moves house, not when demand falls.",
+      hint: "Library of Things operators",
+    },
+    scripture: {
+      claim: "The obligation runs to the lender as much as the borrower: a thing held in common is held in trust, and the keeper is owed something for keeping it.",
+      why: "The traditions that treat lending at length — the Torah's provisions on pledges, the monastic rules on common property — are concerned less with fairness of access than with what the arrangement does to the relationship between the people in it.",
+      hint: "The Rule of Benedict, ch. 33",
+    },
+    philosophy: {
+      claim: "The tradition splits. One line treats common ownership as a straightforward efficiency gain; another holds that shared property erodes the care that ownership produces.",
+      why: "Aristotle's objection is that what is common to the greatest number gets the least care, and he means it as an observation about attention rather than about incentives. The utilitarian reply is that the same reasoning would abolish any public good. Both lines are still live.",
+      hint: "Politics II.3; and Mill onward for the reply",
+    },
+    testimony: {
+      claim: "People who have done it describe the failure as social rather than logistical: nobody wants to be the one who asks for it back.",
+      why: "The recurring account is not theft or breakage but a slow reluctance to make the small ask, until the thing quietly belongs to whoever had it last.",
+      hint: "",
+    },
+  };
+
+  let current = "inner";
+  let tracing = false;
+  const active = new Set(["empirical", "practice", "scripture"]);
+  let asked = true;
+
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  function renderQuadrant(key) {
+    const s = SCREENS[key];
+    let html = `<div class="quad"><span class="sign">${esc(s.name === "Inner" ? "I" : s.name === "Acts" ? "It" : s.name === "Shared" ? "We" : "Its")}</span>
+      <span class="lab">${esc(s.lede.split(".")[0])}.</span></div>`;
+    html += `<p class="lede">${esc(s.lede.split(". ").slice(1).join(". "))}</p>`;
+
+    for (const b of s.blocks) {
+      const lit = tracing && b.trace;
+      html += `<div class="label"><span class="caps">${esc(b.label)}</span></div>`;
+      for (const r of b.rows) {
+        if (r.card) {
+          html += `<div class="card${lit ? " trace" : ""}">
+            ${lit ? '<div class="trace-tag">the same proposal, seen from here</div>' : ""}
+            <p>${esc(r.t)}</p>${r.s ? `<p class="sub">${esc(r.s)}</p>` : ""}</div>`;
+        } else {
+          html += `<div class="row"><div class="body"><p>${esc(r.t)}</p>
+            ${r.s ? `<p class="sub">${esc(r.s)}</p>` : ""}
+            ${r.bar !== undefined ? `<div class="bar-track" style="margin-top:8px"><div class="bar-fill" style="width:${Math.round(r.bar * 100)}%"></div></div>` : ""}
+          </div></div>`;
+        }
+      }
+    }
+
+    if (tracing) {
+      html += `<div class="verdict"><h2>That is the question</h2>
+        <p>One proposal, lit in all four. Its interior is in Inner, what you did about it is in Acts, what the row means by it is in Shared, and the object itself is in Works.</p>
+        <p>Integral theory says every holon has all four quadrants — that is the claim, not a side effect. So navigation by quadrant means nothing lives anywhere, and “the thing about the ladder” has four addresses and no home.</p>
+        <p>Whether that is fatal or fine is what you are here to feel. The counter-argument is that the four <em>are</em> genuinely different questions, and collapsing them into two tabs is how Shared ended up with no screen at all.</p></div>`;
+    }
+    return html;
+  }
+
+  function renderAsk() {
+    let html = `<div class="quad"><span class="sign">⌕</span><span class="lab">Ask, before you decide.</span></div>
+      <p class="lede">A question this proposal turns on, and what several ways of knowing hold about it. They are not reconciled into an answer, because reconciling them is the part you are here to do.</p>
+      <div class="ask">
+        <input id="q" value="Does sharing a tool between households actually work?" aria-label="Your question">
+        <button type="button" id="go">Ask</button>
+      </div>
+      <p class="caps" style="margin:0 0 4px">asked while reading ${esc(LADDER)}</p>
+      <div class="lenses">`;
+    for (const [k, name] of LENSES) {
+      html += `<button class="lens" type="button" data-lens="${k}" aria-pressed="${active.has(k)}">${esc(name)}</button>`;
+    }
+    html += `</div>`;
+
+    if (!asked) {
+      html += `<p class="lede">Press Ask.</p>`;
+      return html;
+    }
+
+    const on = LENSES.filter(([k]) => active.has(k));
+    if (on.length < 2) {
+      html += `<div class="card"><p>Turn on at least two.</p>
+        <p class="sub">A survey of one is an answer, and the database refuses to record one — <span class="nums">two</span> distinct ways of knowing is the floor.</p></div>`;
+      return html;
+    }
+
+    for (const [k, name, note] of on) {
+      const p = POSITIONS[k];
+      html += `<div class="pos">
+        <div class="caps lensname">${esc(name)}</div>
+        <div class="caps">${esc(note)}</div>
+        <p class="claim">${esc(p.claim)}</p>
+        <p class="why">${esc(p.why)}</p>
+        ${p.hint ? `<p class="hint">Somewhere to start: ${esc(p.hint)}</p>` : ""}
+      </div>`;
+    }
+
+    html += `<p class="disclaim">These are a model's account of what each of these holds, not a literature review and not verified. A named work is somewhere to start reading, not evidence that the claim is true. Nothing here has been reconciled into an answer, and none of it counts towards anything — the decision is still yours.</p>`;
+    html += `<div class="verdict"><h2>What it will not do</h2>
+      <p>There is no ranking, no score on a position, and no row at the bottom telling you which one wins. The schema has nowhere to put one, which is the only reason that stays true.</p></div>`;
+    return html;
+  }
+
+  function render() {
+    const el = document.getElementById("screen");
+    const head = document.getElementById("screenName");
+    const sub = document.getElementById("screenQuad");
+    const traceBtn = document.getElementById("traceBtn");
+
+    if (current === "ask") {
+      head.textContent = "Ask";
+      sub.textContent = "the middle · positions, never an answer";
+      traceBtn.hidden = true;
+      el.innerHTML = renderAsk();
+      document.getElementById("go").addEventListener("click", () => { asked = true; render(); });
+      el.querySelectorAll(".lens").forEach((b) =>
+        b.addEventListener("click", () => {
+          const k = b.dataset.lens;
+          active.has(k) ? active.delete(k) : active.add(k);
+          render();
+        }),
+      );
+    } else {
+      const s = SCREENS[current];
+      head.textContent = s.name;
+      sub.textContent = s.quad;
+      traceBtn.hidden = false;
+      el.innerHTML = renderQuadrant(current);
+    }
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
+  document.querySelectorAll(".tab").forEach((t) =>
+    t.addEventListener("click", () => {
+      current = t.dataset.k;
+      document.querySelectorAll(".tab").forEach((o) =>
+        o.setAttribute("aria-selected", String(o.dataset.k === current)),
+      );
+      render();
+    }),
+  );
+
+  document.getElementById("traceBtn").addEventListener("click", (e) => {
+    tracing = !tracing;
+    e.currentTarget.setAttribute("aria-pressed", String(tracing));
+    e.currentTarget.textContent = tracing ? "Stop tracing" : "Trace one proposal";
+    render();
+  });
+
+  render();
+</script>
