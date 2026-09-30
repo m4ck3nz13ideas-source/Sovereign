@@ -85,11 +85,60 @@ export async function saveDetails(input: {
 }
 
 /**
+ * Is the accession machinery actually in this database?
+ *
+ * "You have not agreed yet" and "this database has never had migration 0018
+ * applied" are the same screen and have completely different fixes, and the
+ * error PostgREST gives for the second — could not find the function in the
+ * schema cache — reads like the function was never written. So the page asks
+ * first and says which it is.
+ */
+export async function accessionReady(): Promise<{ ready: boolean; missing: string | null }> {
+  const { supabase } = await currentUser();
+  const { data, error } = await supabase.rpc("accession_ready");
+
+  // accession_ready() itself arrives in 0021. If it is missing too, the
+  // database is behind by at least that much, which is the same answer.
+  if (error) {
+    return {
+      ready: false,
+      missing:
+        "The accession functions are not in this database. Apply migrations 0018 and 0021, then reload the PostgREST schema cache.",
+    };
+  }
+
+  const row = (data as { ready: boolean; missing: string | null }[] | null)?.[0];
+  return { ready: Boolean(row?.ready), missing: row?.missing ?? null };
+}
+
+/** Turns the two failures that look alike into sentences that do not. */
+function readable(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("schema cache") || m.includes("does not exist")) {
+    return (
+      "This database does not have the accession migration yet, so an agreement " +
+      "has nowhere to go. Apply 0018 and 0021 and reload the schema cache — " +
+      "nothing you have typed is lost."
+    );
+  }
+  if (m.includes("agreeing to the ten")) {
+    return "The agreement did not reach the database. Go back a step and agree again.";
+  }
+  return message;
+}
+
+/**
  * Step two. Agreeing to the ten.
  *
  * The law ids come from the build — the same constant the screen rendered —
  * and the database stamps which revision of each was current, so the record
  * says what was actually on the page rather than what a client claimed.
+ *
+ * This step cannot be skipped and cannot silently fail. A trigger on `profiles`
+ * refuses to set `onboarded_at` for anybody without all ten on the record at
+ * their current wording, so a client that jumped the screen, or a step that
+ * appeared to work and did not, is caught at the end rather than producing
+ * somebody who is inside without having read what they are inside of.
  */
 export async function agreeToUniversalLaw() {
   const { supabase, user } = await currentUser();
@@ -99,7 +148,19 @@ export async function agreeToUniversalLaw() {
     p_law_ids: UNIVERSAL_LAWS.map((l) => l.id),
   });
 
-  if (error) return { ok: false as const, error: error.message };
+  if (error) return { ok: false as const, error: readable(error.message) };
+
+  // Read it back. The whole point of this step is that there is a record, and
+  // "the call returned no error" is not the same claim as "there is a record".
+  const { data } = await supabase.rpc("accession_standing");
+  const agreed = (data as { laws_agreed: number }[] | null)?.[0]?.laws_agreed ?? 0;
+  if (agreed < UNIVERSAL_LAWS.length) {
+    return {
+      ok: false as const,
+      error: `The agreement did not land — ${agreed} of ${UNIVERSAL_LAWS.length} laws are on the record. Try again.`,
+    };
+  }
+
   return { ok: true as const };
 }
 
@@ -174,7 +235,14 @@ export async function saveBeliefs(input: {
   return { ok: true as const };
 }
 
-/** Step four, at the end of the demo. This is what opens the rest of the app. */
+/**
+ * Step four, at the end of the demo. This is what opens the rest of the app.
+ *
+ * It can fail, and the interesting failure is the database refusing because
+ * the laws were never agreed to. `needsLaws` tells the screen to send the
+ * person back to that step rather than leaving them looking at an error they
+ * cannot act on.
+ */
 export async function finishOnboarding() {
   const { supabase, user } = await currentUser();
   if (!user) return { ok: false as const, error: "You are not signed in." };
@@ -184,7 +252,13 @@ export async function finishOnboarding() {
     .update({ onboarded_at: new Date().toISOString() })
     .eq("id", user.id);
 
-  if (error) return { ok: false as const, error: error.message };
+  if (error) {
+    return {
+      ok: false as const,
+      error: readable(error.message),
+      needsLaws: error.message.toLowerCase().includes("agreeing to the ten"),
+    };
+  }
 
   revalidatePath("/", "layout");
   return { ok: true as const };

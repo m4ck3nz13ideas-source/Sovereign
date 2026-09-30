@@ -90,6 +90,7 @@ supabase/migrations/0017_mirror.sql        where you and the audit differ
 supabase/migrations/0018_accession.sql     agreeing to the ten, and to which wording
 supabase/migrations/0019_inquiry.sql       what the ways of knowing hold, never an answer
 supabase/migrations/0020_ask.sql           the fourth tab: finding, and asking on its own
+supabase/migrations/0021_accession_required.sql you cannot arrive without agreeing
 ```
 
 In order, and one at a time. `0011` alters `scope_rules`, `0012` alters
@@ -251,6 +252,15 @@ unaliased, and serves a 404 to everybody. Vercel's own domains page shows it
 as fine, because from Vercel's point of view it is. Either redeploy after
 adding the domain, or assign it to the current deployment explicitly. This
 cost an hour, misdiagnosed as DNS the whole time.
+
+**A new function is invisible to the API until PostgREST reloads.** Its cache
+is what answers `supabase.rpc(...)`, and a migration that adds a function does
+not update it. The error is `Could not find the function public.x in the schema
+cache`, which reads like the function was never written rather than like a
+cache being stale — and the fix is not to rewrite anything. Supabase reloads on
+its own eventually; every migration from `0018` on ends with
+`notify pgrst, 'reload schema'` so it happens immediately. If you ever see that
+error after applying a migration by hand, run that one line on its own.
 
 **`NEXT_PUBLIC_SITE_URL` is not optional on a deployed install**, whatever it
 looks like. Sign-in redirects are built from it, and the fallback — the origin

@@ -163,3 +163,9 @@ language sql security definer stable set search_path = public, extensions as $$
 $$;
 
 grant execute on function accession_standing() to authenticated;
+
+-- Make the new functions visible to the API now rather than whenever the
+-- PostgREST schema cache next turns over. Without this the app gets "could not
+-- find the function ... in the schema cache", which reads like the function was
+-- never written.
+notify pgrst, 'reload schema';

@@ -73,6 +73,18 @@ begin
   -- Signing in again must not reset anybody. The trigger fires on insert only
   -- and conflicts do nothing, so a returning person keeps their name, their
   -- place and the fact that they have already been through onboarding.
+  -- Arriving is gated on having agreed to the ten (migration 0021), so the
+  -- fixture has to do what a real person does before it can claim to have
+  -- finished. Written straight in rather than through accept_universal_law(),
+  -- which reads auth.uid() and this block has none.
+  insert into law_acceptances (profile_id, law_id, revision)
+  select '44444444-4444-4444-4444-444444444444', x, 1
+    from unnest(array[
+      'sanctity_of_life','truth_and_transparency','sovereignty_of_the_individual',
+      'equity_and_justice','subsidiarity','reciprocity_and_mutual_care',
+      'stewardship_of_earth','harmony_of_diversity','right_use_of_power',
+      'continuous_evolution']) as x;
+
   update profiles
      set display_name = 'Dervla Ní Fhlannagáin', onboarded_at = now(),
          place_local = 'Somewhere'

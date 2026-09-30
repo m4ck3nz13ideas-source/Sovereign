@@ -200,7 +200,13 @@ export function OnboardingFlow({
           <p className="text-sm text-paper-faint">
             Scroll to the end to agree.
           </p>
-        ) : null}
+        ) : (
+          <p className="text-sm leading-relaxed text-paper-faint">
+            Agreeing records which wording of each law was on this screen, and
+            onboarding cannot finish without it — not as a formality, but
+            because the rest of the app reads every proposal against these.
+          </p>
+        )}
 
         {error ? <p className="text-sm text-alarm">{error}</p> : null}
 
@@ -492,8 +498,17 @@ export function OnboardingFlow({
               start(async () => {
                 setError(null);
                 const r = await finishOnboarding();
-                if (!r.ok) setError(r.error);
-                else router.push("/write");
+                if (r.ok) {
+                  router.push("/write");
+                } else {
+                  setError(r.error);
+                  // The database refused because the ten were never recorded.
+                  // Somewhere to go is more use than a message.
+                  if (r.needsLaws) {
+                    setRead(false);
+                    setStep(1);
+                  }
+                }
               })
             }
           >

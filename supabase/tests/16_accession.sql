@@ -16,7 +16,8 @@ grant select on auth.users to app;
 
 insert into auth.users (id, email) values
   ('b1000001-0000-0000-0000-000000000000', 'accede1@example.com'),
-  ('b1000002-0000-0000-0000-000000000000', 'accede2@example.com');
+  ('b1000002-0000-0000-0000-000000000000', 'accede2@example.com'),
+  ('b1000003-0000-0000-0000-000000000000', 'accede3@example.com');
 
 create temp table t16 (pid uuid);
 grant all on t16 to app;
@@ -27,7 +28,11 @@ do $$
 declare
   ann uuid := 'b1000001-0000-0000-0000-000000000000';
   ben uuid := 'b1000002-0000-0000-0000-000000000000';
-  n int; d timestamptz; flag boolean; pid uuid;
+  -- A third, used only for the nine-of-ten case: giving Ben partial
+  -- acceptances would make the later "nobody else can read yours" checks
+  -- ambiguous, since his own rows are legitimately his to read.
+  cal uuid := 'b1000003-0000-0000-0000-000000000000';
+  n int; d timestamptz; flag boolean; pid uuid; msg text;
   passes int := 0; fails int := 0;
   ten text[] := array[
     'sanctity_of_life','truth_and_transparency','sovereignty_of_the_individual',
@@ -75,6 +80,46 @@ begin
   exception when others then passes := passes + 1;
   end;
 
+  --------------------------------------- onboarding is gated on having agreed
+  -- Ben has agreed to nothing. Finishing onboarding is the one claim that
+  -- cannot be true for him yet, and the interface is not what enforces it.
+  perform set_config('test.uid', ben::text, true);
+  begin
+    update profiles set onboarded_at = now() where id = ben;
+    fails := fails + 1;
+    raise warning 'FAIL: somebody finished onboarding without agreeing to anything';
+  exception when others then passes := passes + 1;
+  end;
+
+  select count(*)::int into n from profiles where id = ben and onboarded_at is not null;
+  if n = 0 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: onboarded_at was set despite the refusal'; end if;
+
+  -- Nine of ten is not the constitution either. accept_universal_law() will
+  -- not write nine, but a direct insert can, and the gate must not be
+  -- satisfied by it.
+  perform set_config('test.uid', cal::text, true);
+  insert into law_acceptances (profile_id, law_id, revision)
+  select cal, x, 1 from unnest(ten[1:9]) as x;
+
+  begin
+    update profiles set onboarded_at = now() where id = cal;
+    fails := fails + 1;
+    raise warning 'FAIL: nine agreed laws let somebody finish onboarding';
+  exception when others then passes := passes + 1;
+  end;
+
+  -- And other updates to a profile are untouched by any of this. The gate is
+  -- on arriving, not on existing.
+  perform set_config('test.uid', ben::text, true);
+  update profiles set display_name = 'Ben, still reading' where id = ben;
+  select count(*)::int into n from profiles
+   where id = ben and display_name = 'Ben, still reading';
+  if n = 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: the accession gate blocked an ordinary profile update'; end if;
+
+  perform set_config('test.uid', ann::text, true);
+
   ------------------------------------------------------------ ten is accepted
   select accept_universal_law(ten) into n;
   if n = 10 then passes := passes + 1; else fails := fails + 1;
@@ -83,6 +128,21 @@ begin
   select laws_agreed into n from accession_standing();
   if n = 10 then passes := passes + 1; else fails := fails + 1;
     raise warning 'FAIL: standing reports % laws agreed, expected 10', n; end if;
+
+  -- Having agreed to all ten, she can arrive.
+  update profiles set onboarded_at = now() where id = ann;
+  select count(*)::int into n from profiles where id = ann and onboarded_at is not null;
+  if n = 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: somebody who agreed to all ten could not finish onboarding'; end if;
+
+  ------------------------------------ and the app can tell the two cases apart
+  select ready into flag from accession_ready();
+  if flag then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: accession_ready() says the database is not migrated when it is'; end if;
+
+  select missing into msg from accession_ready();
+  if msg is null then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: accession_ready() named a missing object (%) on a migrated database', msg; end if;
 
   ------------------------------------- the revision is stamped, not passed in
   select accepted_revision into n from my_law_accession() where law_id = 'subsidiarity';
@@ -135,7 +195,7 @@ begin
 
   ----------------------------------------- it is nobody else's to read or write
   perform set_config('test.uid', ben::text, true);
-  select count(*)::int into n from law_acceptances;
+  select count(*)::int into n from law_acceptances where profile_id = ann;
   if n = 0 then passes := passes + 1; else fails := fails + 1;
     raise warning 'FAIL: another person read % of somebody''s acceptances', n; end if;
 
@@ -245,6 +305,20 @@ begin
   select laws_agreed into n from accession_standing();
   if n = 10 then passes := passes + 1; else fails := fails + 1;
     raise warning 'FAIL: standing counts % laws rather than 10 after a re-agreement', n; end if;
+
+  ------------------- an amendment does not put a person back through the door
+  -- The gate fires on arriving and only on arriving. Somebody already in stays
+  -- in when a law's wording moves; they are told, and what they do about it is
+  -- theirs.
+  update profiles set display_name = 'Ann, after the amendment' where id = ann;
+  select count(*)::int into n from profiles
+   where id = ann and display_name = 'Ann, after the amendment';
+  if n = 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: an amendment blocked an ordinary update for somebody already onboarded'; end if;
+
+  select count(*)::int into n from profiles where id = ann and onboarded_at is not null;
+  if n = 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: an amendment un-onboarded somebody who had already arrived'; end if;
 
   raise notice ' ';
   raise notice '  Accession (after amendment): % passed, % failed', passes, fails;

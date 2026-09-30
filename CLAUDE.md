@@ -157,7 +157,16 @@ on purpose, in a commit that says so.
     can revise is not one. An amendment leaves every prior acceptance standing
     and shows up as `amended_since` — it is not a gate, and nothing in
     `can_reach_proposal()` or `cast_resonance()` may ever read this table.
-    Accession is a record, not a permission system.
+    Accession is a record, not a permission system — with exactly one
+    exception, which is arriving. A trigger on `profiles` refuses to set
+    `onboarded_at` for anybody without all ten on the record at their current
+    wording, because "this person has finished arriving" ought to be false if
+    they never read the constitution they are arriving into. It fires only on
+    the null-to-not-null transition, so an amendment never puts somebody
+    already in back through the door. Nothing else is gated.
+    `accession_ready()` exists so the app can tell "you have not agreed yet"
+    apart from "this database has never had 0018 applied" — the same screen
+    otherwise, with completely different fixes.
 
 29. **An inquiry returns positions, never an answer.** The search surface
     surveys what several ways of knowing hold about a question a proposal
