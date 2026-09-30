@@ -83,10 +83,10 @@ through `0018`.
   IDKit v4 has a different request shape from the v2 endpoint the adapter
   targets. Until it is connected, national scale and above are closed to
   everyone equally, which is the correct behaviour rather than a workaround.
-- **Doc drift.** `README.md`'s tour of the screens still predates the last
-  several features. Everything else is current: `CLAUDE.md`, this file,
+- **Doc drift.** None known. `README.md`, `CLAUDE.md`, this file,
   `docs/architecture.md`, `docs/data-model.md`, `docs/design-system.md`,
-  `docs/deploying.md` and `supabase/tests/README.md`.
+  `docs/deploying.md` and `supabase/tests/README.md` all describe what is
+  actually built. The next feature is the one that makes that false again.
 
 ## What would earn a place next, and what must be true first
 

@@ -15,31 +15,53 @@ The first half never becomes the second unless you send it there.
 
 ## What it actually does
 
-**Launch** is the intake point for everything — one screen, four modes. What
-you write files itself: a journal entry to Reflection, a prayer or question to
-Profile, an idea to Pipeline, something worth sharing to Connection. Nothing is
-sorted, tagged or triaged at the moment of writing.
+**Signing in** is an emailed link, and then four steps: who you are and where,
+the ten Universal Laws read and agreed to, your own values and passions and
+beliefs, and a short walk through the rest. Where you are matters more than it
+sounds — proposals are addressed to places, and the lines you write are what
+decides which ones reach you.
 
-**Reflection** is where entries are sat with rather than processed. Unexamined
-entries appear as banners that read *"From three days ago: '…'. Ready to sit
-with this?"* — a pull, not a task. A thirty-day rhythm display shows the shape
-of your attention. One question at a time can be drawn from recent entries, if
-you ask for it.
+Agreeing to the laws records **which revision of each** was on the screen. The
+wording can be amended, so a plain "I agree" would claim your consent to
+whatever the text later became.
 
-**Pipeline** triages ideas into concepts. Markdown in, markdown out, with paths
-preserved so a re-import updates rather than duplicates.
+Three tabs, and one of them is yours alone.
 
-**Profile** is the living record: values with your own definitions, a statement
-of faith, a purpose, and what you keep returning to. Faith and purpose are
-revisable and never overwritten — the history stays, and stays private even
-when the current statement is shared.
+### Individual — private, in the database rather than by promise
 
-**Connection** is the collective, and the chain runs left to right, under a
-scale selector that says which circle you are looking at:
+**Journal** is where entries are sat with rather than processed. Unexamined
+ones appear as banners reading *"From three days ago: '…'. Ready to sit with
+this?"* — a pull, not a task. A thirty-day rhythm display shows the shape of
+your attention.
 
-```
-Feed → Proposals → Decisions → Projects → Impact
-```
+**Ideas** triages what you have thought of into concepts. Markdown in, markdown
+out, with paths preserved so a re-import updates rather than duplicates.
+
+**Profile** and **Values** are the living record: values with your own
+definitions, what you keep returning to, a statement of faith, a purpose.
+Faith and purpose are revisable and never overwritten — the history stays, and
+stays private even when the current statement is shared.
+
+**AI** is the guardian. It never speaks first, is given the values you wrote
+down and nothing else, holds no verdict or recommendation about any decision,
+and is the one thing here that can be forgotten.
+
+**Chats** are private conversation between friends, reaching no proposal and no
+decision. **Drafts** never leave your browser until you submit one. **Vault**
+is identity, permissions and the contribution record.
+
+There is no policy anywhere that lets another person read any of it.
+
+### Home — where everything goes in, and what is waiting comes out
+
+Writing is a `+` in the top bar: one page, four modes, and what you write files
+itself to the right place without being sorted or tagged at the moment of
+writing. It is the only screen with no backlog on it.
+
+The rest of Home is the attention queue — **ordered by what is blocked, not by
+what is new** — under a selector for which scale you are looking at.
+
+### Collective — proposals, debate, projects, impact, decisions, people
 
 The governance cycle from the whitepaper, in full:
 
@@ -57,6 +79,12 @@ review layer scores it against the group's own values.
 hands it needs. Agreement is not the same as resources.
 **Reflect** — what actually happened, which the review layer reads when the
 next proposal arrives.
+
+Alongside that: **predictions** made before the vote and marked against reality
+afterwards, **contention** for two proposals that cannot both happen, an
+**amendment** path for the wording of a law, and **people** — follow and
+friendship, which decide whose work reaches your feed and touch eligibility
+nowhere.
 
 ---
 
@@ -113,7 +141,7 @@ from the **argument** instead: whether people are still addressing each other,
 or have started restating positions at each other. The summary says which, and
 says plainly that it is a reading of the thread and not of anyone's resonance.
 
-**The feed is ordered by what is blocked, not by what is new.** Connection
+**The feed is ordered by what is blocked, not by what is new.** Home
 opens on what is actually waiting on you, with the reason attached — not
 audited yet, a tension unanswered, you have not read the review, you have not
 responded — and everything you have already answered sinks. A feed sorted by
