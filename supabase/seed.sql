@@ -58,6 +58,19 @@ declare
   v_alts     text;
   v_body     text;
 begin
+  -- 0012 records a submission on the ledger by trigger, so that a proposal
+  -- reaching the table any other way cannot leave the feed disagreeing with
+  -- the proposal list. This file is that other way, on purpose: it writes the
+  -- whole chain by hand at the end, in one pass, with correct hashes and
+  -- backdated timestamps that a trigger firing now could not produce. Leaving
+  -- the trigger on would both duplicate every event and break the ordering —
+  -- and it refuses regardless, because whoever runs a seed is not signed in as
+  -- the fictional author it is writing for.
+  --
+  -- Off for the duration, on again at the end. The whole file is one
+  -- transaction, so a failure part-way puts it back too.
+  alter table proposals disable trigger proposals_record_submission;
+
   -- Fall back to the first real profile if no owner was supplied.
   if v_owner is null then
     select id into v_owner from profiles order by created_at asc limit 1;
@@ -78,13 +91,13 @@ begin
   on conflict (id) do nothing;
 
   -- The trigger on auth.users has already created the profile rows.
-  update profiles set handle = 'example-nadia', display_name = 'Nadia Okonjo',
+  update profiles set handle = 'example_nadia', display_name = 'Nadia Okonjo',
          bio = 'Runs the Thursday session. Example member.', share_values = true
    where id = v_nadia;
-  update profiles set handle = 'example-tom', display_name = 'Tom Bright',
+  update profiles set handle = 'example_tom', display_name = 'Tom Bright',
          bio = 'Keeps the books. Example member.', share_values = true
    where id = v_tom;
-  update profiles set handle = 'example-ruth', display_name = 'Ruth Adeyemi',
+  update profiles set handle = 'example_ruth', display_name = 'Ruth Adeyemi',
          bio = 'Been coming longest. Example member.', share_values = true
    where id = v_ruth;
 
@@ -288,14 +301,17 @@ begin
   );
 
   -- ---------------------------------------------------------- deliberation
-  insert into deliberation_comments (proposal_id, author_id, body, created_at) values
-    (v_proposal, v_tom,
+  -- 0009 gave a contribution a kind, and the default is 'reply' — which is the
+  -- one thing a top-level contribution cannot be. These three are what they
+  -- read as: two concerns raised, and the amendment that answered them.
+  insert into deliberation_comments (proposal_id, author_id, kind, body, created_at) values
+    (v_proposal, v_tom, 'concern',
      E'I will front it, but not for twelve weeks. Six and we look again. £240 I can absorb if it goes wrong; £480 I cannot, and I would rather say that now than discover it in March.',
      now() - interval '93 days'),
-    (v_proposal, v_ruth,
+    (v_proposal, v_ruth, 'concern',
      E'The Hospitality score is right and we should not argue with it. The hall being free is not incidental — it is why Marcus comes, and he will not say so.\n\nIf we do this, two places come out of the fund and we do not announce whose.',
      now() - interval '92 days'),
-    (v_proposal, v_nadia,
+    (v_proposal, v_nadia, 'amendment',
      E'Both taken. Six weeks, £240, two places from the fund, unnamed. I have amended the flags rather than the proposal so the change is on the record.',
      now() - interval '92 days');
 
@@ -369,10 +385,31 @@ begin
   );
 
   -- ------------------------------------------------------------------ feed
-  insert into posts (author_id, group_id, body, source_tag, created_at) values
+  --
+  -- 0025 refuses a post without a reading of these exact words, the way 0007
+  -- refuses a proposal without a sharpening. So the example carries a real one
+  -- rather than a placeholder: this is what the witness says about an ordinary
+  -- post by somebody about their own group, and 0.88 is where the ordinary
+  -- case should sit.
+  insert into post_witness (author_id, body_sha256, first_hand, verdict, concerns,
+                            prompt_id, prompt_version, model, created_at)
+  values (
+    v_nadia,
+    post_body_hash(E'Six weeks in the new room, no cancellations. Worth reading Ruth''s reflection on it — the thing we were solving turned out not to be the thing that was wrong.'),
+    0.880,
+    'Theirs, and it points at the reflection rather than at itself. Going up.',
+    '[]'::jsonb,
+    -- Not backdated. The reading binds to a text and is only good for
+    -- twenty-four hours, so it is made now, when the seed runs, even though
+    -- the post it admits is dated two days ago.
+    'post.witness', '1.0.0', 'example',
+    now()
+  );
+
+  insert into posts (author_id, group_id, body, kind, source_tag, created_at) values
     (v_nadia, v_group,
      E'Six weeks in the new room, no cancellations. Worth reading Ruth''s reflection on it — the thing we were solving turned out not to be the thing that was wrong.',
-     'Thursday Studio', now() - interval '2 days');
+     'learned', 'Thursday Studio', now() - interval '2 days');
 
   -- ---------------------------------------------------------------- ledger
   -- The rows above were written directly rather than through the functions,
@@ -425,6 +462,8 @@ begin
       v_prev := v_hash;
     end loop;
   end;
+
+  alter table proposals enable trigger proposals_record_submission;
 
   raise notice 'Example seeded. Group: Thursday Studio (example).';
 end $$;

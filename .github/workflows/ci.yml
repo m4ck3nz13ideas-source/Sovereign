@@ -44,26 +44,37 @@ jobs:
       PGUSER: postgres
     steps:
       - uses: actions/checkout@v4
-      - name: Apply migrations and run the rules suite
-        # 01_rules.sql raises if any check fails, so a non-zero exit is the
-        # whole assertion — no output parsing.
+
+      # Every migration, in order, then every suite — both by glob rather than
+      # by a list.
+      #
+      # This job used to name the files it applied, and the list stopped at
+      # 0003 while the schema went to 0026. It passed for months because the
+      # three files it did apply were self-consistent, and it was checking
+      # almost nothing: 01_rules.sql had grown a reference to law_acceptances
+      # (0018) and seed.sql to proposal_readiness (0007), so the day either one
+      # was touched the job failed for a reason that had nothing to do with the
+      # change. A list is the bug. Do not reintroduce one.
+      - name: Apply every migration and run every suite
         run: |
           psql -c "create database sovereign_test"
-          psql -d sovereign_test -v ON_ERROR_STOP=1 \
-            -f supabase/tests/00_supabase_shim.sql \
-            -f supabase/migrations/0001_schema.sql \
-            -f supabase/migrations/0002_rls.sql \
-            -f supabase/migrations/0003_functions.sql \
-            -f supabase/tests/01_rules.sql
+          ARGS=(-f supabase/tests/00_supabase_shim.sql)
+          for m in supabase/migrations/*.sql; do ARGS+=(-f "$m"); done
+          ARGS+=(-f supabase/tests/00b_support.sql)
+          for t in supabase/tests/[0-9][0-9]_*.sql; do
+            case "$t" in *00_supabase_shim*|*00b_support*) continue;; esac
+            ARGS+=(-f "$t")
+          done
+          # Each suite raises if any of its checks failed, so a non-zero exit
+          # is the whole assertion — no output parsing.
+          psql -d sovereign_test -v ON_ERROR_STOP=1 "${ARGS[@]}"
 
       - name: The worked example must apply to a fresh database
         run: |
           psql -c "create database sovereign_seed"
-          psql -d sovereign_seed -v ON_ERROR_STOP=1 \
-            -f supabase/tests/00_supabase_shim.sql \
-            -f supabase/migrations/0001_schema.sql \
-            -f supabase/migrations/0002_rls.sql \
-            -f supabase/migrations/0003_functions.sql
+          ARGS=(-f supabase/tests/00_supabase_shim.sql)
+          for m in supabase/migrations/*.sql; do ARGS+=(-f "$m"); done
+          psql -d sovereign_seed -v ON_ERROR_STOP=1 "${ARGS[@]}"
           psql -d sovereign_seed -v ON_ERROR_STOP=1 \
             -c "insert into auth.users (id, email) values (gen_random_uuid(), 'ci@example.com')" \
             -f supabase/seed.sql

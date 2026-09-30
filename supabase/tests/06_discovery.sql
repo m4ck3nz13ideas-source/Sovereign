@@ -196,14 +196,15 @@ begin
 
     insert into proposals (author_id, title, summary, body,
                            intent, change, constraints, risks, alternatives,
-                           scope, place, supersedes)
+                           scope, place, supersedes, supersedes_reason)
     values (cara, 'Moved to Deptford', 'x', 'Deptford take on the Peckham corner.',
             'A problem stated at sufficient length to clear the section constraint here.',
             'A change stated at sufficient length to clear the section constraint here.',
             'It takes 4 hours and £40, and depends on nobody.',
             'It might not work, and three months of nothing would say so clearly.',
             'Doing nothing was considered and rejected.',
-            'local', 'Deptford', dormant);
+            'local', 'Deptford', dormant,
+            'Same corner problem, taken up by somebody in Deptford instead.');
     fails := fails + 1;
     raise warning 'FAIL: a dormant proposal was taken up in a different place';
   exception when others then
@@ -221,7 +222,7 @@ begin
 
   insert into proposals (author_id, title, summary, body,
                          intent, change, constraints, risks, alternatives,
-                         scope, place, supersedes)
+                         scope, place, supersedes, supersedes_reason)
   values (ann, 'The corner, again', 'Second attempt.',
           'The corner again, with somebody to empty it.',
           'A problem stated at sufficient length to clear the section constraint here.',
@@ -229,7 +230,8 @@ begin
           'It takes 4 hours and £40, and depends on nobody.',
           'It might not work, and three months of nothing would say so clearly.',
           'Doing nothing was considered and rejected.',
-          'local', 'Peckham', dormant)
+          'local', 'Peckham', dormant,
+          'The same corner, but this time somebody has agreed to empty it.')
   returning id into revived;
 
   select count(*) into n from dormant_proposals(null, 'local') where proposal_id = dormant;

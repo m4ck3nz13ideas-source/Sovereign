@@ -311,3 +311,5 @@ begin
     raise exception '% checks failed', fails;
   end if;
 end $$;
+
+reset role;
