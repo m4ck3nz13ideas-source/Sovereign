@@ -26,6 +26,7 @@ import { Attention, Dormant, Signal } from "./Discover";
 import { People } from "./People";
 import { FeedItem } from "./FeedItem";
 import { ReadyToShare } from "./ReadyToShare";
+import { TheRuleHere } from "./TheRuleHere";
 
 export const metadata = { title: "Sovereign" };
 
@@ -93,6 +94,18 @@ export default async function HomePage() {
   const events = (signal ?? []) as SignalEvent[];
   const theirs = (people ?? []) as PeopleFeedEvent[];
 
+  // The bar every decision at this address has to clear. Shown because it was
+  // invisible: the numbers live in scope_rules, which is readable by everyone
+  // and was read by nothing.
+  const { data: ruleRow } =
+    scope !== null
+      ? await supabase
+          .from("scope_rules")
+          .select("min_voices, threshold_alignment, deliberation_days")
+          .eq("scope", scope)
+          .maybeSingle()
+      : { data: null };
+
   const here =
     address?.kind === "group"
       ? address.group.name
@@ -153,6 +166,15 @@ export default async function HomePage() {
       </TopBar>
 
       <Screen>
+        {scope !== null && ruleRow ? (
+          <TheRuleHere
+            scope={scope}
+            minVoices={ruleRow.min_voices as number}
+            threshold={Number(ruleRow.threshold_alignment)}
+            deliberationDays={ruleRow.deliberation_days as number}
+          />
+        ) : null}
+
         {ready?.length ? (
           <section className="pt-4">
             <Gutter>

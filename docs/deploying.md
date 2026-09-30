@@ -126,6 +126,10 @@ on it that means one person can decide alone:
 update scope_rules set min_voices = 3, deliberation_days = 2 where scope = 'local';
 ```
 
+`supabase/raise-the-floor.sql` does every scale with its reasoning. Home now
+states the rule in force under the scale selector, including the sentence that
+matters on a fresh install: one voice means one person can decide alone.
+
 ---
 
 ## 2. Vercel

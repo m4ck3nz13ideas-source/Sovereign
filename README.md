@@ -293,6 +293,14 @@ number to raise as people arrive:
 update scope_rules set min_voices = 3, deliberation_days = 2 where scope = 'local';
 ```
 
+`supabase/raise-the-floor.sql` does this for every scale, with the reasoning
+for each number written next to it. It is not a migration and is not applied
+automatically, because how many voices a place needs is a judgement about who
+is actually there and the database cannot make it — a place has no register.
+
+Home shows the rule in force at whichever scale you are looking at, so nobody
+has to go and read the table to find out what bar a proposal clears.
+
 `supabase/reset.sql` clears a half-applied install — a migration that fails
 partway leaves a database with no way forward, and the error it then gives
 says nothing about why.
