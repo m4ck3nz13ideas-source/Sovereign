@@ -29,6 +29,8 @@ export class MockProvider implements AiProvider {
         return { data: this.debate(input), model: "mock" };
       case "record_sharpening":
         return { data: this.sharpen(input), model: "mock" };
+      case "record_witness":
+        return { data: this.witness(input), model: "mock" };
       case "record_law_audit":
         return { data: this.lawAudit(input), model: "mock" };
       case "record_review":
@@ -221,6 +223,89 @@ export class MockProvider implements AiProvider {
         (risks.length ? "shrug — set both yourself before putting any of them on the record." :
           "shrug. It found nothing in the draft it could lift, so there is nothing here. Write your own."),
     };
+  }
+
+  /**
+   * The offline witness.
+   *
+   * This one runs on every post somebody writes, so with no key it is the
+   * difference between a feed and nothing. It judges, like the sharpening pass
+   * and unlike the law audit, because the cost of being wrong is that somebody
+   * rewrites a sentence.
+   *
+   * What it can actually see without a model: the marks of selling and of
+   * recirculation, which are unusually legible in text — imperatives aimed at
+   * the reader, prices and discount codes, tracking parameters on a link, a
+   * wall of quoted material with nothing of the author's around it. What it
+   * cannot see is sincerity, and it does not pretend to: anything that is not
+   * visibly one of those things passes, because the honest default for
+   * somebody writing about their own week is that they are telling the truth.
+   *
+   * It says which of its objections come from reading and which from counting,
+   * the way the sharpening pass does.
+   */
+  private witness(input: string) {
+    const body = (input.split("THE POST\n")[1] ?? input).split("\n\nATTACHED")[0].trim();
+    const lower = body.toLowerCase();
+
+    const selling =
+      /\b(buy now|shop now|order now|limited time|discount code|promo code|use code|% off|sign ?up (now|today)|dm me|link in bio|affiliate|sponsored|guaranteed returns?|make money)\b/i;
+    const priced = /[£$€]\s?\d+(\.\d{2})?\b/;
+    const imperativeAtReader =
+      /\b(you (should|must|need to)|don'?t miss|act fast|hurry|click here|swipe up)\b/i;
+    const tracked = /[?&](utm_|ref=|aff=|fbclid|gclid)/i;
+    const quoted = body.replace(/[^"“”]/g, "").length >= 4 && body.length > 400;
+    const baiting =
+      /\b(unpopular opinion|hot take|am i the only one|thoughts\?|agree\?|prove me wrong|nobody is talking about)\b/i;
+    const universal =
+      /\b(everyone knows|studies show|science says|the truth about|they don'?t want you to know|\d+% of (people|women|men))\b/i;
+
+    const concerns: string[] = [];
+    let score = 0.85;
+
+    if (selling.test(body) || (priced.test(body) && imperativeAtReader.test(body))) {
+      score = Math.min(score, 0.25);
+      concerns.push(
+        "This reads as selling something rather than saying something. If there is a real story here, tell it without the call to action.",
+      );
+    }
+    if (tracked.test(body)) {
+      score = Math.min(score, 0.3);
+      concerns.push(
+        "The link carries tracking parameters, which is the mark of something being promoted rather than shared.",
+      );
+    }
+    if (quoted) {
+      score = Math.min(score, 0.45);
+      concerns.push(
+        "Most of this is quoted material. What is yours in it? A line of your own around somebody else's words is what makes it first-hand.",
+      );
+    }
+    if (universal.test(body)) {
+      score = Math.min(score, 0.5);
+      concerns.push(
+        "There is a claim here about what is true for everybody. Saying what happened to you is testimony; saying what happens to people is a claim you would have to stand behind.",
+      );
+    }
+    if (baiting.test(body)) {
+      score = Math.min(score, 0.55);
+      concerns.push(
+        "This is shaped to get a response rather than to say a thing. Say the thing.",
+      );
+    }
+    if (lower.replace(/\s/g, "").length < 15) {
+      score = Math.min(score, 0.5);
+      concerns.push("There is almost nothing here to read.");
+    }
+
+    const verdict =
+      score >= 0.6
+        ? "Nothing here reads as selling, recirculated or baiting, so it goes up. No model read it — this is a reader that can see the shape of a thing and not its sincerity, and it is giving you the benefit of the doubt on the rest."
+        : "Not going up as written. " +
+          concerns[0] +
+          " No model read this: the objection above comes from the shape of the text, so if you think it is wrong, rewrite the line it is pointing at and try again.";
+
+    return { first_hand: Number(score.toFixed(2)), concerns: concerns.slice(0, 3), verdict };
   }
 
   /**

@@ -17,15 +17,13 @@ import type {
   AttentionItem,
   DormantProposal,
   Entry,
-  Post,
-  PeopleFeedEvent,
   SignalEvent,
+  WitnessFeedItem,
 } from "@/lib/types";
 
 import { Attention, Dormant, Signal } from "./Discover";
-import { People } from "./People";
-import { FeedItem } from "./FeedItem";
-import { ReadyToShare } from "./ReadyToShare";
+import { Compose } from "./Compose";
+import { Feed } from "./Feed";
 import { TheRuleHere } from "./TheRuleHere";
 
 export const metadata = { title: "Sovereign" };
@@ -60,11 +58,11 @@ export default async function HomePage() {
 
   const [
     { data: ready },
-    { data: posts },
+    { data: feed },
     { data: attention },
     { data: dormant },
     { data: signal },
-    { data: people },
+    { data: keeps },
   ] = await Promise.all([
     supabase
       .from("entries")
@@ -74,11 +72,9 @@ export default async function HomePage() {
       .eq("state", "unexamined")
       .order("created_at", { ascending: false })
       .limit(10),
-    supabase
-      .from("posts")
-      .select("*, profiles(display_name), post_reactions(profile_id)")
-      .order("created_at", { ascending: false })
-      .limit(40),
+    // One feed: what people wrote and what they did, in time order. There is
+    // no second sort key and no field to make one out of — see Feed.tsx.
+    supabase.rpc("witness_feed", { p_limit: 40 }),
     address ? supabase.rpc("attention_queue", args) : Promise.resolve({ data: [] }),
     address
       ? supabase.rpc("dormant_proposals", { ...args, p_limit: 6 })
@@ -86,13 +82,16 @@ export default async function HomePage() {
     address
       ? supabase.rpc("signal_feed", { ...args, p_limit: 12 })
       : Promise.resolve({ data: [] }),
-    supabase.rpc("people_feed", { p_limit: 30 }),
+    // Your own keeps, so the card can show which ones are yours. Nobody
+    // else's is readable and there is no count anywhere.
+    supabase.from("post_reactions").select("post_id").eq("profile_id", profile.id),
   ]);
 
   const queue = (attention ?? []) as AttentionItem[];
   const sleeping = (dormant ?? []) as DormantProposal[];
   const events = (signal ?? []) as SignalEvent[];
-  const theirs = (people ?? []) as PeopleFeedEvent[];
+  const items = (feed ?? []) as WitnessFeedItem[];
+  const kept = new Set(((keeps ?? []) as { post_id: string }[]).map((k) => k.post_id));
 
   // The bar every decision at this address has to clear. Shown because it was
   // invisible: the numbers live in scope_rules, which is readable by everyone
@@ -182,10 +181,10 @@ export default async function HomePage() {
             </Gutter>
             <Gutter className="space-y-2">
               {(ready as Entry[]).map((e) => (
-                <ReadyToShare
+                <Compose
                   key={e.id}
-                  id={e.id}
-                  body={e.body}
+                  entryId={e.id}
+                  initialBody={e.body}
                   when={ago(e.created_at)}
                   hasGroup={Boolean(group)}
                 />
@@ -228,66 +227,27 @@ export default async function HomePage() {
           </Gutter>
         </div>
 
-        {/* ----------------------------------------------------- WHO YOU KNOW */}
-        {/* What the people you follow and are friends with have done. Time
-            order, no counts, no reactions, and resonance deliberately absent —
-            see People.tsx for why that last one is the whole design. */}
+        {/* ------------------------------------------------------------ FEED */}
+        {/* What people wrote and what they did, in one stream in time order.
+            Nothing is ranked, nothing is counted, and resonance is absent on
+            purpose — see Feed.tsx and rule 20. */}
         <section className="pt-2">
           <Gutter>
             <SectionLabel
               right={
-                <Link href="/collective/people" className="text-gold">
-                  people
+                <Link href="/settings/feed" className="text-gold">
+                  filter
                 </Link>
               }
             >
-              What people you know are doing
+              What people are doing
             </SectionLabel>
           </Gutter>
-          <Gutter>
-            <People events={theirs} />
-          </Gutter>
-        </section>
 
-        {/* --------------------------------------------------------- PEOPLE */}
-        <section>
-          <Gutter>
-            <SectionLabel>From people you share a place with</SectionLabel>
+          <Gutter className="space-y-3">
+            <Compose hasGroup={Boolean(group)} />
+            <Feed items={items} kept={kept} />
           </Gutter>
-
-          {posts?.length ? (
-            <Gutter className="space-y-3">
-              {posts.map((raw) => {
-                const post = raw as unknown as Post & {
-                  profiles: { display_name: string } | null;
-                  post_reactions: { profile_id: string }[];
-                };
-                return (
-                  <FeedItem
-                    key={post.id}
-                    id={post.id}
-                    author={post.profiles?.display_name ?? "A member"}
-                    body={post.body}
-                    when={ago(post.created_at)}
-                    sourceTag={post.source_tag}
-                    reactions={post.post_reactions?.length ?? 0}
-                    reacted={
-                      post.post_reactions?.some((r) => r.profile_id === profile.id) ??
-                      false
-                    }
-                    mine={post.author_id === profile.id}
-                  />
-                );
-              })}
-            </Gutter>
-          ) : (
-            <Gutter>
-              <Empty>
-                Nothing here yet. What you write under Output arrives above as
-                something you can choose to post — or not.
-              </Empty>
-            </Gutter>
-          )}
         </section>
 
         {!profile.place_set_at ? (

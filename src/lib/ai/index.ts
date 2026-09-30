@@ -13,6 +13,7 @@ import {
   LAW_AUDIT,
   PROPOSAL_REVIEW,
   PROPOSAL_SHARPEN,
+  POST_WITNESS,
   REFLECTION_PROMPT,
   SYNTHESIS_PROMPT,
   QUESTION_POSITIONS,
@@ -38,6 +39,8 @@ import {
   SHARPEN_SECTIONS,
   synthesisJsonSchema,
   synthesisSchema,
+  witnessJsonSchema,
+  witnessSchema,
   type DebateOutput,
   type GuardianOutput,
   type LawAuditOutput,
@@ -46,6 +49,7 @@ import {
   type SharpenOutput,
   type SimulationOutput,
   type SynthesisOutput,
+  type WitnessOutput,
   positionsSchema,
   positionsJsonSchema,
   type PositionsOutput,
@@ -694,3 +698,60 @@ function fmt(n: number | null): string {
 
 export { AiError } from "./provider";
 export * from "./prompts";
+
+/* ---------------------------------------------------------------------------
+   The witness.
+
+   Runs on a post before anybody sees it, on text that exists only in the
+   author's browser until it clears. The database refuses a post without a
+   reading of these exact words at or above the floor (0025), so this is the
+   gate rather than a suggestion — but the refusal is answerable: the concerns
+   name the line that did it and the author rewrites.
+
+   `fast` tier on purpose. This runs on every post somebody writes, it is one
+   number and two sentences, and a gate people wait ten seconds for is a gate
+   they route around by not posting.
+--------------------------------------------------------------------------- */
+
+export const POST_FLOOR = 0.6;
+
+export async function readPost(post: {
+  body: string;
+  kind: string;
+  mediaUrl?: string | null;
+  mediaKind?: string | null;
+}): Promise<{ witness: WitnessOutput; model: string; prompt: typeof POST_WITNESS }> {
+  const input = `WHAT THE AUTHOR SAYS THIS IS
+${post.kind}
+
+THE POST
+${post.body.trim()}
+
+${
+  post.mediaUrl
+    ? `ATTACHED
+a ${post.mediaKind ?? "link"}: ${post.mediaUrl}
+
+You cannot open it. Judge the words, and treat the link as part of what is
+being claimed — a post whose words exist to get somebody to click something is
+the thing you are keeping out.`
+    : "Nothing is attached."
+}`;
+
+  const { data, model } = await provider().complete({
+    prompt: POST_WITNESS,
+    input,
+    schema: witnessJsonSchema as unknown as Record<string, unknown>,
+    schemaName: "record_witness",
+    maxTokens: 700,
+  });
+
+  const parsed = witnessSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new AiError(
+      `The witness reading did not match the expected shape: ${parsed.error.message}`,
+    );
+  }
+
+  return { witness: parsed.data, model, prompt: POST_WITNESS };
+}

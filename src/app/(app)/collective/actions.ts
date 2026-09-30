@@ -12,11 +12,13 @@ import {
   surveyPositions,
   summariseDebate,
   writeRationale,
+  readPost,
+  POST_FLOOR,
   type Draft,
 } from "@/lib/ai";
 import { shortDate } from "@/lib/format";
 import { READINESS_THRESHOLD, sha256 } from "@/lib/readiness";
-import type { ContributionKind } from "@/lib/types";
+import { POST_KINDS, type ContributionKind, type MediaKind, type PostKind } from "@/lib/types";
 import { placeAt } from "@/lib/collective";
 import { ledger } from "@/lib/ledger";
 import { requireSession } from "@/lib/session";
@@ -44,28 +46,102 @@ export async function chooseAddress(value: string) {
    Connection — posting
 --------------------------------------------------------------------------- */
 
-/** Post an Output entry to the feed. The entry is marked examined. */
-export async function publishEntry(entryId: string, body: string, groupOnly = true) {
+/**
+ * Publish a post.
+ *
+ * The witness reads it first, and the database refuses a post without a reading
+ * of these exact words at or above the floor (0025) — so this is a gate rather
+ * than a suggestion, and the refusal comes back to the author with the line
+ * that caused it rather than a closed door.
+ *
+ * Note the order: the reading is written, then the post. If the insert fails
+ * the reading is simply never spent, which is the right way round — an unspent
+ * reading costs nothing, and a post that slipped in unread would be the one
+ * thing this cannot allow.
+ */
+export async function publishPost(input: {
+  body: string;
+  kind: PostKind;
+  mediaUrl?: string;
+  mediaKind?: MediaKind | null;
+  entryId?: string;
+  groupOnly?: boolean;
+}) {
   const { userId, group } = await requireSession();
   const supabase = await createClient();
 
-  const text = body.trim();
+  const text = input.body.trim();
   if (!text) return { ok: false as const, error: "Nothing to post." };
+  if (text.length > 2000) {
+    return { ok: false as const, error: "That is longer than a post can be. Two thousand characters." };
+  }
+
+  const mediaUrl = input.mediaUrl?.trim() || null;
+  if (mediaUrl && !/^https?:\/\/\S{3,}$/.test(mediaUrl)) {
+    return { ok: false as const, error: "A link has to start with http:// or https://." };
+  }
+  if (mediaUrl && !input.mediaKind) {
+    return { ok: false as const, error: "Say what the link is — an image, a video, audio, or a page." };
+  }
+
+  let reading;
+  try {
+    reading = await readPost({
+      body: text,
+      kind: input.kind,
+      mediaUrl,
+      mediaKind: input.mediaKind ?? null,
+    });
+  } catch (e) {
+    return {
+      ok: false as const,
+      error: e instanceof Error ? e.message : "The witness could not read this. Try again.",
+    };
+  }
+
+  const { witness, model, prompt } = reading;
+
+  const { error: wErr } = await supabase.from("post_witness").insert({
+    author_id: userId,
+    body_sha256: await sha256(text),
+    first_hand: witness.first_hand,
+    verdict: witness.verdict,
+    concerns: witness.concerns,
+    prompt_id: prompt.id,
+    prompt_version: prompt.version,
+    model,
+  });
+  if (wErr) return { ok: false as const, error: wErr.message };
+
+  // Refused. The author gets the verdict and the concerns, not a number — the
+  // score is a judgement about a draft and belongs nowhere near the screen once
+  // the post is up, so it does not go on the screen before it is up either.
+  if (witness.first_hand < POST_FLOOR) {
+    return {
+      ok: false as const,
+      error: witness.verdict,
+      concerns: witness.concerns,
+      refused: true as const,
+    };
+  }
 
   const { error } = await supabase.from("posts").insert({
     author_id: userId,
-    group_id: groupOnly && group ? group.id : null,
-    entry_id: entryId || null,
+    group_id: input.groupOnly && group ? group.id : null,
+    entry_id: input.entryId || null,
     body: text,
+    kind: input.kind,
+    media_url: mediaUrl,
+    media_kind: mediaUrl ? (input.mediaKind ?? null) : null,
   });
 
   if (error) return { ok: false as const, error: error.message };
 
-  if (entryId) {
+  if (input.entryId) {
     await supabase
       .from("entries")
       .update({ state: "examined", examined_at: new Date().toISOString() })
-      .eq("id", entryId);
+      .eq("id", input.entryId);
   }
 
   revalidatePath("/home");
@@ -73,7 +149,8 @@ export async function publishEntry(entryId: string, body: string, groupOnly = tr
   return { ok: true as const };
 }
 
-export async function toggleReaction(postId: string) {
+/** Kept, not liked. Private to the person who kept it — see 0025. */
+export async function toggleKeep(postId: string) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -94,12 +171,78 @@ export async function toggleReaction(postId: string) {
       .eq("post_id", postId)
       .eq("profile_id", user.id);
   } else {
-    await supabase
+    const { error } = await supabase
       .from("post_reactions")
       .insert({ post_id: postId, profile_id: user.id });
+    if (error) return { ok: false as const, error: error.message };
   }
 
   revalidatePath("/home");
+  return { ok: true as const };
+}
+
+/* ---------------------------------------------------------------------------
+   The reader's own filter
+
+   None of this touches what anybody else sees. It is stored per person, read
+   by `witness_feed()` for that person only, and there is no policy by which
+   somebody learns they were muted.
+--------------------------------------------------------------------------- */
+
+export async function saveFeedSettings(input: {
+  shows: string[];
+  minutes: number | null;
+  quietDays: number[];
+}) {
+  const { userId } = await requireSession();
+  const supabase = await createClient();
+
+  const shows = input.shows.filter((k) => (POST_KINDS as readonly string[]).includes(k));
+  const minutes =
+    input.minutes && input.minutes > 0 ? Math.min(600, Math.round(input.minutes)) : null;
+  const quiet = input.quietDays.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+
+  const { error } = await supabase.from("feed_settings").upsert({
+    profile_id: userId,
+    shows,
+    minutes,
+    quiet_days: quiet,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath("/home");
+  revalidatePath("/settings/feed");
+  return { ok: true as const };
+}
+
+/** Quieter, not gone. They are still reachable; they are just not arriving. */
+export async function toggleMute(profileId: string) {
+  const { userId } = await requireSession();
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("feed_mutes")
+    .select("muted_id")
+    .eq("profile_id", userId)
+    .eq("muted_id", profileId)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase
+      .from("feed_mutes")
+      .delete()
+      .eq("profile_id", userId)
+      .eq("muted_id", profileId);
+  } else {
+    const { error } = await supabase
+      .from("feed_mutes")
+      .insert({ profile_id: userId, muted_id: profileId });
+    if (error) return { ok: false as const, error: error.message };
+  }
+
+  revalidatePath("/home");
+  revalidatePath("/settings/feed");
   return { ok: true as const };
 }
 

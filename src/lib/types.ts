@@ -866,8 +866,52 @@ export interface Post {
   group_id: string | null;
   entry_id: string | null;
   body: string;
+  /** What the author says this is. Declared, never inferred. */
+  kind: PostKind | null;
+  media_url: string | null;
+  media_kind: MediaKind | null;
+  witness_id: string | null;
   source_tag: string | null;
   created_at: string;
+}
+
+/** The five things a post can say it is. The reader's filter works on these. */
+export const POST_KINDS = ["made", "saw", "asked", "thanks", "learned"] as const;
+export type PostKind = (typeof POST_KINDS)[number];
+
+export const MEDIA_KINDS = ["image", "video", "audio", "page"] as const;
+export type MediaKind = (typeof MEDIA_KINDS)[number];
+
+/**
+ * One item in the feed: a post somebody wrote, or an act off the ledger.
+ * `source` says which, and nothing here is a score — there is no field to
+ * rank by and the order is time.
+ */
+export interface WitnessFeedItem {
+  item_id: string;
+  source: "post" | "act";
+  actor_id: string;
+  actor_name: string;
+  actor_handle: string | null;
+  kind: string;
+  body: string | null;
+  media_url: string | null;
+  media_kind: MediaKind | null;
+  subject_type: string | null;
+  subject_id: string | null;
+  title: string | null;
+  tie: string;
+  happened_at: string;
+}
+
+/** The reader's own filter. Nobody else's business and nobody else's view. */
+export interface FeedSettings {
+  profile_id: string;
+  /** Empty means everything — an explicit "all", not a null three screens read differently. */
+  shows: PostKind[];
+  minutes: number | null;
+  quiet_days: number[];
+  updated_at: string;
 }
 
 export interface SurfacedPrompt {

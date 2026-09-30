@@ -518,3 +518,46 @@ export const positionsJsonSchema = {
     },
   },
 } as const;
+
+/* ---------------------------------------------------------------------------
+   The witness — the gate on a post.
+
+   One number and the words that go with it. There is deliberately nowhere to
+   put a topic, a sentiment, a tone or a quality reading: the gate asks whether
+   a post is first-hand, and a second field here would become a second thing to
+   filter on, then a thing to sort by.
+--------------------------------------------------------------------------- */
+
+export const witnessSchema = z.object({
+  first_hand: score,
+  concerns: z.array(z.string().min(1)).max(3),
+  verdict: z.string().min(1),
+});
+
+export type WitnessOutput = z.infer<typeof witnessSchema>;
+
+export const witnessJsonSchema = {
+  type: "object",
+  required: ["first_hand", "concerns", "verdict"],
+  properties: {
+    first_hand: {
+      type: "number",
+      minimum: 0,
+      maximum: 1,
+      description:
+        "Is this the author's own, told straight? The floor is 0.60. An ordinary post about somebody's own week is 0.85.",
+    },
+    concerns: {
+      type: "array",
+      maxItems: 3,
+      description:
+        "What specifically cannot be vouched for, quoting the line that does it. Usually empty above the floor.",
+      items: { type: "string" },
+    },
+    verdict: {
+      type: "string",
+      description:
+        "One or two sentences to the author. No praise, no reasoning about their character.",
+    },
+  },
+} as const;
