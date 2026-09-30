@@ -84,13 +84,21 @@ labels and metadata, never for content a person is meant to read closely.
 
 ## Navigation
 
-**Three tabs, bottom, always visible.** Straight from the overview's
+**Four tabs, bottom, always visible.** Three come straight from the overview's
 architecture diagram — `SOVEREIGN APP → HOME / INDIVIDUAL / COLLECTIVE` — with
-Home in the middle because it is the one you sit in.
+Home left of centre because it is the one you sit in. Ask is the fourth.
 
 ```
-Individual  ·  Home  ·  Collective
+Individual  ·  Home  ·  Ask  ·  Collective
 ```
+
+Ask sits beside Home rather than raised in the middle. Rule 2 is understanding
+before opinion, and a surface for going and finding something out earns a place
+at this level; a raised centre button does not, because that is the shape of an
+app whose whole purpose is posting.
+
+Four is the ceiling. A fifth would start the argument about which of these
+matters least, and the answer would be whichever one was added last.
 
 Icons are outline when idle and filled when active, the one convention every
 phone app shares, so nobody has to learn it.
@@ -107,6 +115,7 @@ a dropdown hides where you are.
 |---|---|
 | Individual | Profile · AI · Values · Chats · Journal · Ideas · Drafts · Vault |
 | Home | *(none — Home is the feed)* |
+| Ask | *(none — Find and Ask are two modes of one field)* |
 | Collective | Proposals · Debate · Projects · Impact · Decisions · People |
 
 The scale selector sits in the Home top bar, as Rule 6 requires: local,

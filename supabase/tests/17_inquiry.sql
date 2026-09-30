@@ -215,6 +215,81 @@ begin
     raise warning 'FAIL: % decision functions read inquiries — looking something up must not count towards anything', n;
   end if;
 
+  ------------------------------------------------------------------------
+  -- Asked on its own (0020): private, permanently, and findable only by you
+  ------------------------------------------------------------------------
+  perform set_config('test.uid', ann::text, true);
+  iid := record_inquiry(null, 'Does sharing a tool between households work?',
+                        null, 'inquiry.positions', '1.0.0', 'test', two);
+
+  select count(*)::int into n from my_inquiries(30) where id = iid;
+  if n = 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: a standing inquiry is not in its own asker''s list'; end if;
+
+  -- can_reach_proposal(null) is null, not false — the policy has to handle
+  -- that or it hides a standing inquiry from the person who asked it.
+  select count(*)::int into n from positions_for(iid);
+  if n = 2 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: the asker could read % positions of their own standing inquiry', n; end if;
+
+  -- Somebody in the same place must NOT see it. It is attached to nothing, so
+  -- there is no address it belongs to.
+  perform set_config('test.uid', ben::text, true);
+  select count(*)::int into n from inquiries where id = iid;
+  if n = 0 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: a question asked on its own was readable by somebody else'; end if;
+
+  select count(*)::int into n from positions_for(iid);
+  if n = 0 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: % positions of a standing inquiry leaked', n; end if;
+
+  select count(*)::int into n from my_inquiries(30);
+  if n = 0 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: my_inquiries returned somebody else''s'; end if;
+
+  -- And there is no path that attaches one to a proposal afterwards, because
+  -- "readable by its asker alone" must not be true only until somebody
+  -- changes their mind.
+  select count(*)::int into n
+    from pg_proc pp join pg_namespace ns on ns.oid = pp.pronamespace
+   where ns.nspname = 'public'
+     and (pp.proname ilike '%attach%inquir%' or pp.proname ilike '%publish%inquir%'
+          or pp.proname ilike '%promote%inquir%');
+  if n = 0 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: % functions exist to move a private inquiry onto a proposal', n; end if;
+
+  update inquiries set proposal_id = pid where id = iid;
+  select count(*)::int into n from inquiries where id = iid and proposal_id is not null;
+  if n = 0 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: a standing inquiry was attached to a proposal by direct update'; end if;
+
+  ------------------------------------------------- finding what is already here
+  perform set_config('test.uid', ann::text, true);
+  select count(*)::int into n from search_collective('ladder', 20);
+  if n >= 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: search found nothing for a word in a reachable proposal'; end if;
+
+  select kind into msg from search_collective('ladder', 20) limit 1;
+  if msg = 'proposal' then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: search returned kind "%" for a proposal', msg; end if;
+
+  -- One character is not a search. Without a floor this returns the world.
+  select count(*)::int into n from search_collective('l', 20);
+  if n = 0 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: a one-character query returned % rows', n; end if;
+
+  select count(*)::int into n from search_collective('   ', 20);
+  if n = 0 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: an empty query returned % rows', n; end if;
+
+  -- and it cannot be used to discover what is not addressed to you
+  perform set_config('test.uid', cal::text, true);
+  select count(*)::int into n from search_collective('ladder', 20);
+  if n = 0 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: search surfaced % rows to somebody outside the address', n; end if;
+
+  perform set_config('test.uid', ann::text, true);
+
   raise notice ' ';
   raise notice '  Inquiry: % passed, % failed', passes, fails;
   raise notice ' ';

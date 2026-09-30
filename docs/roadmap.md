@@ -47,7 +47,7 @@ Tune those against real decisions before building anything below.
 ## Built since this document was last honest
 
 These were on the list or absent from it, and now exist. Migrations `0010`
-through `0019`.
+through `0020`.
 
 - **Impact simulation.** Dated, falsifiable predictions, frozen before the
   vote, marked against reality afterwards, with a forecasting record split by
@@ -70,6 +70,11 @@ through `0019`.
   about a decision, and stores no model of anybody.
 - **The mirror.** A private reading of your own responses against the ten laws,
   derived rather than stored, with no good direction.
+- **Ask, the fourth tab.** One field with two jobs: finding what the group has
+  already proposed, decided and built, and asking a question of the lenses.
+  A question asked on a proposal belongs to everyone it is addressed to; one
+  asked on its own is owner-only and stays that way, because there is no
+  function that attaches it afterwards.
 - **Inquiry.** A question a proposal turns on, answered by several ways of
   knowing at once — the literature, the traditions, the practitioners — each in
   its own terms and none reconciled. Rule 2 is understanding before opinion,

@@ -1005,3 +1005,26 @@ export interface Position {
   source_hint: string | null;
   ordinal: number;
 }
+
+/** One row of `search_collective()`. */
+export interface SearchHit {
+  kind: "proposal" | "decision" | "project";
+  id: string;
+  title: string;
+  line: string | null;
+  status: string | null;
+  happened: string | null;
+}
+
+/** One row of `my_inquiries()` — everything you have asked, wherever you asked it. */
+export interface MyInquiry {
+  id: string;
+  question: string;
+  note: string | null;
+  model: string;
+  lenses: number;
+  /** Null for a question asked on its own, which is owner-only and stays that way. */
+  proposal_id: string | null;
+  proposal_title: string | null;
+  created_at: string;
+}

@@ -89,6 +89,7 @@ supabase/migrations/0016_guardian.sql      a private reader that never speaks fi
 supabase/migrations/0017_mirror.sql        where you and the audit differ
 supabase/migrations/0018_accession.sql     agreeing to the ten, and to which wording
 supabase/migrations/0019_inquiry.sql       what the ways of knowing hold, never an answer
+supabase/migrations/0020_ask.sql           the fourth tab: finding, and asking on its own
 ```
 
 In order, and one at a time. `0011` alters `scope_rules`, `0012` alters

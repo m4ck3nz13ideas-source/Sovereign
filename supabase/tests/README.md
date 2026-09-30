@@ -264,7 +264,7 @@ accounts.
   original wording survives** — because it is a true record of what that
   person actually read.
 
-### `17_inquiry.sql` — twenty-three checks
+### `17_inquiry.sql` — thirty-five checks
 
 - **A survey of one is refused**, and so is an empty one, and so are two
   positions that come from the same lens — the floor is two *distinct* ways of
@@ -289,6 +289,16 @@ accounts.
   `decisions`, and the suite reads the source of `close_proposal`,
   `cast_resonance` and `can_reach_proposal` and fails if any of them mentions
   inquiries.
+- **A question asked on its own is owner-only, permanently.** Its asker sees
+  it and reads its positions; somebody in the same place sees neither, and
+  `my_inquiries()` returns nobody else's. The suite also asserts that no
+  function exists whose name suggests attaching, publishing or promoting one
+  onto a proposal, and that a direct `update` setting `proposal_id` does not
+  take — "yours alone" cannot be true only until somebody changes their mind.
+- Finding what is already here goes through the same eligibility question as
+  everything else: a word in a reachable proposal is found, the same word is
+  invisible to somebody outside the address, and a one-character or blank
+  query returns nothing rather than the world.
 
 ## Running them
 

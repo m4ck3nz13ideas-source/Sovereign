@@ -175,6 +175,14 @@ on purpose, in a commit that says so.
     precisely the thing being surveyed, and Universal Law 2 is not a
     suggestion. Every position on screen says whose account it is and that a
     named work is somewhere to start reading rather than a citation.
+    A question asked **on a proposal** is readable by everyone it is addressed
+    to; one asked **on its own** has a null `proposal_id` and is owner-only,
+    permanently — there is no function that attaches one to a proposal
+    afterwards and there must not be, because "yours alone" cannot be true
+    only until somebody changes their mind. `can_reach_proposal(null)` is null
+    rather than false, so every gate on these tables spells both cases out,
+    and a `security definer` function carries its own check because the policy
+    does not apply to it.
 
 ## Where things go
 

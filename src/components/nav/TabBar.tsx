@@ -4,21 +4,27 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * Three tabs, left to right: Individual, Home, Collective.
+ * Four tabs, left to right: Individual, Home, Ask, Collective.
  *
- * Straight from the overview's architecture diagram — SOVEREIGN APP branching
- * into HOME, INDIVIDUAL and COLLECTIVE — with Home in the middle because it is
- * the one you sit in. Each tab has its own strip of sub-tabs underneath it, so
- * the depth is in the tab rather than in this bar.
+ * The first three come straight from the overview's architecture diagram —
+ * SOVEREIGN APP branching into HOME, INDIVIDUAL and COLLECTIVE — with Home
+ * left of centre because it is the one you sit in. Each tab has its own strip
+ * of sub-tabs underneath it, so the depth is in the tab rather than in here.
  *
- * Nothing else lives here. Writing is a plus in the Home bar, where it belongs:
- * a raised centre button is the shape of an app whose whole purpose is posting,
- * and that is not what this is.
+ * Ask is the fourth, next to Home rather than raised in the middle. Rule 2 is
+ * understanding before opinion, and a surface for going and finding something
+ * out earns a place at this level; a raised centre button does not, because
+ * that is the shape of an app whose whole purpose is posting. Writing stays a
+ * plus in the Home bar for the same reason.
+ *
+ * Four is the ceiling. A fifth would start the argument about which of these
+ * matters least, and the answer would be whichever one somebody added last.
  */
 
 const TABS = [
   { href: "/individual", label: "Individual", Icon: IndividualIcon },
   { href: "/home", label: "Home", Icon: HomeIcon },
+  { href: "/ask", label: "Ask", Icon: AskIcon },
   { href: "/collective", label: "Collective", Icon: CollectiveIcon },
 ] as const;
 
@@ -96,6 +102,28 @@ function HomeIcon({ filled }: IconProps) {
         stroke="currentColor"
         strokeWidth="1.75"
         strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function AskIcon({ filled }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden>
+      <circle
+        cx="10.75"
+        cy="10.75"
+        r="6.25"
+        fill={filled ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <path
+        d="m15.5 15.5 4.25 4.25"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
       />
     </svg>
   );
