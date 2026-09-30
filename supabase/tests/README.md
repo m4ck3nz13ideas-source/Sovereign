@@ -242,6 +242,28 @@ accounts.
   a profile id later.
 - Nothing about it is stored: no table anywhere has `mirror` in its name.
 
+### `16_accession.sql` — twenty-seven checks
+
+- **A partial constitution is refused.** Nine laws, none, or one law repeated
+  ten times are all rejected — the count is what the database can check, since
+  the ten themselves live in `src/lib/universal-law.ts` rather than a table.
+- The revision is **stamped by the database**, not passed in, so a client
+  cannot record agreement to an older and weaker wording.
+- Agreeing twice writes nothing the second time.
+- **It cannot be edited afterwards**: the suite attempts an update and a
+  delete, asserts neither took, and asserts against `pg_policies` that no
+  update or delete policy exists to permit one later.
+- Nobody else can read it, and nobody can record an agreement in another
+  person's name.
+- **Accession gates nothing.** The suite reads the source of
+  `can_reach_proposal` and `cast_resonance` and fails if either mentions
+  `law_acceptances` — agreeing to the constitution is a record, not a
+  permission system.
+- After an amendment to one law: that law reads as amended since, the others
+  do not, re-agreeing writes exactly one new row, and **the agreement to the
+  original wording survives** — because it is a true record of what that
+  person actually read.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -282,7 +304,8 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/tests/12_chat.sql \
   -f supabase/tests/13_amendment.sql \
   -f supabase/tests/14_guardian.sql \
-  -f supabase/tests/15_mirror.sql
+  -f supabase/tests/15_mirror.sql \
+  -f supabase/tests/16_accession.sql
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server

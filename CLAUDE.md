@@ -145,6 +145,20 @@ on purpose, in a commit that says so.
     reset, and redirecting somebody to the screen that needs the row it is
     missing is a loop with no exit.
 
+28. **An agreement names the wording it agreed to.** Onboarding shows the ten
+    laws and records acceptance in `law_acceptances`, one row per person per
+    law per revision — never a boolean. Rule 24 made the wording amendable, so
+    "agreed to the laws" would otherwise claim consent to whatever the text
+    has since become, which is the exact move a constitution exists to stop.
+    `accept_universal_law()` takes the ids the screen displayed and stamps the
+    revision itself, because a client that could name the revision could name
+    an older one. There is no update policy and no delete policy: an
+    acceptance is a record of what somebody read on a date, and a record you
+    can revise is not one. An amendment leaves every prior acceptance standing
+    and shows up as `amended_since` — it is not a gate, and nothing in
+    `can_reach_proposal()` or `cast_resonance()` may ever read this table.
+    Accession is a record, not a permission system.
+
 ## Where things go
 
 - `src/lib/ai/` — the AI layer. `prompts.ts` holds versioned rubrics;

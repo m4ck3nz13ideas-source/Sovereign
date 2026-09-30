@@ -24,8 +24,13 @@ export default async function OnboardingPage() {
 
   return (
     <Page>
-      <PageTitle sub="Three things, then you are in.">Sovereign</PageTitle>
-      <OnboardingFlow displayName={profile.display_name} />
+      <PageTitle sub="Who you are, what you are agreeing to, what you believe, and a look round.">
+        Sovereign
+      </PageTitle>
+      <OnboardingFlow
+        displayName={profile.display_name}
+        handle={profile.handle ?? null}
+      />
     </Page>
   );
 }
