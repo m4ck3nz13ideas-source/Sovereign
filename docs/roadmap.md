@@ -47,7 +47,7 @@ Tune those against real decisions before building anything below.
 ## Built since this document was last honest
 
 These were on the list or absent from it, and now exist. Migrations `0010`
-through `0023`.
+through `0024`.
 
 - **Impact simulation.** Dated, falsifiable predictions, frozen before the
   vote, marked against reality afterwards, with a forecasting record split by
@@ -101,6 +101,14 @@ through `0023`.
   discovers it meant two things cannot be tidied away afterwards. Groups only,
   because a place has no register.
 
+- **Lineage, finished.** `supersedes` has existed since 0008 and threaded a
+  second attempt back to the first. It said nothing about what changed, went one
+  generation, and — because `check_supersedes()` is an insert trigger — could be
+  re-pointed afterwards by the author's own update policy. `0024` makes the
+  reason mandatory, walks the whole chain, and freezes both columns. The reason
+  is a `not valid` constraint, so rows written before there was anywhere to put
+  one are left alone rather than backfilled with words nobody said.
+
 - **Onboarding, and accession.** Four steps — who you are and where, the ten
   laws read and agreed to, your own values, passions and beliefs, then a walk
   through what the thing does. The agreement records which *revision* of each
@@ -120,6 +128,17 @@ through `0023`.
   actually built. The next feature is the one that makes that false again.
 
 ## What would earn a place next, and what must be true first
+
+### A proposal that can move up a scale
+`check_supersedes()` requires a second attempt to go back to the same group,
+scope and place, which is what stops a proposal that failed on one street being
+put to a friendlier room with its history attached as evidence. The cost is
+that there is no way to say "this needs the whole borough, not just us" and keep
+the thread — subsidiarity works downwards in this schema and not upwards.
+
+*Earns its place when:* a group has actually hit it, and there is a way to
+distinguish escalation from venue-shopping that does not rely on trusting the
+author. A flag saying which it is would be trusting the author.
 
 ### A word raised from where it was used
 Words are raised by hand, from memory, on their own screen. The obvious next

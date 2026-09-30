@@ -53,6 +53,7 @@ lives in a React component is a rule that a future refactor can quietly delete.
 | **Asking again cannot raise your score** | the trigger takes `min(readiness)`, not the latest |
 | **A submitted proposal's text is fixed** | `freeze_proposal_text()` trigger |
 | **A revival is put to the same people** | `check_supersedes()` trigger |
+| **A second attempt says what it changed, and its history never moves** | `proposals_supersedes_reason_paired` check, `freeze_lineage()` trigger |
 | **A declined proposal is never offered back** | `dormant_proposals()` excludes anything that failed on merit |
 | **A contribution says what it is** | `comments_kind_shape` check constraint |
 | **An answer is written, attributed, permanent** | `answer_contribution()` + the `comments_answer` policy |

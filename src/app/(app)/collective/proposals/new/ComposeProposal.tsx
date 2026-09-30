@@ -137,6 +137,10 @@ export function ComposeProposal({
       ? { ...EMPTY, ...stripId(takingUp), address: defaultAddress }
       : { ...EMPTY, address: amend ? amend.globalAddress : defaultAddress },
   );
+  // What a second attempt does differently. Held apart from `form` because it
+  // is not part of the proposal's text and so is not part of the sharpening
+  // fingerprint — changing it must not invalidate a reading of the body.
+  const [changed, setChanged] = useState("");
   const [newText, setNewText] = useState(amend?.currentText ?? "");
   const [newViolation, setNewViolation] = useState(amend?.currentViolation ?? "");
   const [restored, setRestored] = useState(false);
@@ -194,7 +198,12 @@ export function ComposeProposal({
     form.evidence,
   ]);
   const stale = Boolean(sharp) && sharpOf !== fingerprint;
-  const ready = Boolean(sharp) && !stale && (sharp?.readiness ?? 0) >= READINESS_THRESHOLD;
+  const sharpEnough = Boolean(sharp) && !stale && (sharp?.readiness ?? 0) >= READINESS_THRESHOLD;
+  // A second attempt cannot be submitted without saying what it changed. The
+  // database refuses it anyway; this stops the author finding that out after
+  // they have pressed the button.
+  const saidWhatChanged = !takingUp || changed.trim().length >= 20;
+  const ready = sharpEnough && saidWhatChanged;
 
   function sharpen() {
     start(async () => {
@@ -215,6 +224,7 @@ export function ComposeProposal({
       const r = await submitProposal({
         ...form,
         supersedes: takingUp?.id ?? null,
+        supersedesReason: takingUp ? changed : null,
         amendsLaw: amend?.lawId ?? null,
         amendmentText: newText,
         amendmentViolation: newViolation,
@@ -252,12 +262,28 @@ export function ComposeProposal({
       ) : null}
 
       {takingUp ? (
-        <p className="rounded-md border border-gold-dim bg-gold-wash px-3 py-2.5 text-sm leading-relaxed text-paper-dim">
-          This is a second attempt, and it starts from the first one&rsquo;s
-          words and nothing else. Whatever went wrong the first time — nobody
-          responded, or nobody committed what it needed — the fix goes in the
-          text, not in the record. It will be sharpened and audited again.
-        </p>
+        <div className="space-y-3 rounded-md border border-gold-dim bg-gold-wash px-3 py-2.5">
+          <p className="text-sm leading-relaxed text-paper-dim">
+            This is a second attempt, and it starts from the first one&rsquo;s
+            words and nothing else. Whatever went wrong the first time — nobody
+            responded, or nobody committed what it needed — the fix goes in the
+            text, not in the record. It will be sharpened and audited again.
+          </p>
+
+          <Field
+            label="What this one does differently"
+            hint="Whoever read the first one needs to know what to look for. This sits on both proposals permanently and cannot be edited afterwards."
+          >
+            <textarea
+              value={changed}
+              onChange={(e) => setChanged(e.target.value)}
+              rows={2}
+              maxLength={280}
+              placeholder="Same ladder, but kept at number 6 rather than rotating, because rotating custody is what failed."
+              className={`${inputClass} resize-y`}
+            />
+          </Field>
+        </div>
       ) : null}
 
       {amend ? (
@@ -432,7 +458,11 @@ export function ComposeProposal({
           <Card className={ready ? "border-calm/40" : "border-gold-dim"}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-serif text-lg text-paper">
-                {ready ? "Ready to put to people" : "Not ready yet"}
+                {ready
+                  ? "Ready to put to people"
+                  : sharpEnough
+                    ? "Say what this attempt changed"
+                    : "Not ready yet"}
               </h3>
               <Tag tone={ready ? "calm" : "gold"}>
                 {sharp.readiness.toFixed(2)} · bar {READINESS_THRESHOLD.toFixed(2)}

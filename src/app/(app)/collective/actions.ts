@@ -125,6 +125,13 @@ export interface ProposalInput {
   /** The dormant proposal this was written from, if it is a second attempt. */
   supersedes?: string | null;
   /**
+   * What this attempt does differently. Mandatory whenever `supersedes` is
+   * set — 0024 enforces it as a check constraint, and it exists because a
+   * second attempt that cannot say what changed leaves a reader to diff two
+   * near-identical proposals by hand.
+   */
+  supersedesReason?: string | null;
+  /**
    * The Universal Law this rewrites, and the new wording.
    *
    * An amendment is an ordinary proposal in every other respect — same
@@ -253,6 +260,20 @@ export async function submitProposal(input: ProposalInput) {
   if (!input.title.trim()) return { ok: false as const, error: "A proposal needs a title." };
   if (!input.summary.trim()) return { ok: false as const, error: "A proposal needs a one-line summary." };
 
+  // A second attempt says what it changed. The database refuses without it, so
+  // the message here is the useful one rather than a constraint name.
+  const changed = (input.supersedesReason ?? "").trim();
+  if (input.supersedes && changed.length < 20) {
+    return {
+      ok: false as const,
+      error:
+        "Say what this attempt does differently from the first one — twenty characters at least. Whoever read the first one needs to know what to look for.",
+    };
+  }
+  if (changed.length > 280) {
+    return { ok: false as const, error: "Shorter. What changed, not the argument for it." };
+  }
+
   const budget = input.budget.trim() ? Number(input.budget) : null;
   if (budget !== null && Number.isNaN(budget)) {
     return { ok: false as const, error: "The budget should be a number, or blank." };
@@ -296,6 +317,7 @@ export async function submitProposal(input: ProposalInput) {
       scope,
       place,
       supersedes: input.supersedes ?? null,
+      supersedes_reason: input.supersedes ? changed : null,
       amends_law: input.amendsLaw ?? null,
       amendment_text: input.amendsLaw ? (input.amendmentText ?? "").trim() : null,
       amendment_violation: input.amendsLaw

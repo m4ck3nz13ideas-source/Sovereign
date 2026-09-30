@@ -7,6 +7,8 @@ import { asReview, isOpen } from "@/lib/collective";
 import { isSteward, requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type {
+  ProposalLineageRow,
+  ProposalSuccessor,
   ActivationStanding,
   Commitment,
   ContributionKind,
@@ -104,25 +106,18 @@ export default async function ProposalPage({
 
   const rule = ruleRow as ScopeRule | null;
 
-  // The thread, both ways. A second attempt says what it came from; a proposal
-  // somebody has taken up again says so, so nobody reads a dead record as the
-  // current state of the question.
-  const [{ data: cameFrom }, { data: takenUp }] = await Promise.all([
-    proposal.supersedes
-      ? supabase
-          .from("proposals")
-          .select("id, title, status")
-          .eq("id", proposal.supersedes)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    supabase
-      .from("proposals")
-      .select("id, title, status")
-      .eq("supersedes", id)
-      .order("submitted_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+  // The thread, both ways, and all the way back. This used to read one level in
+  // each direction with a direct query, so a third attempt looked like a second
+  // one. 0024's functions walk the chain as far as the reader can reach and
+  // carry what each attempt said it changed — the pointer on its own left a
+  // reader to diff two near-identical proposals by hand.
+  const [{ data: ancestors }, { data: successors }] = await Promise.all([
+    supabase.rpc("proposal_lineage", { p_proposal_id: id }),
+    supabase.rpc("proposal_successors", { p_proposal_id: id }),
   ]);
+
+  const lineage = (ancestors ?? []) as ProposalLineageRow[];
+  const later = (successors ?? []) as ProposalSuccessor[];
 
   const thresholds = proposal.groups
     ? {
@@ -417,32 +412,80 @@ export default async function ProposalPage({
         </p>
       </header>
 
-      {cameFrom || takenUp ? (
+      {lineage.length || later.length ? (
         <div className="mb-8 rounded-card border border-line bg-surface-soft px-4 py-3">
-          {cameFrom ? (
-            <p className="text-sm leading-relaxed text-paper-dim">
-              Written from{" "}
-              <Link
-                href={`/collective/proposals/${(cameFrom as { id: string }).id}`}
-                className="text-gold hover:underline"
-              >
-                {(cameFrom as { title: string }).title}
-              </Link>
-              , which ran out of people rather than out of merit. It was
-              sharpened and audited again from scratch.
-            </p>
+          {lineage.length ? (
+            <>
+              <p className="smallcaps mb-2 text-[10px] text-paper-faint">
+                {lineage.length === 1 ? "The attempt before this" : "Earlier attempts"}
+              </p>
+              <ol className="space-y-2">
+                {/*
+                  Oldest first, so it reads in the order it happened. `changed`
+                  on a row is what the NEXT attempt said it was doing
+                  differently, which is why it renders under the attempt it
+                  replaced rather than over it.
+                */}
+                {[...lineage]
+                  .sort((a, b) => a.generation - b.generation)
+                  .map((a) => (
+                    <li key={a.id} className="text-sm leading-relaxed text-paper-dim">
+                      <Link
+                        href={`/collective/proposals/${a.id}`}
+                        className="text-gold hover:underline"
+                      >
+                        {a.title}
+                      </Link>
+                      <span className="text-paper-faint">
+                        {" — "}
+                        {a.outcome
+                          ? `${a.outcome}${a.alignment !== null ? ` at ${Number(a.alignment).toFixed(3)}` : ""}`
+                          : a.status.replace(/_/g, " ")}
+                        {a.submitted_at ? `, ${shortDate(a.submitted_at)}` : ""}
+                      </span>
+                      {a.changed ? (
+                        <span className="mt-0.5 block text-paper-dim">
+                          Then: {a.changed}
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+              </ol>
+              <p className="mt-2 text-[0.8125rem] leading-relaxed text-paper-faint">
+                Each attempt was sharpened and audited again from scratch.
+                Nothing here counts towards this one.
+              </p>
+            </>
           ) : null}
-          {takenUp ? (
-            <p className={`text-sm leading-relaxed text-paper-dim${cameFrom ? " mt-2" : ""}`}>
-              Taken up again as{" "}
-              <Link
-                href={`/collective/proposals/${(takenUp as { id: string }).id}`}
-                className="text-gold hover:underline"
-              >
-                {(takenUp as { title: string }).title}
-              </Link>
-              . This record stands as it was.
-            </p>
+
+          {later.length ? (
+            <div className={lineage.length ? "mt-4 border-t border-line-soft pt-3" : ""}>
+              <p className="smallcaps mb-2 text-[10px] text-paper-faint">
+                {later.length === 1 ? "Taken up again as" : "Taken up again as"}
+              </p>
+              <ul className="space-y-2">
+                {later.map((l) => (
+                  <li key={l.id} className="text-sm leading-relaxed text-paper-dim">
+                    <Link
+                      href={`/collective/proposals/${l.id}`}
+                      className="text-gold hover:underline"
+                    >
+                      {l.title}
+                    </Link>
+                    <span className="text-paper-faint">
+                      {" — "}
+                      {l.status.replace(/_/g, " ")}, {l.author_name}
+                    </span>
+                    {l.changed ? (
+                      <span className="mt-0.5 block text-paper-dim">{l.changed}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-[0.8125rem] leading-relaxed text-paper-faint">
+                This record stands as it was.
+              </p>
+            </div>
           ) : null}
         </div>
       ) : null}

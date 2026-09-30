@@ -32,7 +32,12 @@ create or replace function test_propose(
   -- than afterwards, because 0015 freezes them the moment the row exists.
   p_amends_law text default null,
   p_amendment_text text default null,
-  p_amendment_violation text default null
+  p_amendment_violation text default null,
+  -- 0008/0024: a second attempt names the one it supersedes and says what it
+  -- changed. Both go in on the insert, because 0024 freezes them the moment the
+  -- row exists.
+  p_supersedes uuid default null,
+  p_supersedes_reason text default null
 ) returns uuid
 language plpgsql set search_path = public, extensions as $$
 declare
@@ -66,11 +71,13 @@ begin
   insert into proposals (group_id, author_id, title, summary, body,
                          intent, change, constraints, risks, alternatives,
                          scope, place, budget_amount, term_days,
-                         amends_law, amendment_text, amendment_violation)
+                         amends_law, amendment_text, amendment_violation,
+                         supersedes, supersedes_reason)
   values (p_group, p_author, p_title, p_summary, v_body,
           v_intent, v_change, v_constraints, v_risks, v_alternatives,
           p_scope, p_place, p_budget, p_term,
-          p_amends_law, p_amendment_text, p_amendment_violation)
+          p_amends_law, p_amendment_text, p_amendment_violation,
+          p_supersedes, p_supersedes_reason)
   returning id into v_id;
 
   return v_id;

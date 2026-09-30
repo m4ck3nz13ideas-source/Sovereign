@@ -6,7 +6,7 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Eighteen suites, four hundred and forty-one checks. Every one of them runs as a
+Nineteen suites, four hundred and seventy-one checks. Every one of them runs as a
 non-superuser, so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
@@ -350,6 +350,43 @@ And the absences, each of which would be a small reasonable-looking addition:
   either table.
 - No term is attached to a proposal, decision or project.
 
+### `19_lineage.sql` — thirty checks
+
+- **A second attempt must say what it changed.** No reason, a nine-character
+  reason, and a reason with no parent are all refused.
+- The chain goes as deep as it goes: a third attempt reports two ancestors,
+  oldest first, at generations −1 and −2.
+- The parent can see what came from it, and the stated reason survives to the
+  parent's page — which is the whole point, since that is where somebody who
+  read the first version is standing.
+- **Nothing can be re-pointed.** Removing the link, moving it to a different
+  parent, and rewriting the reason are all refused by `freeze_lineage()`, and a
+  proposal cannot supersede itself.
+- You cannot supersede a proposal that is not addressed to you, or one that does
+  not exist.
+- **Reach cuts the chain silently.** Somebody outside the address gets no
+  lineage and no successors — not a redacted list, because "there is one more
+  you cannot see" is itself a disclosure.
+
+And the absences:
+
+- No decision function reads ancestry: the source of `close_proposal`,
+  `cast_resonance`, `can_reach_proposal`, `activate_proposal`,
+  `alignment_shape`, `bind_proposal_readiness` and `resonance_summary` is read
+  and must not mention `supersedes`. An attempt that inherited its parent's
+  standing would reward persistence over quality.
+- `dormant_proposals()` **does** read `supersedes`, on purpose — something
+  already taken up stops being offered back — and must **not** read
+  `supersedes_reason`. Both directions are asserted.
+- No contention function infers a clash from shared ancestry. Two attempts can
+  both pass.
+- Lineage reaches no person: `person_standing`, `find_person` and `people_feed`
+  are read and must not mention it.
+- No denormalised `fork_count`, `forks`, `superseded_by`, `generation`,
+  `lineage_score` or `attempt_number` column on `proposals`.
+- Both triggers exist. Without the freeze, every assertion about history above
+  is decoration.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -381,6 +418,7 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/migrations/0021_accession_required.sql \
   -f supabase/migrations/0022_search_mine.sql \
   -f supabase/migrations/0023_lexicon.sql \
+  -f supabase/migrations/0024_lineage.sql \
   -f supabase/tests/00b_support.sql \
   -f supabase/tests/01_rules.sql \
   -f supabase/tests/02_universal_law.sql \
@@ -399,7 +437,8 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/tests/15_mirror.sql \
   -f supabase/tests/16_accession.sql \
   -f supabase/tests/17_inquiry.sql \
-  -f supabase/tests/18_lexicon.sql
+  -f supabase/tests/18_lexicon.sql \
+  -f supabase/tests/19_lineage.sql
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server

@@ -297,6 +297,7 @@ supabase/migrations/0020_ask.sql            the fourth tab: finding, and asking 
 supabase/migrations/0021_accession_required.sql  you cannot arrive without agreeing
 supabase/migrations/0022_search_mine.sql    searching your own half, kept apart
 supabase/migrations/0023_lexicon.sql        what the group means by its words
+supabase/migrations/0024_lineage.sql        what changed the second time
 ```
 
 `scope_rules` ships with local set to one voice and no waiting period, so a
@@ -388,7 +389,8 @@ cannot re-aim a proposal once it is out, that an unsharpened draft is refused
 and a sharpening of one text cannot be spent on another, that a proposal
 people read and declined is never offered back as dormant, that four people
 split two against two are not recorded as a consensus, and that nothing
-anywhere computes how much two people's readings of the same word agree. See
+anywhere computes how much two people's readings of the same word agree, and
+that a proposal's history cannot be re-pointed after people have read it. See
 `supabase/tests/README.md` for how to run it.
 
 ```bash

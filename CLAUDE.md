@@ -215,6 +215,33 @@ on purpose, in a commit that says so.
     groups only: a place has no register (rule 15), so there is nobody for a
     word at a place to belong to.
 
+31. **A second attempt says what it changed, and cannot be re-pointed.**
+    `proposals.supersedes` threads an attempt back to the one before it, and
+    `supersedes_reason` says what is different — mandatory when the link is
+    set, twenty characters minimum, because a second attempt that cannot name
+    the difference is a duplicate with provenance and leaves a reader to diff
+    two near-identical proposals by hand. Both are frozen after insert by
+    `freeze_lineage()`: 0008 validated the link on the way in and then left it
+    editable by the author's own update policy, and re-pointing a history after
+    people have read it is the same class of edit as rewriting the body (rule
+    11). `proposal_lineage()` walks the whole chain rather than one generation,
+    and stops where the reader's reach stops **without saying that it stopped**
+    — "there is one more you cannot see" is itself a disclosure.
+    `check_supersedes()` still requires the same group, scope and place, so a
+    second attempt goes back to the same people; that reads like a missing
+    feature and is a deliberate one, because the alternative is venue-shopping.
+    A second attempt is **not** a contention (rule 21): two of them can both
+    pass, and nothing infers a clash from shared ancestry. It is not the system
+    asking again either — `dormant_proposals()` reads `supersedes` so that
+    something already taken up stops being offered back, and must never read
+    `supersedes_reason`, because whether a proposal is re-offered turns on
+    whether anybody acted, not on how well they explained it. Nothing in
+    `close_proposal()`, `cast_resonance()` or `can_reach_proposal()` reads
+    either column: an attempt that inherited its parent's standing would be a
+    system that rewards persistence over quality. And no count of successors
+    goes near a person — "two later attempts exist" is a fact about a proposal,
+    "this author gets rewritten a lot" is a score.
+
 ## Where things go
 
 - `src/lib/ai/` — the AI layer. `prompts.ts` holds versioned rubrics;

@@ -387,6 +387,37 @@ concern or a projection.
 the screen says so every time it renders one. The mock adapter **refuses** to
 produce a survey at all rather than inventing one.
 
+### `proposals.supersedes`, `proposals.supersedes_reason`
+A second attempt, and what it does differently. The link is from 0008; the
+reason, the depth and the freeze are from 0024.
+
+The reason is **mandatory** whenever the link is set — twenty characters
+minimum, null exactly when `supersedes` is null — because a pointer with no
+stated difference leaves a reader to diff two near-identical proposals by hand.
+The constraint is `not valid`: rows written before 0024 had nowhere to put a
+reason, and backfilling a placeholder would put words in somebody's mouth in the
+one table meant to be a record. It is enforced on every insert and update from
+here.
+
+Both columns are frozen by `freeze_lineage()`. 0008's `check_supersedes()` is a
+BEFORE INSERT trigger, so the link was validated once and then left editable by
+the author's own update policy — re-pointing a history after people have read it
+is the same class of edit as rewriting the body, and that hole was open until
+0024.
+
+`check_supersedes()` still requires the same group, scope and place. A second
+attempt goes back to the same people, which means there is no way to escalate a
+local proposal to regional scale and keep the thread. That is deliberate: the
+alternative is venue-shopping.
+
+`proposal_lineage()` walks the chain upward to any depth, carrying what each
+later attempt said it changed, and stops where the caller's reach stops
+**without reporting that it stopped**. `proposal_successors()` reads one level
+down. Both are `security definer` and check `can_reach_proposal()` per row.
+
+Read by nothing that decides. `dormant_proposals()` reads `supersedes` so that
+something already taken up stops being offered back, and reads the reason never.
+
 ### `terms`, `term_readings`
 A word a group has noticed it uses, and what each member takes it to mean. The
 collective interior: everything else under Collective records what the group
@@ -569,6 +600,7 @@ friendship stops new messages and leaves the old ones readable by both.
 | `accept_universal_law`, `my_law_accession`, `accession_standing` | Ten laws, the revision stamped here, and no way to edit it after |
 | `record_inquiry`, `inquiries_for`, `positions_for` | Two lenses minimum, no ranking anywhere, and it counts towards nothing |
 | `raise_term`, `write_reading`, `group_lexicon`, `readings_for`, `reading_history` | Readings, never a definition, and nothing measures whether they agree |
+| `proposal_lineage`, `proposal_successors`, `freeze_lineage` | A second attempt says what changed, and its history cannot be re-pointed |
 
 ## Indexes
 

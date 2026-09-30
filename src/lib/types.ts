@@ -160,6 +160,8 @@ export interface Proposal {
   body_sha256: string | null;
   /** The earlier proposal this one was written from, if it is a second attempt. */
   supersedes: string | null;
+  /** What this attempt does differently. Set with `supersedes`, then frozen. */
+  supersedes_reason: string | null;
   /** The place it is addressed to. Null for a group proposal and for a global one. */
   place: string | null;
   /** When deliberation ends for a place proposal. Nobody may close it sooner. */
@@ -1046,6 +1048,38 @@ export interface Reading {
   written_at: string;
   first_at: string;
   mine: boolean;
+}
+
+/**
+ * One earlier attempt at a proposal, from `proposal_lineage()`.
+ *
+ * `changed` is what the attempt AFTER this one said it was doing differently,
+ * so a chain read oldest-first tells the story in the order it happened.
+ * `generation` is -1 for the immediate parent, -2 for its parent, and so on.
+ *
+ * The list stops where the reader's reach stops and says nothing about what is
+ * beyond it — "there is one more you cannot see" is itself a disclosure.
+ */
+export interface ProposalLineageRow {
+  id: string;
+  title: string;
+  status: string;
+  changed: string | null;
+  generation: number;
+  submitted_at: string | null;
+  alignment: number | null;
+  outcome: string | null;
+}
+
+/** A later attempt at this proposal, from `proposal_successors()`. */
+export interface ProposalSuccessor {
+  id: string;
+  title: string;
+  status: string;
+  changed: string | null;
+  author_id: string;
+  author_name: string;
+  submitted_at: string | null;
 }
 
 /** An earlier wording, from `reading_history()`. */
