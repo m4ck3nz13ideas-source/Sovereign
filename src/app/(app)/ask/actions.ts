@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { surveyPositions } from "@/lib/ai";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
-import type { SearchHit } from "@/lib/types";
+import type { MineHit, SearchHit } from "@/lib/types";
 
 /**
  * The Ask tab's own actions.
@@ -17,22 +17,39 @@ import type { SearchHit } from "@/lib/types";
  * proposal, in which case 0019's rules apply instead.
  */
 
-export async function findInCollective(query: string): Promise<
-  { ok: true; hits: SearchHit[] } | { ok: false; error: string }
+/**
+ * Both halves, returned apart.
+ *
+ * Two functions rather than one, and two lists on the screen rather than one
+ * with a column. `search_collective()` returns things other people can also
+ * see; `search_mine()` returns things nobody else can see, ever. If that
+ * difference were a field in a merged result set, a screen that got the field
+ * wrong would break the product's central promise quietly, which is the worst
+ * way for a promise to break.
+ */
+export async function find(query: string): Promise<
+  | { ok: true; shared: SearchHit[]; mine: MineHit[] }
+  | { ok: false; error: string }
 > {
   const q = query.trim();
-  if (q.length < 2) return { ok: true as const, hits: [] };
+  if (q.length < 2) return { ok: true as const, shared: [], mine: [] };
 
   await requireSession();
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc("search_collective", {
-    p_query: q,
-    p_limit: 20,
-  });
+  const [collective, own] = await Promise.all([
+    supabase.rpc("search_collective", { p_query: q, p_limit: 20 }),
+    supabase.rpc("search_mine", { p_query: q, p_limit: 20 }),
+  ]);
 
-  if (error) return { ok: false as const, error: error.message };
-  return { ok: true as const, hits: (data ?? []) as SearchHit[] };
+  if (collective.error) return { ok: false as const, error: collective.error.message };
+  if (own.error) return { ok: false as const, error: own.error.message };
+
+  return {
+    ok: true as const,
+    shared: (collective.data ?? []) as SearchHit[],
+    mine: (own.data ?? []) as MineHit[],
+  };
 }
 
 /**

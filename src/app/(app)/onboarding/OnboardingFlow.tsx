@@ -22,38 +22,65 @@ type Passion = { name: string; note: string };
  * are what the values are read alongside, and somebody should know what they
  * are joining before being asked to describe themselves to it.
  */
+const BLANK_VALUES: Pair[] = [
+  { name: "", definition: "" },
+  { name: "", definition: "" },
+  { name: "", definition: "" },
+];
+const BLANK_PASSIONS: Passion[] = [
+  { name: "", note: "" },
+  { name: "", note: "" },
+];
+
+const STEP_NAMES = ["You", "The ten", "Yours", "A look round"];
+
 export function OnboardingFlow({
   displayName,
   handle,
+  places,
+  savedValues,
+  savedPassions,
+  purpose: savedPurpose,
+  faith: savedFaith,
+  agreed,
+  startAt,
 }: {
   displayName: string;
   handle: string | null;
+  places: { local: string; regional: string; national: string; continental: string };
+  savedValues: Pair[];
+  savedPassions: Passion[];
+  purpose: string;
+  faith: string;
+  /** Whether the ten are already on the record, so the laws step knows. */
+  agreed: boolean;
+  /** Where the database says this person got to. See the page's comment. */
+  startAt: number;
 }) {
   const router = useRouter();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(startAt);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   const [name, setName] = useState(displayName === "Unnamed" ? "" : displayName);
   const [tag, setTag] = useState(handle ?? "");
-  const [local, setLocal] = useState("");
-  const [regional, setRegional] = useState("");
-  const [national, setNational] = useState("");
-  const [continental, setContinental] = useState("");
+  const [local, setLocal] = useState(places.local);
+  const [regional, setRegional] = useState(places.regional);
+  const [national, setNational] = useState(places.national);
+  const [continental, setContinental] = useState(places.continental);
 
-  const [read, setRead] = useState(false);
+  // Somebody returning to a step they already completed has read the laws
+  // once; making them scroll again would be ceremony rather than care.
+  const [read, setRead] = useState(agreed);
 
-  const [values, setValues] = useState<Pair[]>([
-    { name: "", definition: "" },
-    { name: "", definition: "" },
-    { name: "", definition: "" },
-  ]);
-  const [passions, setPassions] = useState<Passion[]>([
-    { name: "", note: "" },
-    { name: "", note: "" },
-  ]);
-  const [purpose, setPurpose] = useState("");
-  const [faith, setFaith] = useState("");
+  const [values, setValues] = useState<Pair[]>(
+    savedValues.length ? savedValues : BLANK_VALUES,
+  );
+  const [passions, setPassions] = useState<Passion[]>(
+    savedPassions.length ? savedPassions : BLANK_PASSIONS,
+  );
+  const [purpose, setPurpose] = useState(savedPurpose);
+  const [faith, setFaith] = useState(savedFaith);
 
   const [demo, setDemo] = useState(0);
 
@@ -64,11 +91,36 @@ export function OnboardingFlow({
     setPassions((ps) => ps.map((row, j) => (j === i ? { ...row, [key]: v } : row)));
   }
 
+  // Four steps with a visible end. This is not the progress mechanic the
+  // roadmap rules out — that one is open-ended and never finishes, which is
+  // what makes it a debt. Knowing there are four of these and which one you
+  // are on is ordinary courtesy.
+  const Steps = (
+    <ol className="mb-6 flex items-center gap-1.5" aria-label="Onboarding progress">
+      {STEP_NAMES.map((label, i) => (
+        <li key={label} className="flex flex-1 flex-col gap-1">
+          <span
+            className={`h-0.5 rounded-full ${i <= step ? "bg-gold" : "bg-surface"}`}
+            aria-hidden
+          />
+          <span
+            className={`smallcaps text-[9px] ${
+              i === step ? "text-gold" : "text-paper-faint"
+            }`}
+          >
+            {label}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+
   // ---------------------------------------------------------------- 1. details
 
   if (step === 0) {
     return (
       <div className="space-y-5">
+        {Steps}
         <p className="text-[0.95rem] leading-relaxed text-paper-dim">
           Sovereign has two halves. One is yours alone — what you write, what
           you are working out, what you believe. The other is shared, and is
@@ -157,6 +209,7 @@ export function OnboardingFlow({
   if (step === 1) {
     return (
       <div className="space-y-5">
+        {Steps}
         <p className="text-[0.95rem] leading-relaxed text-paper-dim">
           Ten laws sit underneath everything here. They are not a rubric and not
           a set of guidelines: every proposal is read against them, and one that
@@ -238,6 +291,7 @@ export function OnboardingFlow({
   if (step === 2) {
     return (
       <div className="space-y-6">
+        {Steps}
         <div>
           <p className="text-[0.95rem] leading-relaxed text-paper-dim">
             Now your own. The ten laws are shared; these are not, and nothing
@@ -472,6 +526,7 @@ export function OnboardingFlow({
 
   return (
     <div className="space-y-5">
+      {Steps}
       <div>
         <p className="smallcaps text-[10px] text-paper-faint">
           A quick look — {demo + 1} of {panels.length}

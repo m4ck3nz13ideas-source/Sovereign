@@ -6,9 +6,9 @@ import { useState, useTransition } from "react";
 import { Button, Card, Empty, Pill, Rail, inputClass } from "@/components/ui";
 import { ago } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
-import type { InquiryLens, MyInquiry, Position, SearchHit } from "@/lib/types";
+import type { InquiryLens, MineHit, MyInquiry, Position, SearchHit } from "@/lib/types";
 
-import { askStandingQuestion, findInCollective, forgetInquiry } from "./actions";
+import { askStandingQuestion, find, forgetInquiry } from "./actions";
 
 const LENS_NAME: Record<InquiryLens, string> = {
   empirical: "The literature",
@@ -26,12 +26,18 @@ const KIND_WORD: Record<SearchHit["kind"], string> = {
   project: "Project",
 };
 
+const MINE_WORD: Record<MineHit["kind"], string> = {
+  entry: "Written",
+  concept: "Idea",
+};
+
 type Mode = "find" | "ask";
 
 export function AskPanel({ mine }: { mine: MyInquiry[] }) {
   const [mode, setMode] = useState<Mode>("find");
   const [q, setQ] = useState("");
-  const [hits, setHits] = useState<SearchHit[] | null>(null);
+  const [shared, setShared] = useState<SearchHit[] | null>(null);
+  const [mine_, setMine] = useState<MineHit[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [open, setOpen] = useState<string | null>(null);
@@ -42,9 +48,12 @@ export function AskPanel({ mine }: { mine: MyInquiry[] }) {
     start(async () => {
       setError(null);
       if (mode === "find") {
-        const r = await findInCollective(q);
+        const r = await find(q);
         if (!r.ok) setError(r.error);
-        else setHits(r.hits);
+        else {
+          setShared(r.shared);
+          setMine(r.mine);
+        }
       } else {
         const r = await askStandingQuestion(q);
         if (!r.ok) setError(r.error);
@@ -56,10 +65,16 @@ export function AskPanel({ mine }: { mine: MyInquiry[] }) {
   return (
     <div className="mt-4 space-y-4">
       <Rail>
-        <Pill active={mode === "find"} onClick={() => { setMode("find"); setHits(null); setError(null); }}>
+        <Pill
+          active={mode === "find"}
+          onClick={() => { setMode("find"); setShared(null); setMine(null); setError(null); }}
+        >
           Find
         </Pill>
-        <Pill active={mode === "ask"} onClick={() => { setMode("ask"); setHits(null); setError(null); }}>
+        <Pill
+          active={mode === "ask"}
+          onClick={() => { setMode("ask"); setShared(null); setMine(null); setError(null); }}
+        >
           Ask
         </Pill>
       </Rail>
@@ -84,32 +99,81 @@ export function AskPanel({ mine }: { mine: MyInquiry[] }) {
 
       {error ? <p className="text-sm text-alarm">{error}</p> : null}
 
-      {mode === "find" && hits !== null ? (
-        hits.length ? (
-          <div>
-            {hits.map((h) => (
-              <Link
-                key={`${h.kind}-${h.id}`}
-                href={`/collective/proposals/${h.id}`}
-                className="press block border-b border-line-soft py-3"
-              >
+      {mode === "find" && shared !== null && mine_ !== null ? (
+        shared.length || mine_.length ? (
+          <div className="space-y-6">
+            {/*
+              Two lists, two headings, never merged. The difference between
+              these is who else can read the thing, and that is not a
+              distinction to encode as a badge on a row.
+            */}
+            {shared.length ? (
+              <div>
                 <p className="smallcaps text-[10px] text-paper-faint">
-                  {KIND_WORD[h.kind]}
-                  {h.status && h.kind === "proposal" ? ` · ${h.status.replace(/_/g, " ")}` : ""}
-                  {h.happened ? ` · ${ago(h.happened)}` : ""}
+                  The collective half — others can see these too
                 </p>
-                <p className="mt-0.5 text-[0.9375rem] leading-snug text-paper">{h.title}</p>
-                {h.line ? (
-                  <p className="mt-0.5 text-sm leading-relaxed text-paper-dim">{h.line}</p>
-                ) : null}
-              </Link>
-            ))}
+                {shared.map((h) => (
+                  <Link
+                    key={`${h.kind}-${h.id}`}
+                    href={`/collective/proposals/${h.id}`}
+                    className="press block border-b border-line-soft py-3"
+                  >
+                    <p className="smallcaps text-[10px] text-paper-faint">
+                      {KIND_WORD[h.kind]}
+                      {h.status && h.kind === "proposal"
+                        ? ` · ${h.status.replace(/_/g, " ")}`
+                        : ""}
+                      {h.happened ? ` · ${ago(h.happened)}` : ""}
+                    </p>
+                    <p className="mt-0.5 text-[0.9375rem] leading-snug text-paper">
+                      {h.title}
+                    </p>
+                    {h.line ? (
+                      <p className="mt-0.5 text-sm leading-relaxed text-paper-dim">
+                        {h.line}
+                      </p>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+
+            {mine_.length ? (
+              <div>
+                <p className="smallcaps text-[10px] text-gold">
+                  Your half — nobody else can read any of this
+                </p>
+                {mine_.map((h) => (
+                  <Link
+                    key={`${h.kind}-${h.id}`}
+                    href={h.kind === "concept" ? `/individual/ideas/${h.id}` : "/individual/journal"}
+                    className="press block border-b border-line-soft py-3"
+                  >
+                    <p className="smallcaps text-[10px] text-paper-faint">
+                      {MINE_WORD[h.kind]}
+                      {h.state ? ` · ${h.state.replace(/_/g, " ")}` : ""}
+                      {h.happened ? ` · ${ago(h.happened)}` : ""}
+                    </p>
+                    {h.title ? (
+                      <p className="mt-0.5 text-[0.9375rem] leading-snug text-paper">
+                        {h.title}
+                      </p>
+                    ) : null}
+                    {h.line ? (
+                      <p className="mt-0.5 text-sm leading-relaxed text-paper-dim">
+                        {h.line}
+                      </p>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
           </div>
         ) : (
           <Empty>
-            Nothing here matches that. Search only reaches what is addressed to
-            you, so a thing decided somewhere you are not will not appear
-            however it is spelled.
+            Nothing in either half matches that. The collective side only
+            reaches what is addressed to you, so a thing decided somewhere you
+            are not will not appear however it is spelled.
           </Empty>
         )
       ) : null}

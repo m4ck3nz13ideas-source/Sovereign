@@ -1016,6 +1016,16 @@ export interface SearchHit {
   happened: string | null;
 }
 
+/** One row of `search_mine()`. Yours alone — nobody else can read any of it. */
+export interface MineHit {
+  kind: "entry" | "concept";
+  id: string;
+  title: string | null;
+  line: string | null;
+  state: string | null;
+  happened: string | null;
+}
+
 /** One row of `my_inquiries()` — everything you have asked, wherever you asked it. */
 export interface MyInquiry {
   id: string;

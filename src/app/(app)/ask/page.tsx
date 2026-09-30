@@ -31,8 +31,8 @@ export default async function AskPage() {
       <TopBar title="Ask" />
       <Gutter>
         <p className="mt-2 text-[0.9375rem] leading-relaxed text-paper-dim">
-          Find something the group has already said, or ask a question and see
-          what several ways of knowing hold about it.
+          Find something you or the group has already written, or ask a
+          question and see what several ways of knowing hold about it.
         </p>
 
         <AskPanel mine={(data ?? []) as MyInquiry[]} />
@@ -42,12 +42,16 @@ export default async function AskPage() {
         <SectionLabel>How this works</SectionLabel>
         <div className="space-y-3 pb-4 text-sm leading-relaxed text-paper-faint">
           <p>
-            <span className="text-paper-dim">Finding</span> searches only what
-            is addressed to you — the same question every other screen asks.
-            Nothing here is a way to see what a group you are not part of is
-            doing. Results are in time order, not by relevance, because
-            relevance would need something to rank on and the only honest
-            candidates are recency and attention.
+            <span className="text-paper-dim">Finding</span> searches both
+            halves and keeps them apart. The collective side reaches only what
+            is addressed to you — the same question every other screen asks, so
+            nothing here shows you what a group you are not part of is doing.
+            Your side reaches what you wrote, and nobody else can see any of
+            it. Two lists rather than one with a label on each row, because the
+            difference between them is who else can read the thing.
+            Results are in time order, not by relevance, because relevance
+            would need something to rank on and the only honest candidates are
+            recency and attention.
           </p>
           <p>
             <span className="text-paper-dim">Asking</span> returns positions,

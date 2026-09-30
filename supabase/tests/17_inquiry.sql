@@ -282,6 +282,39 @@ begin
   if n = 0 then passes := passes + 1; else fails := fails + 1;
     raise warning 'FAIL: an empty query returned % rows', n; end if;
 
+  ------------------------------------------- and your own half, kept apart
+  insert into entries (profile_id, mode, body)
+  values (ann, 'journal', 'Keep meaning to ask about the ladder and never do.');
+  insert into concepts (profile_id, title, body)
+  values (ann, 'A shared ladder', 'Six houses, one ladder, one shed.');
+
+  select count(*)::int into n from search_mine('ladder', 20);
+  if n = 2 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: searching your own half found % of 2', n; end if;
+
+  -- It is a security definer function, so the owner-only policies underneath
+  -- do not apply to it and it has to carry its own check. Same trap as
+  -- positions_for() in 0020.
+  perform set_config('test.uid', ben::text, true);
+  select count(*)::int into n from search_mine('ladder', 20);
+  if n = 0 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: somebody read % rows of another person''s private half', n; end if;
+
+  perform set_config('test.uid', ann::text, true);
+  select count(*)::int into n from search_mine('l', 20);
+  if n = 0 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: a one-character query returned % private rows', n; end if;
+
+  -- The two halves are separate functions on purpose: one returns things
+  -- others can see, the other things nobody can. Merging them would make that
+  -- difference a column.
+  select count(*)::int into n
+    from pg_proc pp join pg_namespace ns on ns.oid = pp.pronamespace
+   where ns.nspname = 'public' and pp.proname = 'search_collective'
+     and pg_get_functiondef(pp.oid) ilike '%from entries%';
+  if n = 0 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: search_collective reads the private half'; end if;
+
   -- and it cannot be used to discover what is not addressed to you
   perform set_config('test.uid', cal::text, true);
   select count(*)::int into n from search_collective('ladder', 20);
