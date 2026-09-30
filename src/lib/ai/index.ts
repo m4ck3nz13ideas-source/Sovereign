@@ -15,6 +15,7 @@ import {
   PROPOSAL_SHARPEN,
   REFLECTION_PROMPT,
   SYNTHESIS_PROMPT,
+  QUESTION_POSITIONS,
 } from "./prompts";
 import { AiError, type AiProvider } from "./provider";
 import {
@@ -45,6 +46,9 @@ import {
   type SharpenOutput,
   type SimulationOutput,
   type SynthesisOutput,
+  positionsSchema,
+  positionsJsonSchema,
+  type PositionsOutput,
 } from "./schemas";
 
 /**
@@ -637,6 +641,52 @@ ${ideas.map((e) => `${e.created_at.slice(0, 10)}\n${e.body}\n---`).join("\n") ||
 
   return { result: parsed.data, model, prompt: SYNTHESIS_PROMPT };
 }
+
+/**
+ * What several ways of knowing hold about one question.
+ *
+ * Returns a survey and never a conclusion. The provider is asked for at least
+ * two lenses and the database refuses fewer, so there is no path by which a
+ * single position reaches a screen looking like an answer.
+ */
+export async function surveyPositions(ctx: {
+  question: string;
+  /** The proposal it was asked about, so the lenses address this rather than the abstract case. */
+  proposal: { title: string; summary: string; scope: string; place: string | null };
+}): Promise<{
+  result: PositionsOutput;
+  model: string;
+  prompt: typeof QUESTION_POSITIONS;
+}> {
+  const input = `THE QUESTION
+${ctx.question}
+
+ASKED WHILE READING THIS PROPOSAL
+title: ${ctx.proposal.title}
+in one line: ${ctx.proposal.summary}
+addressed to: ${ctx.proposal.place ? `${ctx.proposal.place} (${ctx.proposal.scope})` : ctx.proposal.scope}
+
+Address the question as it bears on this decision, not the abstract version of
+it. Survey what the lenses hold. Do not resolve them.`;
+
+  const { data, model } = await provider().complete({
+    prompt: QUESTION_POSITIONS,
+    input,
+    schema: positionsJsonSchema as unknown as Record<string, unknown>,
+    schemaName: "record_positions",
+    maxTokens: 2400,
+  });
+
+  const parsed = positionsSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new AiError(
+      `The survey did not match the expected shape: ${parsed.error.message}`,
+    );
+  }
+
+  return { result: parsed.data, model, prompt: QUESTION_POSITIONS };
+}
+
 
 function fmt(n: number | null): string {
   return n === null ? "—" : n.toFixed(2);

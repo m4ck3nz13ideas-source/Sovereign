@@ -9,6 +9,7 @@ import {
   reviewProposal,
   sharpenDraft,
   simulateImpact,
+  surveyPositions,
   summariseDebate,
   writeRationale,
   type Draft,
@@ -1327,6 +1328,79 @@ export async function runSimulation(proposalId: string) {
       error: e instanceof Error ? e.message : "The simulation could not be run.",
     };
   }
+}
+
+
+/**
+ * Look a question up.
+ *
+ * Runs the survey and records it in one go, because an unrecorded survey is a
+ * member's private browsing and the point is the group's understanding. It is
+ * readable by anybody the proposal is addressed to, and the asker can withdraw
+ * their own.
+ *
+ * Note what this action cannot do: there is no path here that writes a single
+ * position, and no field anywhere that says which one is right.
+ */
+export async function askQuestion(input: { proposalId: string; question: string }) {
+  const question = input.question.trim();
+  if (question.length < 12) {
+    return { ok: false as const, error: "A question needs to be a question — twelve characters at least." };
+  }
+  if (question.length > 240) {
+    return { ok: false as const, error: "Shorter. One question, not a paragraph of them." };
+  }
+
+  const supabase = await createClient();
+
+  const { data: proposal } = await supabase
+    .from("proposals")
+    .select("title, summary, scope, place")
+    .eq("id", input.proposalId)
+    .maybeSingle();
+
+  if (!proposal) return { ok: false as const, error: "No such proposal." };
+
+  try {
+    const { result, model, prompt } = await surveyPositions({
+      question,
+      proposal: {
+        title: proposal.title,
+        summary: proposal.summary,
+        scope: proposal.scope,
+        place: proposal.place,
+      },
+    });
+
+    const { error } = await supabase.rpc("record_inquiry", {
+      p_proposal_id: input.proposalId,
+      p_question: question,
+      p_note: result.note,
+      p_prompt_id: prompt.id,
+      p_prompt_version: prompt.version,
+      p_model: model,
+      p_positions: result.positions,
+    });
+
+    if (error) return { ok: false as const, error: error.message };
+
+    revalidatePath(`/collective/proposals/${input.proposalId}`);
+    return { ok: true as const };
+  } catch (e) {
+    return {
+      ok: false as const,
+      error: e instanceof Error ? e.message : "The question could not be looked up.",
+    };
+  }
+}
+
+/** Withdraw your own. An inquiry reaches no decision, so it can be taken back. */
+export async function withdrawInquiry(inquiryId: string, proposalId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("inquiries").delete().eq("id", inquiryId);
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/collective/proposals/${proposalId}`);
+  return { ok: true as const };
 }
 
 /**

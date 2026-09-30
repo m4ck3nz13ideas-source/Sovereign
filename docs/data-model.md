@@ -363,6 +363,30 @@ locally and regionally, on from national up — and never for reading, writing,
 asking or objecting, and never inside a group. Every decision stores
 `verified_voices` whether the scale asked for it or not.
 
+### `inquiries`, `positions`
+A question a proposal turns on, and what several ways of knowing hold about
+it. The lens enum is `empirical`, `scripture`, `philosophy`, `literature`,
+`screen`, `practice`, `testimony`.
+
+**It returns a survey, never an answer**, and the schema is what enforces that
+rather than the copy. `positions` carries no score, rank, weight, confidence or
+verdict column and there is nowhere to put one — a ranked survey is an answer
+wearing a survey's clothes. `ordinal` is the order the lenses came back in and
+nothing else. `record_inquiry()` refuses fewer than two *distinct* lenses,
+because one position speaking alone is an oracle with extra steps.
+
+No insert policy on either table: the function is the only way in, which is
+what makes that floor a rule rather than a request. No update policy anywhere —
+asking again makes a new inquiry rather than editing an old one. Read follows
+the proposal, because research only its asker can see is research somebody
+repeats. The asker alone may withdraw their own, which is permitted here and
+nowhere else in the schema: an inquiry reaches no decision, unlike a flag, a
+concern or a projection.
+
+`source_hint` names a work or thinker to go and read. It is not a citation and
+the screen says so every time it renders one. The mock adapter **refuses** to
+produce a survey at all rather than inventing one.
+
 ## Projects and Impact
 
 ### `projects`
@@ -500,6 +524,7 @@ friendship stops new messages and leaves the old ones readable by both.
 | `guardian_context`, `my_guardian_notes`, `forget_guardian_notes` | Your own values and nothing else — and it can be forgotten |
 | `mirror_floor`, `my_law_mirror`, `my_mirror_standing` | Derived, private, no argument, nothing below four |
 | `accept_universal_law`, `my_law_accession`, `accession_standing` | Ten laws, the revision stamped here, and no way to edit it after |
+| `record_inquiry`, `inquiries_for`, `positions_for` | Two lenses minimum, no ranking anywhere, and it counts towards nothing |
 
 ## Indexes
 

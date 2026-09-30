@@ -961,3 +961,47 @@ export const LAUNCH_MODES: {
     filesToHref: "/home",
   },
 ];
+
+/**
+ * The ways of knowing an inquiry surveys.
+ *
+ * There is no `answer` lens and there must never be one. Every position here
+ * is a model's account of what a body of thought holds, which is a different
+ * object from a conclusion about the question.
+ */
+export type InquiryLens =
+  | "empirical"
+  | "scripture"
+  | "philosophy"
+  | "literature"
+  | "screen"
+  | "practice"
+  | "testimony";
+
+/** One row of `inquiries_for()`. */
+export interface InquirySummary {
+  id: string;
+  question: string;
+  note: string | null;
+  asked_by: string;
+  asked_by_name: string;
+  model: string;
+  /** How many distinct lenses answered. Two is the floor the database enforces. */
+  lenses: number;
+  created_at: string;
+}
+
+/**
+ * One row of `positions_for()`.
+ *
+ * Note the absences, which the migration comment spells out: no score, no
+ * rank, no confidence, no verdict. `ordinal` is the order it came back in and
+ * nothing else.
+ */
+export interface Position {
+  lens: InquiryLens;
+  claim: string;
+  reasoning: string;
+  source_hint: string | null;
+  ordinal: number;
+}

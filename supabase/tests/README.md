@@ -264,6 +264,32 @@ accounts.
   original wording survives** — because it is a true record of what that
   person actually read.
 
+### `17_inquiry.sql` — twenty-three checks
+
+- **A survey of one is refused**, and so is an empty one, and so are two
+  positions that come from the same lens — the floor is two *distinct* ways of
+  knowing.
+- A failed call leaves nothing behind: the inquiry and its positions land
+  together or not at all.
+- Order is the order returned, not a ranking.
+- **There is nowhere to say which one is right.** The suite asserts against
+  `information_schema.columns` that `positions` has no `score`, `rank`,
+  `weight`, `confidence`, `verdict`, `correct`, `best`, `strength` or `answer`
+  column, and that `inquiries` has no `answer`, `conclusion`, `verdict`,
+  `synthesis` or `resolved`.
+- A position cannot be rewritten afterwards, and no update policy exists on
+  either table to permit one later.
+- A position cannot be inserted outside `record_inquiry()`, which is what makes
+  the two-lens floor a rule rather than a request.
+- Read follows the proposal: somebody it is addressed to sees it, somebody
+  outside the address sees nothing and cannot ask.
+- The asker may withdraw their own and nobody else may, and the positions go
+  with it.
+- **It counts towards nothing.** No ledger event, no column on `proposals` or
+  `decisions`, and the suite reads the source of `close_proposal`,
+  `cast_resonance` and `can_reach_proposal` and fails if any of them mentions
+  inquiries.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -305,7 +331,8 @@ psql -d sovereign_test -v ON_ERROR_STOP=1 \
   -f supabase/tests/13_amendment.sql \
   -f supabase/tests/14_guardian.sql \
   -f supabase/tests/15_mirror.sql \
-  -f supabase/tests/16_accession.sql
+  -f supabase/tests/16_accession.sql \
+  -f supabase/tests/17_inquiry.sql
 ```
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server

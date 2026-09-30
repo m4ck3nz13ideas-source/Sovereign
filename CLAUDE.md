@@ -159,6 +159,23 @@ on purpose, in a commit that says so.
     `can_reach_proposal()` or `cast_resonance()` may ever read this table.
     Accession is a record, not a permission system.
 
+29. **An inquiry returns positions, never an answer.** The search surface
+    surveys what several ways of knowing hold about a question a proposal
+    turns on — the literature, the traditions, the practitioners — attributed,
+    in their own terms, and unreconciled. `record_inquiry()` refuses fewer
+    than two distinct lenses, because a survey of one is an oracle with extra
+    steps. `positions` has no score, rank, weight, confidence or verdict
+    column and must never grow one: a ranked survey is an answer, and
+    answering a contested question is the thing a governance system must not
+    automate. `ordinal` is the order it came back in, nothing more. Nothing in
+    `close_proposal()`, `cast_resonance()` or `can_reach_proposal()` may read
+    these tables — looking something up counts towards nothing. And the mock
+    adapter **refuses** rather than inventing one, like the personhood
+    adapter: a fabricated account of what the sciences and scriptures hold is
+    precisely the thing being surveyed, and Universal Law 2 is not a
+    suggestion. Every position on screen says whose account it is and that a
+    named work is somewhere to start reading rather than a citation.
+
 ## Where things go
 
 - `src/lib/ai/` — the AI layer. `prompts.ts` holds versioned rubrics;

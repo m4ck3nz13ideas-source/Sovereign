@@ -322,6 +322,42 @@ export const debateJsonSchema = {
   },
 } as const;
 
+/**
+ * A survey of positions, never an answer.
+ *
+ * Note what is absent and must stay absent: no score, no rank, no confidence,
+ * no "strongest" flag, no synthesis field. A shape that could express which
+ * position wins is a shape somebody will eventually sort on, and a sorted
+ * survey is an answer. The floor of two lenses is enforced again in
+ * record_inquiry(), because a schema is a request and a function is a rule.
+ */
+export const positionsSchema = z.object({
+  positions: z
+    .array(
+      z.object({
+        lens: z.enum([
+          "empirical",
+          "scripture",
+          "philosophy",
+          "literature",
+          "screen",
+          "practice",
+          "testimony",
+        ]),
+        claim: z.string().min(20).max(600),
+        reasoning: z.string().min(20).max(900),
+        /** A work or thinker to go and read. Never a citation. Omitted rather than invented. */
+        source_hint: z.string().max(200).optional(),
+      }),
+    )
+    .min(2)
+    .max(7),
+  /** The hole in the survey, or what the real disagreement is. Never a verdict. */
+  note: z.string(),
+});
+
+export type PositionsOutput = z.infer<typeof positionsSchema>;
+
 export const simulationJsonSchema = {
   type: "object",
   required: ["projections", "note"],
@@ -427,5 +463,58 @@ export const synthesisJsonSchema = {
     rationale: { type: "string" },
     suggested_title: { type: "string" },
     discipline: { type: "string" },
+  },
+} as const;
+
+export const positionsJsonSchema = {
+  type: "object",
+  required: ["positions", "note"],
+  properties: {
+    positions: {
+      type: "array",
+      minItems: 2,
+      maxItems: 7,
+      description:
+        "What each way of knowing holds. Two is the floor; four or five is usually right. Do not include a lens that has nothing genuine to say about this question.",
+      items: {
+        type: "object",
+        required: ["lens", "claim", "reasoning"],
+        properties: {
+          lens: {
+            type: "string",
+            enum: [
+              "empirical",
+              "scripture",
+              "philosophy",
+              "literature",
+              "screen",
+              "practice",
+              "testimony",
+            ],
+            description: "Which body of thought this position belongs to.",
+          },
+          claim: {
+            type: "string",
+            description:
+              "What this lens holds, in one or two sentences. Its position, not the truth of the matter.",
+          },
+          reasoning: {
+            type: "string",
+            description:
+              "Why it holds it, in its own terms rather than translated into another lens's language.",
+          },
+          source_hint: {
+            type: "string",
+            description:
+              "A named work, thinker or school to go and read. A starting point, NOT a citation. Omit entirely rather than inventing one — no fabricated titles, authors, years or statistics.",
+          },
+        },
+      },
+    },
+    note: {
+      type: "string",
+      description:
+        "What could not be found or fairly represented, or — if nothing is missing — what the real disagreement between these positions is. Never which one wins.",
+    },
   },
 } as const;

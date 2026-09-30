@@ -47,7 +47,7 @@ Tune those against real decisions before building anything below.
 ## Built since this document was last honest
 
 These were on the list or absent from it, and now exist. Migrations `0010`
-through `0018`.
+through `0019`.
 
 - **Impact simulation.** Dated, falsifiable predictions, frozen before the
   vote, marked against reality afterwards, with a forecasting record split by
@@ -70,6 +70,13 @@ through `0018`.
   about a decision, and stores no model of anybody.
 - **The mirror.** A private reading of your own responses against the ten laws,
   derived rather than stored, with no good direction.
+- **Inquiry.** A question a proposal turns on, answered by several ways of
+  knowing at once — the literature, the traditions, the practitioners — each in
+  its own terms and none reconciled. Rule 2 is understanding before opinion,
+  and until now there was nowhere to go and check anything. It returns
+  positions and cannot return an answer: two lenses minimum, no ranking column
+  anywhere, and the offline adapter refuses rather than inventing a survey of
+  human thought.
 - **Onboarding, and accession.** Four steps — who you are and where, the ten
   laws read and agreed to, your own values, passions and beliefs, then a walk
   through what the thing does. The agreement records which *revision* of each

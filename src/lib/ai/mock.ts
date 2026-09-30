@@ -37,6 +37,21 @@ export class MockProvider implements AiProvider {
         return { data: this.simulation(input), model: "mock" };
       case "record_guardian":
         return { data: this.guardian(input), model: "mock" };
+      // The one thing this adapter will not do.
+      //
+      // Everywhere else, guessing is recoverable: a structural reading is a
+      // weak review and it says so. Here the output IS a claim about what
+      // human traditions and literatures hold, and a plausible-sounding
+      // invention of that is indistinguishable from the real thing to the
+      // person reading it. A fabricated survey of human thought is precisely
+      // the thing being surveyed. So it refuses, like the personhood adapter
+      // and for the same reason.
+      case "record_positions":
+        throw new AiError(
+          "Looking a question up needs a model. Without one this would be a made-up " +
+            "account of what the sciences and the traditions hold, which is worse than " +
+            "nothing — so it does not offer you one. Set ANTHROPIC_API_KEY.",
+        );
       case "record_rationale":
         return { data: this.rationale(text), model: "mock" };
       case "record_reflection":

@@ -279,6 +279,7 @@ supabase/migrations/0015_amendment.sql      the tenth law made operable
 supabase/migrations/0016_guardian.sql       a private reader that never speaks first
 supabase/migrations/0017_mirror.sql         where you and the audit differ
 supabase/migrations/0018_accession.sql      agreeing to the ten, and to which wording
+supabase/migrations/0019_inquiry.sql        what the ways of knowing hold, never an answer
 ```
 
 `scope_rules` ships with local set to one voice and no waiting period, so a

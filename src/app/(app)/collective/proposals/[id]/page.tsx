@@ -21,6 +21,7 @@ import type {
   ContentionEntry,
   NeedStanding,
   PastRefusal,
+  InquirySummary,
   Projection,
   ProjectionStanding,
   Proposal,
@@ -47,6 +48,7 @@ import { Sharpening } from "./Sharpening";
 import { Amendment } from "./Amendment";
 import { AskGuardian } from "./AskGuardian";
 import { Contended, OpenContention } from "./Contended";
+import { Inquiries } from "./Inquiries";
 import { Projections } from "./Projections";
 import { ResonancePanel } from "./ResonancePanel";
 import { WithdrawButton } from "./WithdrawButton";
@@ -165,6 +167,7 @@ export default async function ProposalPage({
     { data: projectionStandingRows },
     { data: contentionRows },
     { data: summaryRow },
+    { data: inquiryRows },
   ] = await Promise.all([
     supabase
       .from("proposal_reviews")
@@ -233,6 +236,7 @@ export default async function ProposalPage({
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase.rpc("inquiries_for", { p_proposal_id: id }),
   ]);
 
   const review = reviewRows?.[0] ? asReview(reviewRows[0]) : null;
@@ -559,6 +563,17 @@ export default async function ProposalPage({
           standing={projectionStanding}
           open={open}
           decided={!open}
+        />
+      </section>
+
+      {/* --------------------------------------------------------- INQUIRY */}
+      <section className="mb-10">
+        <SectionLabel>Look something up</SectionLabel>
+        <Inquiries
+          proposalId={id}
+          inquiries={(inquiryRows ?? []) as InquirySummary[]}
+          userId={userId}
+          canAsk={open}
         />
       </section>
 
