@@ -5,7 +5,9 @@ Source of truth is `supabase/migrations/`.
 
 ## Individual — private, always
 
-Four tables with owner-only policies and no group-visibility path anywhere.
+Owner-only policies and no group-visibility path anywhere. `profiles`,
+`entries`, `concepts`, `concept_entries`, `statement_revisions`,
+`profile_values`, `profile_passions`, `guardian_notes` and `law_acceptances`.
 
 ### `profiles`
 One row per auth user, created automatically by a trigger on `auth.users`.
@@ -51,6 +53,48 @@ Every version of a faith or purpose statement, never overwritten.
 **Always private, even when the current statement is shared.** How a belief
 moved is a different thing from what it currently is, and the second being
 public should not make the first public.
+
+### `profile_values`, `profile_passions`
+What you value, with your own definition of each, and what you keep returning
+to. Unique on `(profile_id, name)` for values. These are the rubric every
+proposal is scored against — a review reads the union of the group's members'
+value names and definitions, and a group whose members have named nothing gets
+scored on nothing, which is why onboarding insists on at least one.
+
+### `guardian_notes`
+Every row exists because somebody pressed something. `questions` and `gaps` are
+jsonb, `reading` is one paragraph addressed to its owner, and the prompt id,
+version and model are recorded like every other AI artefact so a reading can be
+traced to the rubric behind it.
+
+Owner-only `for all`, with no share path. It holds no `verdict`, `score`,
+`recommendation`, `alignment`, `profile_model`, `inferred_values` or
+`sentiment` column, and the suite asserts each of those absences — they are the
+difference between a counsel and a handler. `proposal_id` is null for a note
+about a draft, because a draft does not exist anywhere but its author's browser.
+
+It is also the only thing in this schema that can be forgotten
+(`forget_guardian_notes()`), because nobody else is entitled to it.
+
+### `law_acceptances`
+One row per person, per law, per revision of its wording, with `accepted_at`.
+Primary key across all three.
+
+Not a boolean, and the reason is rule 24: the wording of a law can be amended,
+so "agreed to the laws" would claim consent to whatever the text has since
+become. `accept_universal_law()` takes the law ids the screen displayed and
+stamps the revision itself — a client that could name the revision could name
+an older and weaker one — and refuses any call that does not name ten, because
+the constitution is ten.
+
+No update policy and no delete policy. An acceptance is a record of what
+somebody read on a date; one that can be revised afterwards is not a record. An
+amendment leaves every prior row standing and surfaces through
+`my_law_accession().amended_since`.
+
+**It gates nothing.** Nothing in `can_reach_proposal()` or `cast_resonance()`
+reads this table, and the suite fails if either ever does. Accession is a
+record, not a permission system.
 
 ## Collective — visible to one group, or to one place
 
@@ -256,6 +300,69 @@ Stores the numbers as they were at the moment of closing, so changing a
 threshold later never reinterprets a past decision. `values_invoked` is the
 union of value names the review scored — this is the key retrieval runs on.
 
+### `projections`
+Dated, falsifiable predictions attached to a proposal before it closes. An
+`effect` is what it is meant to do; a `risk` is what it might cost, and both
+are marked the same way. `statement` is 20–240 characters, `horizon_days` 1 to
+3650 — days from the decision, not a date, because the decision has not
+happened yet. `source` records whether the words were a model's or a person's,
+and `created_by` records who put them on the record; both, always.
+
+No insert policy and no delete policy: the only way in is `record_projection()`,
+which refuses once the proposal has closed, and there is no way out at all. A
+trigger rejects any edit to the words. The one permitted update is a
+resolution, and `resolve_projection()` allows an early mark only as `held` — an
+observation can arrive ahead of schedule, a failure cannot be declared before
+the horizon it was given.
+
+`complete_project()` refuses while a projection that has come due is unmarked.
+
+### `contentions`, `contention_members`, `preferences`
+Two or more proposals that cannot both happen, and the order the survivors go
+looking for resources in. A contention carries the shared address — group, or
+scope and place — and every member has to match it, which is what stops one
+street's proposal being contended against another's.
+
+A unique index gives a proposal at most one set. `preferences` is keyed on
+`(contention_id, profile_id)`, so one first choice each, and it has no readable
+select policy beyond your own until `resolved_at` is set — the same withholding
+as resonance averages and for the same reason.
+
+**A preference orders, it never passes.** `close_proposal()` settled each
+proposal on its own terms and a contention cannot reach back into it; what
+`activate_proposal()` does is refuse to start while a sibling with more
+preferences is still live. `stand_down_proposal()` needs twenty attributed
+characters and is the only thing that releases the next answer.
+
+### `law_revisions`
+An amended wording of one of the ten. `revision` starts at 2 — revision 1 is
+the shipped text in `src/lib/universal-law.ts` and never appears here. Unique
+on `(law_id, revision)`.
+
+`adopted_from` is `not null references proposals on delete restrict`: there is
+no other way a row gets here, and the proposal that carried it cannot be
+deleted out from under it. Written only by `enact_amendment()`, which refuses
+unless the **lowest** single voice is at `amendment_threshold()` or above — not
+the mean, because a mean lets a majority carry a constitution over a minority's
+objection. `law_assessments.law_revision` records which wording produced a
+verdict.
+
+There is no repeal, no merge and no eleventh law anywhere in the schema.
+
+### `personhood_proofs`
+Keyed by `profile_id`, so one per person. Holds `method`, the `provider` that
+did the seeing, that provider's own word for `level`, and the **nullifier** —
+opaque, per-application, stable for one human, at least 16 characters. A
+partial unique index makes it unique across everyone not revoked.
+
+That is the entire record. No name, no document, no image, no biometric, and
+nowhere to put one. Only the person can revoke their own.
+
+Required to resonate only where `scope_rules.require_personhood` says so — off
+locally and regionally, on from national up — and never for reading, writing,
+asking or objecting, and never inside a group. Every decision stores
+`verified_voices` whether the scale asked for it or not.
+
 ## Projects and Impact
 
 ### `projects`
@@ -301,7 +408,48 @@ the author. Local is the only scale used here — sharing a continent is not a
 relationship, and a feed that behaved as though it were would be the thing this
 product is not.
 
-There is no repost, no follower graph, and no engagement count on the card.
+There is no repost and no engagement count on the card.
+
+## People
+
+### `follows`, `friendships`
+A follow is one-way and public to the person followed; a friendship is mutual
+and has to be asked for. `friendships` is keyed on `(lower_id, higher_id)` with
+a check that `lower_id < higher_id`, so a pair is one row rather than two, and
+`requested_by` plus a nullable `accepted_at` carry the asking. Asking back is
+how you accept.
+
+**The graph never touches eligibility.** It decides whose work reaches your
+feed and who you can talk to, and nothing else. `can_reach_proposal()` is the
+only answer to who may resonate, read or reach a proposal, and the moment the
+graph gets a vote this is a different product.
+
+There is no directory. `find_person()` matches an exact handle and nothing
+else — no prefix search, no listing, no people-you-may-know — and nobody can
+read anybody else's follow graph. `person_standing()` returns counts of
+finished acts and no ratio anywhere: "written 12, passed 3" is a record, and
+"25%" is a score, and the distance between them is one division.
+
+`people_feed()` reads acts off the ledger — submissions, decisions, projects,
+marked predictions — in time order. Resonance is excluded on purpose: "four
+people you follow have responded to this" is the most effective engagement
+mechanic there is, and it is the bandwagon that hiding live averages exists to
+prevent, wearing a friendly face.
+
+### `messages`, `chat_marks`
+Private conversation between friends, addressed by the same ordered pair as
+`friendships` so a conversation is one address rather than two. A check
+constrains `author_id` to one of the pair. `send_message()` requires
+`is_friend()`; a delete policy covers your own messages only.
+
+**A chat reaches nothing.** No proposal, no decision, no ledger entry, and
+nothing said in one is evidence of anything.
+
+`chat_marks` is read state, keyed on `(profile_id, other_id)`, and it belongs
+to the reader — the other person has no policy by which to see it. There are no
+`read_at`, `seen_at` or `typing` columns anywhere, and there will not be: each
+one is a mechanism for making somebody anxious about not replying. Ending a
+friendship stops new messages and leaves the old ones readable by both.
 
 ## Functions
 
@@ -336,6 +484,22 @@ There is no repost, no follower graph, and no engagement count on the card.
 | `attention_queue` | What is blocked here, and on whom — ordered by what blocks it |
 | `dormant_proposals` | Failed for want of people, never for want of merit |
 | `signal_feed` | Governance acts, straight off the ledger |
+| `record_projection`, `resolve_projection` | Frozen before the vote; early only as `held` |
+| `projection_standing`, `forecast_record`, `due_projections` | What was claimed, how it went, and what has come due |
+| `is_verified_person`, `record_personhood`, `revoke_personhood` | One human, one nullifier, revocable only by them |
+| `verified_voice_count`, `personhood_standing` | How many voices were proved, whether or not the scale asked |
+| `follow_person`, `request_friendship`, `accept_friendship`, `end_friendship` | The graph, which decides reach and nothing else |
+| `find_person` | Exact handle only. There is no directory |
+| `person_standing`, `people_feed`, `my_people` | Counts of finished acts, and acts off the ledger — never a ratio |
+| `send_message`, `mark_conversation_read`, `my_conversations` | Friends only; read state belongs to the reader |
+| `open_contention`, `add_to_contention`, `set_preference` | A clash somebody noticed, and one first choice each |
+| `resolve_contention_if_ready`, `contention_standing` | Counts withheld until every member has closed |
+| `stand_down_proposal` | Twenty attributed characters, and the only release |
+| `law_current_revision`, `law_text`, `amendment_history` | Which wording is in force, and how it got there |
+| `amendment_threshold`, `amendment_would_reopen`, `enact_amendment` | Every voice, not the mean |
+| `guardian_context`, `my_guardian_notes`, `forget_guardian_notes` | Your own values and nothing else — and it can be forgotten |
+| `mirror_floor`, `my_law_mirror`, `my_mirror_standing` | Derived, private, no argument, nothing below four |
+| `accept_universal_law`, `my_law_accession`, `accession_standing` | Ten laws, the revision stamped here, and no way to edit it after |
 
 ## Indexes
 

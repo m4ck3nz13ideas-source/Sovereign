@@ -124,9 +124,26 @@ The ten laws are **constants in `src/lib/universal-law.ts`**, not rows.
 
 That is a deliberate representation choice. The paper says amending a law
 requires the agreement of every user — not a threshold, all of them. A table a
-steward could `UPDATE` would misrepresent what these are, so they ship with
-the build, are readable by every member at `/settings/law`, and change only by
-changing the build.
+steward could `UPDATE` would misrepresent what these are, so they ship with the
+build and are readable by every member at `/settings/law`.
+
+**The wording can now be amended, and only the wording.** `law_revisions` holds
+revision 2 upwards of an existing law's text; revision 1 is the shipped
+constant and is never a row. An amendment is an ordinary proposal — same
+readiness gate, same review, same sliders, audited against the other nine —
+that then clears a higher bar: `enact_amendment()` refuses unless the **lowest**
+single voice is at 0.900 or above. Not the mean. A mean lets a majority carry a
+constitution over a minority's objection, which is the thing a constitution
+exists to stop.
+
+There is no repeal, no merge and no eleventh law anywhere in the schema, and no
+amendment can set a verdict aside. `law_assessments.law_revision` records which
+wording produced a verdict, and the audit runs against `currentLaws()` — the
+constants with any revisions overlaid — or the whole protocol is decorative.
+
+Because the wording can move, agreeing to it has to name it: `law_acceptances`
+records one row per person per law **per revision**, so an amendment cannot
+retroactively rewrite what anybody consented to. It gates nothing.
 
 Three verdicts, and only one is fatal:
 
@@ -433,8 +450,9 @@ signals (are costs given, are claims supported, is the commitment reversible),
 so the whole loop can be walked without a key. It records its model as `mock`,
 and the review UI renders a warning on any review that carries it.
 
-**Seven prompts, versioned.** Proposal sharpening, law audit, proposal review,
-debate summary, decision rationale, reflection prompt, synthesis prompt. Sharpening is the only
+**Nine prompts, versioned.** Proposal sharpening, law audit, proposal review,
+debate summary, decision rationale, reflection prompt, synthesis prompt, impact
+simulation, and the guardian. Sharpening is the only
 one that runs before anything is stored, and the only one that can stop a
 member doing something. Every artefact stores the id and version that made
 it. Changing a rubric means bumping the version — editing in place silently
@@ -516,6 +534,104 @@ complete_project() ────────────► ledger: project.compl
    a NEW proposal, supersedes = the old one
       └── sharpened and audited again from scratch
 ```
+
+## Predictions, and marking them
+
+`src/lib/ai` can simulate a proposal's impact, but a simulation nobody returns
+to is decoration. So a projection is **dated, frozen and marked**: a statement
+of 20–240 characters, a horizon in days from the decision, and a verdict
+written against reality afterwards.
+
+The mechanism is the freeze. `record_projection()` refuses once the proposal
+has closed, a trigger rejects any edit to the words, there is no delete path,
+and `complete_project()` refuses while a projection that has come due is
+unmarked. `resolve_projection()` permits an early mark only as `held` — an
+observation can arrive ahead of schedule; a failure cannot be declared before
+the horizon it was given.
+
+`forecast_record()` splits the record by whose words they were, because "the
+model was confident and wrong" and "we were confident and wrong" are different
+findings.
+
+## Proving personhood
+
+`src/lib/personhood/` is a seam with one question asked outward — is this a
+distinct living human — and one answer kept: an opaque, per-application
+nullifier. No name, no document, no image, no biometric, and nowhere in the
+schema to put one. An adapter that returned anything identifying would be a
+bug rather than a feature.
+
+It is required only where `scope_rules.require_personhood` says so — off
+locally and regionally, on from national up — and never for reading, writing,
+asking or objecting, and never inside a group. Sybil resistance is what makes
+a national number mean anything; it is not an entry requirement.
+
+With nothing configured the adapter **refuses rather than pretending**, unlike
+the AI layer's mock. A fabricated review is a weak reading; a fabricated
+personhood proof *is* the thing being proved. So with no verifier, the scales
+that need one are closed to everybody equally, and the screen says so.
+
+## The graph
+
+Follow is one-way; friendship is mutual and asked for. Together they decide
+whose work reaches your feed and who you can talk to.
+
+**They decide nothing else.** `can_reach_proposal()` remains the only answer to
+who may resonate, read or reach a proposal, and the moment the graph gets a
+vote this is a different product. There is no directory — `find_person()`
+matches an exact handle and nothing else — no follower count on any screen, and
+no ratio in `person_standing()`.
+
+`people_feed()` carries acts off the ledger and deliberately excludes
+resonance. "Four people you follow have responded to this" is the most
+effective engagement mechanic there is, and it is precisely the bandwagon that
+hiding live averages exists to prevent.
+
+Chats reach nothing: no proposal, no decision, no ledger. Read state belongs to
+the reader, and there are no read receipts, typing indicators or last-seen
+anywhere.
+
+## Contention
+
+Two proposals that cannot both happen. A contention names the clash in the
+group's own words and shares one address, so a proposal on one street cannot be
+contended against one on another.
+
+**A preference orders, it never passes.** Each proposal was already settled on
+its own terms by `close_proposal()`; what a contention changes is which of the
+survivors goes looking for resources first. `activate_proposal()` refuses while
+a sibling with more preferences is still live, and `stand_down_proposal()` —
+twenty attributed characters — is the only thing that releases the next one.
+Counts stay hidden until every member has closed, like resonance averages.
+
+The system cannot *detect* a clash, only record one somebody noticed. Two
+proposals wanting the same £900 look identical to Postgres. Guessing wrong
+would tell people two unrelated proposals are alternatives, which is worse than
+saying nothing.
+
+## The guardian, and the mirror
+
+Two readings of "a personal AI trained on your values" are available and one of
+them is a surveillance product. The guardian is the other one.
+
+It **never speaks first** — every note exists because somebody pressed
+something. It is given a proposal and `guardian_context()`, which returns the
+values that person wrote down and nothing else: not their journal, drafts,
+votes, reads or graph. Widening that happens in the function, visibly, or not
+at all. It holds no verdict, score or recommendation, reaches no proposal,
+decision or ledger, and is the one thing in this schema that can be forgotten.
+
+The mirror is the other half of the same restraint. `my_law_mirror()` computes,
+from a person's own resonance votes, how they respond to proposals the audit
+flagged for each law, compared with how they respond generally. It is derived
+rather than stored — there is no table — takes no argument and must never grow
+one, and reports nothing below four responses on a law, because four is not a
+pattern.
+
+**Its number has no good direction.** Backing something the audit flagged is
+not a failing; holding back from something clean is not virtue. What it says is
+"this law moves you", not "you are aligned with this law", and that distinction
+is the only reason it is permissible at all.
 
 ## Performance
 

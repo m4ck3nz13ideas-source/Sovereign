@@ -83,10 +83,10 @@ through `0018`.
   IDKit v4 has a different request shape from the v2 endpoint the adapter
   targets. Until it is connected, national scale and above are closed to
   everyone equally, which is the correct behaviour rather than a workaround.
-- **Doc drift.** `docs/architecture.md` and `docs/data-model.md` still describe
-  an older shape in places, and `README.md`'s tour of the screens predates the
-  last four features. `CLAUDE.md`, this file, `docs/design-system.md`,
-  `docs/deploying.md` and `supabase/tests/README.md` are current.
+- **Doc drift.** `README.md`'s tour of the screens still predates the last
+  several features. Everything else is current: `CLAUDE.md`, this file,
+  `docs/architecture.md`, `docs/data-model.md`, `docs/design-system.md`,
+  `docs/deploying.md` and `supabase/tests/README.md`.
 
 ## What would earn a place next, and what must be true first
 
