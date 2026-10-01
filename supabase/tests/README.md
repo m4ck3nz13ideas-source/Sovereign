@@ -6,7 +6,8 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Twenty-one suites, five hundred and sixty-seven checks. Every one of them runs as a
+Twenty-one SQL suites, five hundred and sixty-seven checks, plus a concurrency
+suite of twenty that needs real connections. Every one of them runs as a
 non-superuser, so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
 
@@ -465,6 +466,49 @@ And the absences, which are most of the suite:
   `profiles`, `projects` or `groups`, and both the minting trigger and the
   mint-once index still exist.
 
+### `concurrency/` — twenty checks, and not in psql
+
+Everything else here runs in one psql session, which cannot overlap anything
+with anything. These are the rules that only break when two people act at the
+same moment, so they need real connections acting at once —
+`concurrency/run.py`, driving psycopg.
+
+Two shapes, both on purpose. **Interleaved**: two connections hold open
+transactions and the harness orders the statements between them; under READ
+COMMITTED a transaction cannot see another's uncommitted rows, so "A reads, B
+reads, A writes, B writes" is reproducible rather than lucky, and every race
+below failed on every run before 0027. **Thrashed**: N connections wait on a
+barrier and go at once — evidence rather than proof, and the shape that catches
+the interleaving nobody wrote down.
+
+A test that serialises the operations and then asserts the answer is right is
+not a concurrency test. None of these do that.
+
+- **An invite with one seat, taken twice.** Before 0027 `uses` reached 2
+  against `max_uses` 1 deterministically, and under eight-way load the last
+  seat went to all eight with `uses` at 5 — the increments raced each other as
+  well as the check.
+- **Two ledger writes on the same parent.** Both read the same tip, both
+  appended, and `verify_ledger()` then reported the chain broken at its first
+  event: a tamper-evident record reporting tampering on an untampered database.
+  Also asserted directly, that no two events share a `prev_hash`.
+- **Two people closing one proposal.** `on conflict do nothing` already kept a
+  second decision row out; it never kept out the second caller's status write
+  or its ledger event, so one decision had two `proposal.decided` events.
+- **A vote arriving mid-close.** The decision recorded one voter while two
+  votes sat on the record. Rule 34 decides this: the vote is refused, and the
+  suite asserts both that the counts agree and that the voter was told.
+
+The assertions are outcomes, never lock mechanics: "uses never exceeds
+max_uses" survives somebody finding a better fix, "takes FOR UPDATE" would have
+to be rewritten by them.
+
+The checks read through the owner connection rather than through `app`, because
+a check that reads through the policies it is testing can pass because a row is
+invisible rather than because it is absent. The one exception is
+`verify_ledger()`, which is security definer and asks whether the caller is in
+the group.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:
@@ -485,6 +529,16 @@ done
 
 psql -d sovereign_test -v ON_ERROR_STOP=1 "${ARGS[@]}"
 ```
+
+Then the concurrency suite, which needs its own fixture and real connections:
+
+```bash
+pip install "psycopg[binary]"
+psql -d sovereign_test -v ON_ERROR_STOP=1 -f supabase/tests/concurrency/fixture.sql
+PGDATABASE=sovereign_test python3 supabase/tests/concurrency/run.py
+```
+
+It prints `N passed, 0 failed` and exits non-zero on failure, like the suites.
 
 `00b_support.sql` is test scaffolding: `test_propose()` does what the server
 action does — records a sharpening, then submits — so the other suites stay

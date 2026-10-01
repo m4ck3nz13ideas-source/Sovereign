@@ -78,3 +78,19 @@ jobs:
           psql -d sovereign_seed -v ON_ERROR_STOP=1 \
             -c "insert into auth.users (id, email) values (gen_random_uuid(), 'ci@example.com')" \
             -f supabase/seed.sql
+
+      # The rules that only break when two people act at the same moment.
+      # Everything above runs in one psql session, which cannot overlap
+      # anything with anything — see supabase/tests/concurrency/run.py for what
+      # "genuinely overlapping" means here and why serialising the operations
+      # and asserting the answer would prove nothing.
+      - name: Concurrency
+        run: |
+          python3 -m pip install --quiet "psycopg[binary]"
+          psql -c "create database sovereign_race"
+          ARGS=(-f supabase/tests/00_supabase_shim.sql)
+          for m in supabase/migrations/*.sql; do ARGS+=(-f "$m"); done
+          ARGS+=(-f supabase/tests/00b_support.sql)
+          ARGS+=(-f supabase/tests/concurrency/fixture.sql)
+          psql -d sovereign_race -v ON_ERROR_STOP=1 "${ARGS[@]}"
+          PGDATABASE=sovereign_race python3 supabase/tests/concurrency/run.py

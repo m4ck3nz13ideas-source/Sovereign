@@ -286,6 +286,24 @@ on purpose, in a commit that says so.
     absent. There is no price, conversion, market or fee column and no function
     named for one. It is a SIMULATION and every surface that shows it says so.
 
+34. **A vote racing a close is refused, and three other things cannot happen
+    twice.** The proposal row is the lock: `close_proposal()` takes it `for
+    update` and `cast_resonance()` takes the same one, so a vote arriving while
+    a close is being calculated waits and is then told the proposal is closed.
+    The alternative — letting it in — would leave a decision whose
+    `voter_count` the rows contradict, and a decision is a statement about what
+    the group had said at the moment it closed. `redeem_invite()` locks the
+    invite before reading `uses`, because the read and the `uses + 1` are
+    separated by an insert and two people took the last seat. And
+    `record_ledger_event()` takes a transaction-scoped advisory lock per chain
+    before reading the tip: two writers appending to the same parent left a
+    chain that no longer replays, which is a tamper-evident record reporting
+    tampering on an untampered database. None of these change what any function
+    decides — the other twenty-one suites are the check on that — and
+    `supabase/tests/concurrency` fails on every run without them. Assert
+    outcomes there, never lock mechanics: "uses never exceeds max_uses" survives
+    a better fix, "takes FOR UPDATE" does not.
+
 ## Where things go
 
 - `src/lib/ai/` — the AI layer. `prompts.ts` holds versioned rubrics;
@@ -346,6 +364,14 @@ for t in supabase/tests/[0-9][0-9]_*.sql; do
   ARGS+=(-f "$t")
 done
 psql -d sovereign_test -v ON_ERROR_STOP=1 "${ARGS[@]}"
+```
+
+And the concurrency suite, which needs real connections rather than one psql
+session:
+
+```bash
+psql -d sovereign_test -v ON_ERROR_STOP=1 -f supabase/tests/concurrency/fixture.sql
+PGDATABASE=sovereign_test python3 supabase/tests/concurrency/run.py
 ```
 
 **Globs, never a list.** CI named its files once, the list stopped at 0003
