@@ -17,6 +17,7 @@ import {
   REFLECTION_PROMPT,
   SYNTHESIS_PROMPT,
   QUESTION_POSITIONS,
+  VENDOR_VETTING,
 } from "./prompts";
 import { AiError, type AiProvider } from "./provider";
 import {
@@ -406,6 +407,56 @@ Return exactly ten readings, one per law, using the ids given above.`;
   }
 
   return { readings: parsed.data.readings, model, prompt: LAW_AUDIT };
+}
+
+/** Reads a business against the ten Universal Laws, for the marketplace. */
+export async function vetVendor(vendor: {
+  name: string;
+  description: string;
+  evidence: string;
+  website: string;
+  location: string | null;
+}): Promise<{ readings: LawAuditOutput["readings"]; model: string; prompt: typeof VENDOR_VETTING }> {
+  const laws = UNIVERSAL_LAWS.map(
+    (l) =>
+      `${l.ordinal}. ${l.name}\n   id: ${l.id}\n   "${l.text}"\n   a violation here looks like: ${l.violationLooksLike}`,
+  ).join("\n\n");
+
+  const input = `THE TEN UNIVERSAL LAWS
+
+${laws}
+
+THE BUSINESS
+name: ${vendor.name}
+website: ${vendor.website}
+location: ${vendor.location ?? "not given"}
+
+what it is:
+${vendor.description}
+
+its evidence:
+${vendor.evidence}
+
+Return exactly ten readings, one per law, using the ids given above.`;
+
+  const { data, model } = await provider().complete({
+    prompt: VENDOR_VETTING,
+    input,
+    schema: lawAuditJsonSchema as unknown as Record<string, unknown>,
+    schemaName: "record_law_audit",
+    maxTokens: 4000,
+  });
+
+  const parsed = lawAuditSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new AiError(`The vetting did not match the expected shape: ${parsed.error.message}`);
+  }
+  const seen = new Set(parsed.data.readings.map((r) => r.law_id));
+  const missing = UNIVERSAL_LAWS.filter((l) => !seen.has(l.id));
+  if (missing.length) {
+    throw new AiError(`The vetting did not cover: ${missing.map((l) => l.name).join(", ")}.`);
+  }
+  return { readings: parsed.data.readings, model, prompt: VENDOR_VETTING };
 }
 
 export interface RationaleContext {

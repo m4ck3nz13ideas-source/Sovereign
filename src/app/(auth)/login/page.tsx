@@ -18,7 +18,7 @@ const REFUSALS: { line: string; rule: string }[] = [
   { line: "Ask shows you positions, never a verdict.", rule: "29" },
   { line: "What you agreed to stays what you agreed to — an amendment cannot rewrite it.", rule: "28" },
   { line: "No follower counts, no directory, no read receipts.", rule: "19, 23" },
-  { line: "Nobody approves, ranks or sells placement in the Marketplace — a group admits a listing by passing a proposal.", rule: "37" },
+  { line: "Advertising buys a labelled slot in the Marketplace, never approval — every business there is read against the ten laws and signed off first.", rule: "37" },
 ];
 
 /**
@@ -44,7 +44,7 @@ const TABS: { name: string; line: string }[] = [
   },
   {
     name: "Marketplace",
-    line: "Products, services and businesses your groups and places have admitted by passing a proposal. No ads, no rankings, nothing paid to be shown.",
+    line: "Trade with businesses whose products and services align with the ten Universal Laws, each vetted by the AI and signed off by a reviewer. Buy on their site; one sponsored slot, always labelled.",
   },
   {
     name: "Collective",

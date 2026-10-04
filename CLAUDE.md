@@ -343,25 +343,27 @@ on purpose, in a commit that says so.
     `24_record.sql` opens with the exploit itself. Recovered from the live
     database in 0029; it had been applied there as "0027" and never committed.
 
-37. **Nobody approves a listing; a group admits it.** A listing is attached to
-    one of its author's own proposals, before anybody has responded, by
-    `offer_listing()` — and it is listed exactly when that proposal passes.
-    `listing_state()` derives where it stands from the proposals and there is
-    no status column anybody can set. It comes down the same way: a
-    revocation rides on a proposal to the same group, scale and place as the
-    one that admitted it (anything else is venue-shopping), and the listing
-    is revoked when that passes. The offerer can withdraw it with a reason and
-    cannot undo that. The words are frozen once attached because people
-    resonated with those words; only `contact` changes. Neither table has a
-    write policy. Reach is `can_reach_proposal()` on the carrying proposal, and
-    `marketplace()` is security invoker so it cannot add any. It is ordered by
-    scale and then by decision date and nothing else: there is no boost,
-    promoted, sponsored, rating, review, view or click column, no price or
-    currency column (terms are the seller's words), no SOV spent and none
-    minted, and nothing that decides a proposal reads these tables.
-    `23_marketplace.sql` holds it to all of that. The proposal page shows what
-    a proposal carries above the AI layer, because resonating with it IS
-    admitting the listing. Recovered from the live database in 0030.
+37. **Paying buys visibility, never approval.** (Rewritten in 0031. The
+    marketplace is trade, not a proposal space; the 0030 version that admitted
+    listings by passing proposals was retired before it held a row.) A
+    business is approved when `vendor_status()` says so, and it says so only
+    when the AI's reading of all ten laws (prompt `marketplace.vetting`) found
+    no violation **and** a marketplace reviewer signed that reading off **and**
+    no suspension is open — for the exact words the business stands on now,
+    because every vetting stores a hash of what it read and an edit lapses
+    approval. There is no approved column. A reviewer can refuse what the AI
+    passed, can never pass what it refused, and never signs off their own
+    business. Reviewers are added from the SQL editor; no policy lets anybody
+    add themselves. Advertising is pay per click: only an approved business
+    can start a campaign, an ad stops the moment approval lapses, and a click
+    is charged once per person per campaign per day, never for the
+    advertiser's own clicks and never past budget. The one sponsored slot is
+    labelled. **No approval or ordering function may read anything on the
+    money side** — `25_trade.sql` reads their source for campaign, click,
+    bid, spend and budget and fails if any appears. Organic listings are
+    newest first and not for sale. A concern is seen by whoever raised it and
+    the reviewers, never by the business. Not here yet: in-app checkout
+    (listings link out), card billing for ads, ratings, SOV.
 
 ## On the surface, not in the schema
 

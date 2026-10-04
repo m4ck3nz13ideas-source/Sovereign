@@ -1,213 +1,178 @@
 import Link from "next/link";
 
-import {
-  Empty,
-  Gutter,
-  PillLink,
-  Rail,
-  Readers,
-  Screen,
-  SectionLabel,
-  Tag,
-  TopBar,
-} from "@/components/ui";
-import { ago, firstLine } from "@/lib/format";
-import {
-  KIND_LABEL,
-  KIND_PLURAL,
-  STATE_LABEL,
-  isListingKind,
-  stateTone,
-  whereLabel,
-} from "@/lib/marketplace";
+import { Empty, Gutter, inputClass, PillLink, Rail, Screen, SectionLabel, Tag, TopBar } from "@/components/ui";
+import { firstLine } from "@/lib/format";
+import { isOfferingKind, safeUrl, type Ad, type MarketOffering } from "@/lib/marketplace";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
-import { LISTING_KINDS, type Listing, type ListingState, type MarketListing } from "@/lib/types";
 
 export const metadata = { title: "Marketplace · Sovereign" };
 
 /**
- * The marketplace (rule 37): products, services and businesses a group has
- * admitted by passing a proposal.
+ * Marketplace — trade with businesses that align with the Universal Laws.
  *
- * WHY THERE IS NO APPROVE BUTTON ANYWHERE
+ * Every business here was read against all ten laws by the AI and signed off
+ * by a reviewer, for the words it stands on now. Buying happens on the
+ * business's own site; a listing links out.
  *
- * "Sovereign-approved" could have meant a queue and somebody with a role
- * ticking things — and whoever holds that tick holds the market. Here nobody
- * approves anything. A listing rides on a proposal, and is listed exactly when
- * the proposal passes: reviewed, audited against the ten laws, deliberated and
- * resonated with by the people it is addressed to. It comes down the same way.
- *
- * WHY THE ORDER IS WHAT IT IS
- *
- * Nearest scale first, then most recently admitted. Nothing else orders it:
- * there is no boost, no rating, no view count and nothing anybody can pay for,
- * because a marketplace that sorts sellers is a marketplace somebody will pay
- * to be sorted in. No money or SOV moves here — the terms are the seller's
- * own words and the trade happens between people.
+ * One slot is sponsored, and says so. It is the highest live pay-per-click
+ * bid among businesses that are already approved — paying buys that slot and
+ * nothing else. The list below it is newest first and is not for sale.
  */
 export default async function MarketplacePage({
   searchParams,
 }: {
-  searchParams: Promise<{ kind?: string }>;
+  searchParams: Promise<{ kind?: string; view?: string; q?: string }>;
 }) {
-  const { kind } = await searchParams;
-  const filter = isListingKind(kind) ? kind : null;
+  await requireSession();
+  const { kind: rawKind, view, q: rawQ } = await searchParams;
+  const kind = isOfferingKind(rawKind) ? rawKind : null;
+  const businesses = view === "businesses";
+  const q = (rawQ ?? "").trim().slice(0, 80);
 
-  const { userId, groups } = await requireSession();
   const supabase = await createClient();
-
-  const [{ data: listedRows, error }, { data: mineRows }] = await Promise.all([
-    supabase.rpc("marketplace", { p_kind: filter }),
-    supabase
-      .from("listings")
-      .select("*")
-      .eq("offered_by", userId)
-      .order("created_at", { ascending: false }),
+  const [{ data: adRaw }, listing, { data: reviewer }] = await Promise.all([
+    supabase.rpc("pick_ad"),
+    businesses
+      ? supabase.rpc("market_vendors", { p_q: q || null })
+      : supabase.rpc("market_offerings", { p_kind: kind, p_q: q || null }),
+    supabase.rpc("is_marketplace_reviewer"),
   ]);
 
-  // 0030 not applied yet: say so, rather than an empty market that looks real.
-  const missing = Boolean(error && /marketplace|listing/i.test(error.message));
+  const ad = ((adRaw ?? []) as Ad[])[0] ?? null;
+  const offerings = businesses ? [] : ((listing.data ?? []) as MarketOffering[]);
+  const vendors = businesses
+    ? ((listing.data ?? []) as { id: string; name: string; description: string; location: string | null }[])
+    : [];
+  const broken = !!listing.error;
 
-  const listed = (listedRows ?? []) as MarketListing[];
-  const mine = (mineRows ?? []) as Listing[];
-
-  const mineStates = new Map<string, ListingState>();
-  await Promise.all(
-    mine.map(async (l) => {
-      const { data } = await supabase.rpc("listing_state", { p_listing_id: l.id });
-      mineStates.set(l.id, (data as ListingState) ?? "pending");
-    }),
+  const tab = (label: string, href: string, active: boolean) => (
+    <PillLink href={href} active={active}>
+      {label}
+    </PillLink>
   );
-
-  const sellerIds = Array.from(new Set(listed.map((l) => l.offered_by)));
-  const { data: sellerRows } = sellerIds.length
-    ? await supabase.from("profiles").select("id, display_name").in("id", sellerIds)
-    : { data: [] };
-  const sellers = new Map(
-    (sellerRows ?? []).map((p) => [p.id as string, p.display_name as string]),
-  );
-  const groupNames = new Map(groups.map((g) => [g.id, g.name]));
+  const qs = q ? `&q=${encodeURIComponent(q)}` : "";
 
   return (
     <Screen>
-      <TopBar
-        title="Marketplace"
-        action={
-          <Link
-            href="/marketplace/offer"
-            className="press rounded-pill bg-surface px-3.5 py-1.5 text-[0.8125rem] font-medium text-paper active:bg-surface-lift"
-          >
-            Offer
-          </Link>
-        }
-      >
+      <TopBar title="Marketplace">
         <Rail>
-          <PillLink href="/marketplace" active={!filter}>
-            Everything
-          </PillLink>
-          {LISTING_KINDS.map((k) => (
-            <PillLink key={k} href={`/marketplace?kind=${k}`} active={filter === k}>
-              {KIND_PLURAL[k]}
-            </PillLink>
-          ))}
+          {tab("All", `/marketplace?${qs.slice(1)}`, !kind && !businesses)}
+          {tab("Products", `/marketplace?kind=product${qs}`, kind === "product")}
+          {tab("Services", `/marketplace?kind=service${qs}`, kind === "service")}
+          {tab("Businesses", `/marketplace?view=businesses${qs}`, businesses)}
         </Rail>
       </TopBar>
 
       <Gutter>
-        <p className="mt-4 text-[0.9375rem] leading-relaxed text-paper-dim">
-          What the groups and places you belong to have admitted. Nobody
-          approves a listing here — it rides on a proposal and is listed when
-          that proposal passes, and it comes down the same way.
-        </p>
-        <Readers className="mt-2 mb-5">
-          Each listing: everyone the proposal that admitted it was addressed to,
-          and nobody else.
-        </Readers>
+        <form action="/marketplace" className="mt-4">
+          {kind ? <input type="hidden" name="kind" value={kind} /> : null}
+          {businesses ? <input type="hidden" name="view" value="businesses" /> : null}
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="Search the marketplace"
+            className={inputClass}
+            aria-label="Search the marketplace"
+          />
+        </form>
+
+        {broken ? (
+          <p className="mt-4 text-sm text-alarm">
+            The marketplace could not be read. If this is a new install, migration 0030 has not been
+            applied yet.
+          </p>
+        ) : null}
+
+        {ad ? (
+          <a
+            href={`/marketplace/ad/${ad.campaign_id}`}
+            rel="sponsored noopener"
+            className="press mt-5 block rounded-card border border-gold/40 bg-surface-soft px-4 py-3.5 active:bg-surface"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <span className="smallcaps text-[10px] text-gold">Sponsored</span>
+              <span className="text-xs text-paper-faint">{ad.vendor_name}</span>
+            </div>
+            <p className="mt-1.5 font-serif text-lg leading-snug text-paper">{ad.headline}</p>
+            <p className="mt-1 text-sm leading-relaxed text-paper-dim">{ad.body}</p>
+          </a>
+        ) : null}
       </Gutter>
 
-      {missing ? (
-        <Gutter>
-          <Empty>
-            The marketplace is not in this database yet. Migration 0030 adds it.
-          </Empty>
-        </Gutter>
-      ) : listed.length ? (
-        <ul className="border-t border-line-soft">
-          {listed.map((l) => (
-            <li key={l.id}>
-              <Link
-                href={`/marketplace/${l.id}`}
-                className="press block border-b border-line-soft px-5 py-4 active:bg-surface-soft"
-              >
-                <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                  <Tag>{KIND_LABEL[l.kind]}</Tag>
-                  <span className="smallcaps text-[10px] text-paper-faint">
-                    {whereLabel(l, groupNames)}
-                  </span>
-                </div>
-                <p className="text-[1.0625rem] leading-snug text-paper">{l.name}</p>
-                <p className="mt-1 text-sm leading-relaxed text-paper-dim">
-                  {firstLine(l.description, 140)}
-                </p>
-                <p className="smallcaps mt-2 text-[10px] text-paper-faint">
-                  {sellers.get(l.offered_by) ?? "A member"} · admitted {ago(l.listed_at)}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <Gutter>
-          <Empty>
-            {filter
-              ? `No ${KIND_PLURAL[filter].toLowerCase()} have been admitted where you are yet.`
-              : "Nothing has been admitted where you are yet. Something gets here when a proposal carrying it passes."}
-          </Empty>
-        </Gutter>
-      )}
-
-      {mine.length ? (
-        <Gutter className="mt-10">
-          <SectionLabel>What you have offered</SectionLabel>
-          <ul>
-            {mine.map((l) => {
-              const state = mineStates.get(l.id) ?? "pending";
-              return (
-                <li key={l.id}>
+      <Gutter className="mt-6">
+        {businesses ? (
+          vendors.length ? (
+            <ul className="space-y-3">
+              {vendors.map((v) => (
+                <li key={v.id}>
                   <Link
-                    href={`/marketplace/${l.id}`}
-                    className="press flex items-baseline justify-between gap-3 border-b border-line-soft py-3"
+                    href={`/marketplace/v/${v.id}`}
+                    className="press block rounded-card border border-line bg-surface-soft px-4 py-3.5 active:bg-surface"
                   >
-                    <span className="min-w-0 truncate text-paper">{l.name}</span>
-                    <Tag tone={stateTone(state)}>{STATE_LABEL[state]}</Tag>
+                    <span className="font-serif text-lg leading-snug text-paper">{v.name}</span>
+                    <p className="mt-1.5 text-sm leading-relaxed text-paper-dim">{firstLine(v.description, 140)}</p>
+                    {v.location ? <p className="mt-2 text-xs text-paper-faint">{v.location}</p> : null}
                   </Link>
+                </li>
+              ))}
+            </ul>
+          ) : !broken ? (
+            <Empty>{q ? `No businesses match “${q}”.` : "No businesses have been approved yet."}</Empty>
+          ) : null
+        ) : offerings.length ? (
+          <ul className="space-y-3">
+            {offerings.map((o) => {
+              const href = safeUrl(o.url);
+              return (
+                <li key={o.id} className="rounded-card border border-line bg-surface-soft px-4 py-3.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="font-serif text-lg leading-snug text-paper">{o.name}</span>
+                    <Tag>{o.kind}</Tag>
+                  </div>
+                  <p className="mt-1.5 text-sm leading-relaxed text-paper-dim">{firstLine(o.description, 160)}</p>
+                  <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+                    <Link href={`/marketplace/v/${o.vendor_id}`} className="text-paper-faint hover:text-paper">
+                      {o.vendor_name}
+                    </Link>
+                    <span className="text-paper">{o.price}</span>
+                  </div>
+                  {href ? (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-block text-sm text-gold hover:underline"
+                    >
+                      Buy from {o.vendor_name} ↗
+                    </a>
+                  ) : null}
                 </li>
               );
             })}
           </ul>
-        </Gutter>
-      ) : null}
+        ) : !broken ? (
+          <Empty>{q ? `Nothing matches “${q}”.` : "Nothing has been listed yet."}</Empty>
+        ) : null}
+      </Gutter>
 
-      <Gutter className="mt-10">
-        <SectionLabel>How something gets here</SectionLabel>
-        <div className="space-y-3 pb-4 text-sm leading-relaxed text-paper-faint">
-          <p>
-            Write a proposal to the people you want to trade with, then attach
-            what you are offering to it before anybody has responded. They read
-            it, the reviewer audits it against the ten laws, and they decide.
-            If it passes, it is listed for exactly the people who decided.
-          </p>
-          <p>
-            Anyone it reaches can propose taking it down, to the same people
-            who admitted it. If that passes, it comes down; if it fails, it
-            stays. Both stay on the record.
-          </p>
-          <p>
-            Nothing here is paid for, ranked or promoted, and no SOV is spent.
-            The terms are the seller&rsquo;s own words; the trade happens
-            between you.
-          </p>
+      <Gutter className="mt-10 pb-4">
+        <SectionLabel>How a business gets in</SectionLabel>
+        <p className="text-sm leading-relaxed text-paper-faint">
+          It describes what it does and gives its evidence. The AI reads that against all ten
+          Universal Laws, and a reviewer checks the evidence and signs it off. Changing the
+          description means being read again. Advertising can buy the sponsored slot — never a
+          place in the marketplace.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-4 text-sm">
+          <Link href="/marketplace/sell" className="text-gold hover:underline">
+            Sell here
+          </Link>
+          {reviewer ? (
+            <Link href="/marketplace/review" className="text-gold hover:underline">
+              Review queue
+            </Link>
+          ) : null}
         </div>
       </Gutter>
     </Screen>

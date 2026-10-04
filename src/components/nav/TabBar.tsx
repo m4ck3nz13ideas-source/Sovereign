@@ -19,8 +19,9 @@ import { usePathname } from "next/navigation";
  *
  * Marketplace is the fifth, and Mackenzie's call: the app is meant to be
  * inclusive of trade, and trade that has to be dug out from under Collective
- * reads as tolerated rather than included. It sits beside Collective because
- * everything in it was admitted by a collective decision (rule 37).
+ * reads as tolerated rather than included. It is trade, not governance: a
+ * business is in when it has been read against the Universal Laws and signed
+ * off (rule 37), and it sits beside Collective because those laws are shared.
  *
  * Five is the ceiling. A sixth would start the argument about which of these
  * matters least, and the answer would be whichever one somebody added last.

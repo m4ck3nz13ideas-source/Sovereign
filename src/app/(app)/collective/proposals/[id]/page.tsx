@@ -38,7 +38,6 @@ import { READINESS_THRESHOLD, SECTION_LABELS } from "@/lib/readiness";
 import { UNIVERSAL_LAWS } from "@/lib/universal-law";
 
 import { AiLayer } from "./AiLayer";
-import { Carried } from "./Carried";
 import { CloseButton } from "./CloseButton";
 import { DebateSummary } from "./DebateSummary";
 import { Deliberation, type Contribution } from "./Deliberation";
@@ -548,17 +547,6 @@ export default async function ProposalPage({
       ) : (
         <div data-selectable>{context}</div>
       )}
-
-      {/* ------------------------------------------------------ MARKETPLACE */}
-      <Carried
-        proposalId={proposal.id}
-        isAuthor={proposal.author_id === userId}
-        attachable={
-          ["in_review", "in_deliberation"].includes(proposal.status) &&
-          !proposal.amends_law &&
-          (summary?.voter_count ?? 0) === 0
-        }
-      />
 
       {/* ------------------------------------------------------- SHARPENING */}
       <section className="mb-10">
