@@ -83,3 +83,17 @@ begin
   return v_id;
 end;
 $$;
+
+-- 0029: a proposal's status moves only through the decision functions, or by
+-- the author's two hand moves (to deliberation, or withdrawn before a vote).
+-- A suite that needs a proposal to have ALREADY failed or passed, as scenery
+-- for something else, sets it here. This one IS security definer, on purpose
+-- and narrowly: it stands in for `close_proposal()` having run, and must never
+-- be used in a suite about how a proposal closes.
+create or replace function test_set_status(p_proposal uuid, p_status proposal_status)
+returns void language sql security definer set search_path = public, extensions as $$
+  update proposals set status = p_status, closed_at = coalesce(closed_at, now())
+   where id = p_proposal;
+$$;
+
+grant execute on function test_set_status(uuid, proposal_status) to public;

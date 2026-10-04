@@ -112,7 +112,7 @@ begin
                  else 'clear' end,
             'law.audit', '1.0.0', 'test');
   end loop;
-  update proposals set status = 'failed', closed_at = now() where id = killed;
+  perform test_set_status(killed, 'failed');
 
   ------------------------------------------------- the amendment itself
   weak := test_propose(ann, null, 'global', null,
