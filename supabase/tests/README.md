@@ -6,7 +6,7 @@ whether a member can read someone else's private journal — a policy can.
 
 ## What is tested
 
-Twenty-one SQL suites, five hundred and sixty-seven checks, plus a concurrency
+Twenty-two SQL suites, five hundred and ninety-two checks, plus a concurrency
 suite of twenty that needs real connections. Every one of them runs as a
 non-superuser, so row-level security actually applies — a test that passes as the owner proves
 nothing about what a member can see.
@@ -465,6 +465,19 @@ And the absences, which are most of the suite:
 - No write policies at all on `sov_entries`, no stored balance column on
   `profiles`, `projects` or `groups`, and both the minting trigger and the
   mint-once index still exist.
+
+### `22_sightings.sql` — twenty-five checks
+
+- A member can raise a word from their group's proposal; it lands in that
+  group's Words, and the stored sentence is the one quoted.
+- **A sentence the proposal does not contain is refused**, and so is a word
+  the sentence does not contain. Reflowed whitespace and case are not refusals.
+- A place proposal cannot be the scene of a sighting — nobody's language.
+- An outsider can neither raise one nor write a row directly, and sees none.
+- Pressing twice is one sighting. A sighting cannot be edited or deleted.
+- Absences: no column on `proposals` points at words, no weight or relevance
+  column, no write policy, nothing that decides reads `term_sightings` or the
+  lexicon, and no function lists a proposal's words.
 
 ### `concurrency/` — twenty checks, and not in psql
 

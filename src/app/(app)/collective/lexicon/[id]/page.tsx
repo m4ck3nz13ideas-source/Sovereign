@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Card, Empty, Page, ScreenHead, Tag } from "@/components/ui";
+import { Card, Empty, Page, Readers, ScreenHead, Tag } from "@/components/ui";
 import { ago, shortDate } from "@/lib/format";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
-import type { Reading, ReadingRevision } from "@/lib/types";
+import type { Reading, ReadingRevision, TermSighting } from "@/lib/types";
 
 import { YourReading } from "./YourReading";
 
@@ -36,14 +36,20 @@ export default async function TermPage({
   // is the same answer as a word that does not exist, deliberately.
   const { data: term } = await supabase
     .from("terms")
-    .select("id, term, raised_at")
+    .select("id, term, raised_at, groups(name)")
     .eq("id", id)
     .maybeSingle();
 
   if (!term) notFound();
 
-  const { data } = await supabase.rpc("readings_for", { p_term_id: id });
+  const [{ data }, { data: seen }] = await Promise.all([
+    supabase.rpc("readings_for", { p_term_id: id }),
+    supabase.rpc("sightings_for", { p_term_id: id }),
+  ]);
   const readings = (data ?? []) as Reading[];
+  const sightings = (seen ?? []) as TermSighting[];
+  const groupName =
+    (term as unknown as { groups: { name: string } | null }).groups?.name ?? "this group";
   const mine = readings.find((r) => r.mine) ?? null;
   const others = readings.filter((r) => !r.mine);
 
@@ -61,6 +67,11 @@ export default async function TermPage({
       >
         {term.term as string}
       </ScreenHead>
+
+      <Readers className="mb-5">
+        Everyone in {groupName}, and nobody outside it. A reading is written to
+        be read by the people you decide with.
+      </Readers>
 
       <Card className="mb-6">
         <p className="smallcaps mb-3 text-[10px] text-gold">Yours</p>
@@ -126,6 +137,8 @@ export default async function TermPage({
         </Empty>
       )}
 
+      {sightings.length ? <Sightings sightings={sightings} /> : null}
+
       {mine ? <History termId={id} profileId={mine.profile_id} /> : null}
 
       <p className="mt-8 border-t border-line-soft pt-4 text-sm leading-relaxed text-paper-faint">
@@ -137,6 +150,49 @@ export default async function TermPage({
         arrangements.
       </p>
     </Page>
+  );
+}
+
+/**
+ * Where somebody stopped at this word.
+ *
+ * Each row is a person and the sentence they were reading, quoted from the
+ * proposal and checked against it by the database. It says where the word was
+ * noticed, not that the proposal is about it and not that the decision turned
+ * on it — which is why this list lives here, on the word, and the proposal page
+ * carries no list of "its" words. Rule 35. Oldest first.
+ */
+function Sightings({ sightings }: { sightings: TermSighting[] }) {
+  return (
+    <div className="mt-8">
+      <p className="smallcaps mb-1 text-[10px] text-paper-faint">Where it was noticed</p>
+      <ul className="space-y-0">
+        {sightings.map((s) => (
+          <li
+            key={`${s.proposal_id}-${s.raised_by}`}
+            className="border-b border-line-soft py-3"
+          >
+            <p className="text-sm leading-relaxed text-paper-dim" data-selectable>
+              &ldquo;{s.excerpt}&rdquo;
+            </p>
+            <p className="smallcaps mt-1 text-[10px] text-paper-faint">
+              {s.mine ? "you" : s.display_name}, reading{" "}
+              <Link
+                href={`/collective/proposals/${s.proposal_id}`}
+                className="underline decoration-line"
+              >
+                {s.proposal_title}
+              </Link>{" "}
+              · {shortDate(s.raised_at)}
+            </p>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-[0.8125rem] leading-relaxed text-paper-faint">
+        Somebody stopped here. That is all a sighting says — not that the
+        proposal is about this word, and not that anything was decided by it.
+      </p>
+    </div>
   );
 }
 

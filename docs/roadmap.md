@@ -101,6 +101,19 @@ through `0024`.
   discovers it meant two things cannot be tidied away afterwards. Groups only,
   because a place has no register.
 
+- **Raising a word from where it was used** (0028, rule 35). Select a word
+  while reading a proposal and it goes into the group's Words with the sentence
+  you stopped at, quoted and checked against the proposal by the database. It
+  shows on the word's page as where it was noticed, and nowhere on the
+  proposal's — a list of a proposal's words would be the attachment 0023
+  refused.
+- **The front door, after looking at America.gov.** Ask opens with example
+  questions; the sign-in page lists what this place will not do, each line
+  tied to a rule; every surface says who can read it; and a proposal shows the
+  path it is on and what the next step needs. The one thing deliberately not
+  copied is the part their product is built on — a single answer from
+  authoritative sources — because that is what rule 29 refuses.
+
 - **Lineage, finished.** `supersedes` has existed since 0008 and threaded a
   second attempt back to the first. It said nothing about what changed, went one
   generation, and — because `check_supersedes()` is an insert trigger — could be
@@ -139,19 +152,6 @@ the thread — subsidiarity works downwards in this schema and not upwards.
 *Earns its place when:* a group has actually hit it, and there is a way to
 distinguish escalation from venue-shopping that does not rely on trusting the
 author. A flag saying which it is would be trusting the author.
-
-### A word raised from where it was used
-Words are raised by hand, from memory, on their own screen. The obvious next
-step is to raise one *while reading the proposal that turned on it* — select
-the word, and it is in the lexicon with the proposal as the reason it came up.
-That is a link from a term to a proposal, which `0023` deliberately does not
-have, so it would need to be a link recording *where somebody raised it* rather
-than a claim that the decision turned on the definition. The distinction is the
-whole design, and getting it wrong tells people a decision hinged on a word it
-never mentioned.
-
-*Earns its place when:* a group has raised words at all, and the complaint is
-that they had to come back and remember them.
 
 ### A shared group rubric
 Every member's values currently union into one list. At eight people that is

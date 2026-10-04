@@ -1,4 +1,4 @@
-import { Empty, Gutter, LinkButton, Screen } from "@/components/ui";
+import { Empty, Gutter, LinkButton, Readers, Screen } from "@/components/ui";
 import { requireSession } from "@/lib/session";
 
 export const metadata = { title: "Drafts · Sovereign" };
@@ -26,6 +26,9 @@ export default async function DraftsPage() {
           device. That is the cost of a half-formed idea being nobody
           else&rsquo;s business until you decide it is.
         </p>
+        <Readers className="mt-3">
+          Nobody, and only this browser. The server has never seen it.
+        </Readers>
 
         <div className="mt-6">
           <LinkButton href="/collective/proposals/new" tone="gold">

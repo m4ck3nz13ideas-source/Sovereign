@@ -1095,6 +1095,24 @@ export interface Reading {
 }
 
 /**
+ * Where somebody noticed a word, from `sightings_for()`.
+ *
+ * A person's act, quoted and attributed — never a claim that the proposal is
+ * about the word or that a decision turned on it. It lives on the word's page
+ * and nowhere on the proposal's. Rule 35.
+ */
+export interface TermSighting {
+  proposal_id: string;
+  proposal_title: string;
+  /** Verbatim from the proposal; the database refuses a quote it does not contain. */
+  excerpt: string;
+  raised_by: string;
+  display_name: string;
+  raised_at: string;
+  mine: boolean;
+}
+
+/**
  * One earlier attempt at a proposal, from `proposal_lineage()`.
  *
  * `changed` is what the attempt AFTER this one said it was doing differently,

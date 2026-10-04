@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Page, PageTitle } from "@/components/ui";
+import { Page, PageTitle, Readers } from "@/components/ui";
 import { addressOptions, requireAddress } from "@/lib/address";
 import { SCOPES, reachableScopes } from "@/lib/collective";
 import { createClient } from "@/lib/supabase/server";
@@ -59,6 +59,11 @@ export default async function NewProposalPage({
       >
         {taking ? "Again" : "A proposal"}
       </PageTitle>
+
+      <Readers className="-mt-2 mb-6">
+        Nobody while you write — the draft stays in this browser. Once you
+        submit, everyone it is addressed to — and its words cannot be rewritten afterwards.
+      </Readers>
 
       <ComposeProposal
         addresses={options}

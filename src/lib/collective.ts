@@ -118,3 +118,117 @@ export function addressLabel(
   if (proposal.scope === "global") return "Global";
   return proposal.place ?? "somewhere";
 }
+
+/* --- where a proposal has got to ----------------------------------------- */
+
+export type StepState = "done" | "current" | "ahead";
+
+export interface ProgressStep {
+  key: string;
+  label: string;
+  state: StepState;
+}
+
+/**
+ * The path a proposal walks, and where this one is on it.
+ *
+ * Derived entirely from `status`, which the database moves — nothing here
+ * decides anything, and the strip must never show a step the record does not
+ * support. Two honest gaps follow from that:
+ *
+ *   * A proposal that did not pass, or was withdrawn, ends where it ended. The
+ *     steps after it are not drawn greyed-out as though they were still ahead.
+ *   * A withdrawn proposal shows only that it was withdrawn. `status` does not
+ *     say which stage it was withdrawn from, and drawing "reviewed, deliberated"
+ *     in front of it would be a guess presented as history.
+ *
+ * `passed` is not the end: ratification is not activation (rule 9), so the
+ * step after it stays visibly ahead until a project exists.
+ */
+export function proposalProgress(status: ProposalStatus): ProgressStep[] {
+  if (status === "withdrawn") {
+    return [{ key: "withdrawn", label: "Withdrawn", state: "current" }];
+  }
+
+  const decided =
+    status === "failed" ? "Did not pass" : "Passed";
+
+  const path: { key: string; label: string; at: ProposalStatus[] }[] = [
+    { key: "review", label: "Review", at: ["in_review"] },
+    { key: "deliberation", label: "Deliberation", at: ["in_deliberation"] },
+    { key: "resonance", label: "Resonance", at: ["voting"] },
+    { key: "decided", label: decided, at: ["passed", "failed"] },
+    { key: "underway", label: "Under way", at: ["executing"] },
+    { key: "done", label: "Done", at: ["completed"] },
+  ];
+
+  const here = path.findIndex((p) => p.at.includes(status));
+  const steps = path.map((p, i): ProgressStep => ({
+    key: p.key,
+    label: p.label,
+    state: i < here ? "done" : i === here ? "current" : "ahead",
+  }));
+
+  // A path that ended does not show the road it did not take.
+  return status === "failed" ? steps.slice(0, here + 1) : steps;
+}
+
+/**
+ * One sentence on what happens next, in the voice of the rest of the app: the
+ * rule, and why. `closesAt` is only known for a place (rule 15 — the clock
+ * decides there, not a steward).
+ */
+export function whatHappensNext(
+  status: ProposalStatus,
+  opts: { hasGroup: boolean; closesAt: string | null },
+): string {
+  switch (status) {
+    case "in_review":
+      return "The reviewer and the law audit read it first. Nobody is asked to respond to something that has not been read.";
+    case "in_deliberation":
+      return "Questions and concerns are open. Each person's resonance unlocks once they have read it.";
+    case "voting":
+      return opts.hasGroup
+        ? "Resonance is open, and the averages stay hidden until a steward closes it."
+        : opts.closesAt
+          ? `Resonance is open until ${new Date(opts.closesAt).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}, and the averages stay hidden until then.`
+          : "Resonance is open, and the averages stay hidden until it closes.";
+    case "passed":
+      return "Passing is not starting. It becomes a project once every need has somebody's name against it.";
+    case "failed":
+      return "The record stands as it is. A second attempt can take it up, and has to say what it changed.";
+    case "executing":
+      return "It completes when somebody writes down what actually happened, against what was expected.";
+    case "completed":
+      return "Finished, with a reflection on the record.";
+    case "withdrawn":
+      return "Its author withdrew it. The record of it stays.";
+  }
+}
+
+/* --- quoting a sentence -------------------------------------------------- */
+
+const MAX_EXCERPT = 400;
+
+/**
+ * The sentence around [start, end) in `text`, trimmed to something quotable.
+ *
+ * Used when a word is raised from a proposal: the sighting quotes the sentence
+ * somebody stopped at (rule 35). The database checks the quote against the
+ * proposal, so this only has to find a sensible span, not a trustworthy one.
+ */
+export function sentenceAround(text: string, start: number, end: number): string {
+  let from = Math.max(0, Math.min(start, text.length));
+  while (from > 0 && !/[.!?\n]/.test(text[from - 1])) from--;
+  let to = Math.max(from, Math.min(end, text.length));
+  while (to < text.length && !/[.!?\n]/.test(text[to])) to++;
+  if (to < text.length && text[to] !== "\n") to++; // keep the full stop
+
+  const s = text.slice(from, to).trim();
+  if (s.length <= MAX_EXCERPT) return s;
+
+  // Centre a window on the selection rather than cutting it off.
+  const mid = Math.floor((start + end) / 2) - from;
+  const lo = Math.max(0, Math.min(mid - MAX_EXCERPT / 2, s.length - MAX_EXCERPT));
+  return s.slice(lo, lo + MAX_EXCERPT).trim();
+}

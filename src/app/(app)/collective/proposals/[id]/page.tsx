@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Empty, Page, Prose, SectionLabel, Tag } from "@/components/ui";
+import { Empty, Page, Prose, Readers, SectionLabel, Tag } from "@/components/ui";
 import { ago, money, shortDate, STATUS_LABEL } from "@/lib/format";
 import { asReview, isOpen } from "@/lib/collective";
 import { isSteward, requireSession } from "@/lib/session";
@@ -51,7 +51,9 @@ import { Amendment } from "./Amendment";
 import { AskGuardian } from "./AskGuardian";
 import { Contended, OpenContention } from "./Contended";
 import { Inquiries } from "./Inquiries";
+import { Progress } from "./Progress";
 import { Projections } from "./Projections";
+import { RaiseFromText } from "./RaiseFromText";
 import { ResonancePanel } from "./ResonancePanel";
 import { WithdrawButton } from "./WithdrawButton";
 
@@ -344,6 +346,36 @@ export default async function ProposalPage({
       : projectionStandingRows
   ) as ProjectionStanding | null;
 
+  const context = (
+    <section className="mb-10 space-y-7">
+      {(
+        [
+          ["intent", proposal.intent],
+          ["change", proposal.change],
+          ["constraints", proposal.constraints],
+          ["risks", proposal.risks],
+          ["alternatives", proposal.alternatives],
+          ["evidence", proposal.evidence],
+        ] as const
+      ).map(([key, text]) =>
+        text && text.trim() ? (
+          <div key={key}>
+            <SectionLabel>{SECTION_LABELS[key]}</SectionLabel>
+            <Prose>{text}</Prose>
+          </div>
+        ) : null,
+      )}
+
+      {/* Proposals written before the sections existed kept their prose. */}
+      {!proposal.intent.trim() ? (
+        <div>
+          <SectionLabel>Context</SectionLabel>
+          <Prose>{proposal.body}</Prose>
+        </div>
+      ) : null}
+    </section>
+  );
+
   return (
     <Page>
       <Link
@@ -410,7 +442,21 @@ export default async function ProposalPage({
             </>
           ) : null}
         </p>
+
+        <Readers className="mt-3">
+          {proposal.groups
+            ? `Everyone in ${proposal.groups.name}, and nobody outside it.`
+            : proposal.scope === "global"
+              ? "Everyone on Sovereign — it is addressed to all of them."
+              : `Everyone whose ${proposal.scope} place is ${proposal.place}. The people it is addressed to are the people who can read it.`}
+        </Readers>
       </header>
+
+      <Progress
+        status={proposal.status}
+        hasGroup={Boolean(proposal.group_id)}
+        closesAt={proposal.closes_at ?? null}
+      />
 
       {lineage.length || later.length ? (
         <div className="mb-8 rounded-card border border-line bg-surface-soft px-4 py-3">
@@ -491,33 +537,16 @@ export default async function ProposalPage({
       ) : null}
 
       {/* --------------------------------------------------------- CONTEXT */}
-      <section className="mb-10 space-y-7">
-        {(
-          [
-            ["intent", proposal.intent],
-            ["change", proposal.change],
-            ["constraints", proposal.constraints],
-            ["risks", proposal.risks],
-            ["alternatives", proposal.alternatives],
-            ["evidence", proposal.evidence],
-          ] as const
-        ).map(([key, text]) =>
-          text && text.trim() ? (
-            <div key={key}>
-              <SectionLabel>{SECTION_LABELS[key]}</SectionLabel>
-              <Prose>{text}</Prose>
-            </div>
-          ) : null,
-        )}
-
-        {/* Proposals written before the sections existed kept their prose. */}
-        {!proposal.intent.trim() ? (
-          <div>
-            <SectionLabel>Context</SectionLabel>
-            <Prose>{proposal.body}</Prose>
-          </div>
-        ) : null}
-      </section>
+      {/*
+        Selecting a word here offers to raise it in the group's Words, with the
+        sentence it was in (rule 35). A place has no register, so there is
+        nobody's language for a word to join, and only members can raise one.
+      */}
+      {proposal.group_id && myRole ? (
+        <RaiseFromText proposalId={proposal.id}>{context}</RaiseFromText>
+      ) : (
+        <div data-selectable>{context}</div>
+      )}
 
       {/* ------------------------------------------------------- SHARPENING */}
       <section className="mb-10">

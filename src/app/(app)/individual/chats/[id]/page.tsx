@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Gutter, Screen } from "@/components/ui";
+import { Gutter, Readers, Screen } from "@/components/ui";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Message } from "@/lib/types";
@@ -40,6 +40,10 @@ export default async function ChatPage({
             ← Chats
           </Link>
           <h2 className="display mt-2 text-[1.5rem] text-paper">{name}</h2>
+          <Readers className="mt-1">
+            The two of you. Nothing said here reaches a proposal, a decision or
+            the ledger, and neither of you can see whether the other has read it.
+          </Readers>
         </div>
 
         <Thread

@@ -546,3 +546,37 @@ export function ScreenHead({
     </header>
   );
 }
+
+/**
+ * Who can read the thing on this screen, said plainly.
+ *
+ * Every surface in Sovereign has a different audience — you alone, the two of
+ * you, the group, everyone a place reaches — and the database already enforces
+ * each one. This line is the database's answer said out loud, so nobody has to
+ * infer who is on the other side of what they are writing. It must name the
+ * policy that is actually in force: a line that promised more privacy than the
+ * RLS gives would be worse than no line at all.
+ *
+ * Greyscale on purpose. Amber means "yours to act on", and this is not an
+ * action — it is the room you are standing in.
+ */
+export function Readers({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <p
+      className={cx(
+        "flex items-baseline gap-1.5 text-[0.8125rem] leading-snug text-paper-faint",
+        className,
+      )}
+    >
+      <span className="smallcaps shrink-0 text-[10px] text-paper-dim">Who can read this</span>
+      <span aria-hidden>·</span>
+      <span>{children}</span>
+    </p>
+  );
+}

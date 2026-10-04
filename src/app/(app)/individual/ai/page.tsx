@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Card, Empty, Gutter, Screen, SectionLabel, Tag } from "@/components/ui";
+import { Card, Empty, Gutter, Readers, Screen, SectionLabel, Tag } from "@/components/ui";
 import { aiIsLive } from "@/lib/ai";
 import { ago } from "@/lib/format";
 import { requireSession } from "@/lib/session";
@@ -44,6 +44,10 @@ export default async function GuardianPage() {
             questions about it. Nobody else ever sees any of this, and none of
             it is attached to anything.
           </p>
+          <Readers className="mt-3">
+            Only you — and you can forget any of it, which nothing else here
+            allows, because nobody else is entitled to it.
+          </Readers>
         </div>
 
         <section>

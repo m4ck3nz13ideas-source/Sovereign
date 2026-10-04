@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { asReview, isClosed, isOpen, reviewQuality, scoreTone } from "./collective";
+import {
+  asReview,
+  isClosed,
+  isOpen,
+  proposalProgress,
+  reviewQuality,
+  scoreTone,
+  sentenceAround,
+  whatHappensNext,
+} from "./collective";
 import { CLOSED_STATUSES, type ProposalStatus } from "./types";
 
 describe("proposal status", () => {
@@ -90,5 +99,90 @@ describe("asReview", () => {
     expect(r.risks).toEqual([]);
     expect(r.questions).toEqual([]);
     expect(r.memory_used).toEqual([]);
+  });
+});
+
+
+describe("where a proposal has got to", () => {
+  const current = (s: ProposalStatus) =>
+    proposalProgress(s).find((x) => x.state === "current")?.key;
+
+  it("puts each open status on its own step", () => {
+    expect(current("in_review")).toBe("review");
+    expect(current("in_deliberation")).toBe("deliberation");
+    expect(current("voting")).toBe("resonance");
+  });
+
+  it("marks everything before the current step as done and after as ahead", () => {
+    const steps = proposalProgress("voting");
+    expect(steps.map((s) => s.state)).toEqual([
+      "done", "done", "current", "ahead", "ahead", "ahead",
+    ]);
+  });
+
+  it("keeps the project step ahead after passing — ratification is not activation", () => {
+    const steps = proposalProgress("passed");
+    expect(steps.find((s) => s.key === "decided")?.label).toBe("Passed");
+    expect(steps.find((s) => s.key === "underway")?.state).toBe("ahead");
+  });
+
+  it("ends a failed proposal where it ended, without the road it did not take", () => {
+    const steps = proposalProgress("failed");
+    expect(steps.at(-1)?.label).toBe("Did not pass");
+    expect(steps.some((s) => s.key === "underway" || s.key === "done")).toBe(false);
+  });
+
+  it("does not invent a history for a withdrawn proposal", () => {
+    // status does not say which stage it was withdrawn from.
+    expect(proposalProgress("withdrawn")).toEqual([
+      { key: "withdrawn", label: "Withdrawn", state: "current" },
+    ]);
+  });
+
+  it("has something to say for every status", () => {
+    const all: ProposalStatus[] = [
+      "in_review", "in_deliberation", "voting", "passed",
+      "failed", "withdrawn", "executing", "completed",
+    ];
+    for (const s of all) {
+      expect(whatHappensNext(s, { hasGroup: true, closesAt: null }).length).toBeGreaterThan(10);
+    }
+  });
+
+  it("names the closing date for a place, where the clock decides", () => {
+    const line = whatHappensNext("voting", { hasGroup: false, closesAt: "2026-10-14T12:00:00Z" });
+    expect(line).toContain("14 October");
+  });
+});
+
+describe("quoting the sentence a word was noticed in", () => {
+  const text =
+    "The ladder is kept at number 6. Members get shared access to the workshop. Nobody pays.";
+
+  it("returns the sentence around a selection, full stop included", () => {
+    const at = text.indexOf("shared");
+    expect(sentenceAround(text, at, at + 6)).toBe(
+      "Members get shared access to the workshop.",
+    );
+  });
+
+  it("handles a selection in the first and last sentence", () => {
+    expect(sentenceAround(text, 4, 10)).toBe("The ladder is kept at number 6.");
+    const at = text.indexOf("pays");
+    expect(sentenceAround(text, at, at + 4)).toBe("Nobody pays.");
+  });
+
+  it("stops at a line break as well as a full stop", () => {
+    const t = "A heading\nshared access for all";
+    const at = t.indexOf("shared");
+    expect(sentenceAround(t, at, at + 6)).toBe("shared access for all");
+  });
+
+  it("keeps a run-on sentence quotable and keeps the word in it", () => {
+    const long = "a ".repeat(400) + "shared " + "b ".repeat(400);
+    const at = long.indexOf("shared");
+    const s = sentenceAround(long, at, at + 6);
+    expect(s.length).toBeLessThanOrEqual(400);
+    expect(s).toContain("shared");
   });
 });

@@ -158,6 +158,11 @@ should not look more precise than it is.
 **`Empty`** — a dashed border and a sentence that says what would make content
 appear here. Never "No items found."
 
+**`Readers`** — one greyscale line, "Who can read this · …", under a screen's
+heading. It states the policy in force for what is on that screen, in plain
+words, and must never promise more than the RLS gives. Not amber: it is the
+room you are in, not something to act on.
+
 **`Button`** — four tones. `gold` for the primary action on a screen, `quiet`
 for secondary, `ghost` for dismissal, `danger` for destruction. One gold button
 per screen; two means the screen has not decided what it is for. Pill-shaped,

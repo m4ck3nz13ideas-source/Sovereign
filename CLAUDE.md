@@ -210,7 +210,8 @@ on purpose, in a commit that says so.
     that two people meant different things be tidied away, and that discovery
     is the feature. No term is attached to a proposal, because matching a word
     against proposal text is a guess and a wrong guess tells people a decision
-    turned on a definition it never mentioned. Nothing in `close_proposal()`,
+    turned on a definition it never mentioned — what a proposal can be is the
+    scene of a *sighting*, which is a person's act and not a match (rule 35). Nothing in `close_proposal()`,
     `cast_resonance()` or `can_reach_proposal()` may read these tables. It is
     groups only: a place has no register (rule 15), so there is nobody for a
     word at a place to belong to.
@@ -303,6 +304,53 @@ on purpose, in a commit that says so.
     `supabase/tests/concurrency` fails on every run without them. Assert
     outcomes there, never lock mechanics: "uses never exceeds max_uses" survives
     a better fix, "takes FOR UPDATE" does not.
+
+35. **A word raised from a proposal is a quotation, not an attachment.**
+    `term_sightings` records that a person, reading a proposal, stopped at a
+    word in it: the word, the proposal, their name, and the sentence they
+    stopped at. `raise_term_from()` refuses the sentence unless the proposal's
+    own text contains it (title, summary or body, case- and whitespace-
+    insensitive) and refuses the word unless the sentence contains it — the
+    client is not trusted with either, because a sighting that quotes words a
+    proposal never said is exactly the fabricated attachment rule 30 refuses.
+    It is attributed and append-only: no insert policy (the function does the
+    checking a policy cannot), no update, no delete, and one row per person per
+    word per proposal. Sightings show **on the word's page and nowhere on the
+    proposal's** — a list of "words in this proposal" would read as the
+    proposal's vocabulary, which is the claim this table exists not to make.
+    `proposals` has no column that points at words, `term_sightings` has no
+    weight, score or relevance column, and nothing in `close_proposal()`,
+    `cast_resonance()`, `can_reach_proposal()`, `activate_proposal()` or
+    `dormant_proposals()` reads it: how often a word was stopped at is not a
+    measure of anything the ledger records. Groups only, same group, for the
+    same reason as rule 30.
+
+## On the surface, not in the schema
+
+These are interface conventions rather than rules the database enforces, but
+each one restates a rule that it does, so changing the rule means changing the
+line.
+
+- **Every surface says who can read it.** `<Readers>` in `components/ui.tsx`
+  names the audience on the journal, ideas, drafts, values, the AI, a chat, a
+  proposal, Words, a word, Ask and the composer. Each line must match the
+  policy actually in force — a line that promises more privacy than the RLS
+  gives is worse than no line. Greyscale, because amber means "yours to act
+  on" and this is the room, not an action.
+- **The sign-in page lists what this place will not do.** `REFUSALS` in
+  `(auth)/login/page.tsx` carries the rule number beside each line, so a
+  promise cannot drift from the code that keeps it. No line may promise
+  something no policy or function enforces.
+- **A proposal shows where it has got to.** `proposalProgress()` derives the
+  strip from `status` alone and draws nothing the record does not support: a
+  failed proposal ends where it ended, a withdrawn one shows only that it was
+  withdrawn (status does not say from which stage), and "passed" leaves the
+  project step visibly ahead (rule 9). It never estimates a date — nothing in
+  the schema knows one, and a made-up date reads as a promise.
+- **Ask starts with examples.** `STARTERS` in `AskPanel.tsx`. Every ASK example
+  is a question people genuinely disagree on, because a starting point with one
+  obvious answer would teach that Ask is where answers come from (rule 29).
+  FIND examples run on tap; ASK examples only fill the field.
 
 ## Where things go
 

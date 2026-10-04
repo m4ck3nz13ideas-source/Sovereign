@@ -2,6 +2,24 @@ import { LoginForm } from "./LoginForm";
 
 export const metadata = { title: "Sign in · Sovereign" };
 
+/**
+ * What this place will not do, on the door.
+ *
+ * Every line is a rule the database enforces, with its number in CLAUDE.md
+ * beside it here so that a promise cannot drift away from the code that keeps
+ * it. If a rule is ever changed on purpose, the line changes in the same
+ * commit — a door that promises more than the policies give is worse than a
+ * door that promises nothing. No line may promise something no policy or
+ * function enforces.
+ */
+const REFUSALS: { line: string; rule: string }[] = [
+  { line: "What you write for yourself is readable by you alone.", rule: "1" },
+  { line: "Nobody sees which way a decision is leaning until it closes.", rule: "3" },
+  { line: "Ask shows you positions, never a verdict.", rule: "29" },
+  { line: "What you agreed to stays what you agreed to — an amendment cannot rewrite it.", rule: "28" },
+  { line: "No follower counts, no directory, no read receipts.", rule: "19, 23" },
+];
+
 export default async function LoginPage({
   searchParams,
 }: {
@@ -27,12 +45,20 @@ export default async function LoginPage({
           </p>
         ) : null}
 
-        <p className="mt-10 text-xs leading-relaxed text-paper-faint">
-          Sovereign sends a sign-in link rather than keeping a password. Your
-          individual space — entries, concepts, the history of what you have
-          believed — is readable by you alone, enforced in the database rather
-          than by this page.
-        </p>
+        <div className="mt-10 border-t border-line-soft pt-6">
+          <p className="smallcaps mb-3 text-[10px] text-paper-faint">What this place will not do</p>
+          <ul className="space-y-2">
+            {REFUSALS.map((r) => (
+              <li key={r.rule} className="text-[0.875rem] leading-snug text-paper-dim">
+                {r.line}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-xs leading-relaxed text-paper-faint">
+            Each of these is enforced by the database rather than by this page.
+            Sovereign sends a sign-in link rather than keeping a password.
+          </p>
+        </div>
       </div>
     </main>
   );

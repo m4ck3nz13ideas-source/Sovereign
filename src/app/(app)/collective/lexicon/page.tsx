@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { ScaleSelector } from "@/components/nav/ScaleSelector";
-import { Empty, Page, ScreenHead, Tag } from "@/components/ui";
+import { Empty, Page, Readers, ScreenHead, Tag } from "@/components/ui";
 import { addressOptions, requireAddress } from "@/lib/address";
 import { ago } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -67,6 +67,11 @@ export default async function LexiconPage() {
         — there is no agreed definition, because the useful thing to find out is
         usually that there isn&rsquo;t one.
       </p>
+      {address.kind === "group" ? (
+        <Readers className="-mt-2 mb-5">
+          Everyone in {address.group.name}, and nobody outside it.
+        </Readers>
+      ) : null}
 
       {address.kind !== "group" ? (
         <Empty>

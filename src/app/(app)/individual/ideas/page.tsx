@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Empty, Page, ScreenHead, SectionLabel, Tag } from "@/components/ui";
+import { Empty, Page, Readers, ScreenHead, SectionLabel, Tag } from "@/components/ui";
 import { ago, STATUS_LABEL } from "@/lib/format";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
@@ -56,6 +56,7 @@ export default async function PipelinePage() {
   return (
     <Page>
       <ScreenHead sub="Where ideas are triaged and concepts are built.">Ideas</ScreenHead>
+      <Readers className="-mt-2 mb-5">Only you, until you turn one into a proposal and submit it.</Readers>
 
       <section className="mb-10">
         <SectionLabel right={ideas.length ? `${ideas.length}` : undefined}>

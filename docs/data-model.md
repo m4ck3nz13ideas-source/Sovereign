@@ -461,6 +461,21 @@ definition it never mentioned. Nothing in `close_proposal()`,
 `cast_resonance()` or `can_reach_proposal()` reads either table: looking a word
 up counts towards nothing.
 
+### `term_sightings`
+
+Where somebody noticed a word: `(term_id, proposal_id, raised_by)` is the key,
+plus `excerpt` (2–400 characters) and `raised_at`. Written only through
+`raise_term_from()`, which checks reach, membership and same group, and refuses
+the excerpt unless the proposal's own title, summary or body contains it
+(`flat_text()` — lower-cased, whitespace collapsed) and the word unless the
+excerpt contains it. There is no insert, update or delete policy. Readable by
+the word's group; `sightings_for()` is `security definer` and asks both
+`is_group_member()` and `can_reach_proposal()`.
+
+It is a quotation with a name on it, not a link saying the proposal is about the
+word. `proposals` gains no column, nothing lists a proposal's words, and nothing
+that decides reads this table. Rule 35.
+
 ## Projects and Impact
 
 ### `projects`
@@ -600,6 +615,7 @@ friendship stops new messages and leaves the old ones readable by both.
 | `accept_universal_law`, `my_law_accession`, `accession_standing` | Ten laws, the revision stamped here, and no way to edit it after |
 | `record_inquiry`, `inquiries_for`, `positions_for` | Two lenses minimum, no ranking anywhere, and it counts towards nothing |
 | `raise_term`, `write_reading`, `group_lexicon`, `readings_for`, `reading_history` | Readings, never a definition, and nothing measures whether they agree |
+| `raise_term_from`, `sightings_for`, `flat_text` | A word raised while reading a proposal, with the sentence quoted and checked against it |
 | `proposal_lineage`, `proposal_successors`, `freeze_lineage` | A second attempt says what changed, and its history cannot be re-pointed |
 
 ## Indexes

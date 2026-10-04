@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Card, Gutter, Screen, SectionLabel, Tag } from "@/components/ui";
+import { Card, Gutter, Readers, Screen, SectionLabel, Tag } from "@/components/ui";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { UNIVERSAL_LAWS } from "@/lib/universal-law";
@@ -24,7 +24,7 @@ export const metadata = { title: "Values · Sovereign" };
  * product should never contain the second.
  */
 export default async function ValuesPage() {
-  const { userId } = await requireSession();
+  const { userId, profile } = await requireSession();
   const supabase = await createClient();
 
   const [{ data: values }, { data: mirrorRows }, { data: standingRows }] =
@@ -63,6 +63,11 @@ export default async function ValuesPage() {
             everyone. Nothing on this screen is a score anybody else can see,
             and nothing on it affects a decision.
           </p>
+          <Readers className="mt-3">
+            {profile.share_values
+              ? "Your values: you, and the people in your groups, because you chose to share them. The mirror: only you — it is worked out when you open this screen and never stored."
+              : "Only you. Your values stay yours unless you choose to share them with your groups, and the mirror is worked out when you open this screen and never stored."}
+          </Readers>
         </div>
 
         {/* ------------------------------------------------------ YOUR OWN */}

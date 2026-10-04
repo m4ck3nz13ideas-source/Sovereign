@@ -1,4 +1,4 @@
-import { Gutter, Screen, SectionLabel, TopBar } from "@/components/ui";
+import { Gutter, Readers, Screen, SectionLabel, TopBar } from "@/components/ui";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type { MyInquiry } from "@/lib/types";
@@ -34,6 +34,10 @@ export default async function AskPage() {
           Find something you or the group has already written, or ask a
           question and see what several ways of knowing hold about it.
         </p>
+        <Readers className="mt-2">
+          A question asked here: only you, permanently. One asked on a proposal:
+          everyone that proposal is addressed to.
+        </Readers>
 
         <AskPanel mine={(data ?? []) as MyInquiry[]} />
       </Gutter>
