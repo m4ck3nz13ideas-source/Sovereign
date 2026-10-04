@@ -5,7 +5,7 @@ import type { MyInquiry } from "@/lib/types";
 
 import { AskPanel } from "./AskPanel";
 
-export const metadata = { title: "Ask · Sovereign" };
+export const metadata = { title: "Search · Sovereign" };
 
 /**
  * Ask — one field, two jobs.
@@ -28,7 +28,7 @@ export default async function AskPage() {
 
   return (
     <Screen>
-      <TopBar title="Ask" />
+      <TopBar title="Search" />
       <Gutter>
         <p className="mt-2 text-[0.9375rem] leading-relaxed text-paper-dim">
           Find something you or the group has already written, or ask a

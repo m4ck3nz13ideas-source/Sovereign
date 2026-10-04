@@ -4,27 +4,33 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * Four tabs, left to right: Individual, Home, Ask, Collective.
+ * Five tabs, left to right: Individual, Home, Search, Marketplace, Collective.
  *
  * The first three come straight from the overview's architecture diagram —
  * SOVEREIGN APP branching into HOME, INDIVIDUAL and COLLECTIVE — with Home
  * left of centre because it is the one you sit in. Each tab has its own strip
  * of sub-tabs underneath it, so the depth is in the tab rather than in here.
  *
- * Ask is the fourth, next to Home rather than raised in the middle. Rule 2 is
- * understanding before opinion, and a surface for going and finding something
- * out earns a place at this level; a raised centre button does not, because
- * that is the shape of an app whose whole purpose is posting. Writing stays a
- * plus in the Home bar for the same reason.
+ * Search (the /ask route) sits next to Home rather than raised in the middle.
+ * Rule 2 is understanding before opinion, and a surface for going and finding
+ * something out earns a place at this level; a raised centre button does not,
+ * because that is the shape of an app whose whole purpose is posting. Writing
+ * stays a plus in the Home bar for the same reason.
  *
- * Four is the ceiling. A fifth would start the argument about which of these
+ * Marketplace is the fifth, and Mackenzie's call: the app is meant to be
+ * inclusive of trade, and trade that has to be dug out from under Collective
+ * reads as tolerated rather than included. It sits beside Collective because
+ * everything in it was admitted by a collective decision (rule 37).
+ *
+ * Five is the ceiling. A sixth would start the argument about which of these
  * matters least, and the answer would be whichever one somebody added last.
  */
 
 const TABS = [
   { href: "/individual", label: "Individual", Icon: IndividualIcon },
   { href: "/home", label: "Home", Icon: HomeIcon },
-  { href: "/ask", label: "Ask", Icon: AskIcon },
+  { href: "/ask", label: "Search", Icon: AskIcon },
+  { href: "/marketplace", label: "Marketplace", Icon: MarketplaceIcon },
   { href: "/collective", label: "Collective", Icon: CollectiveIcon },
 ] as const;
 
@@ -122,6 +128,27 @@ function AskIcon({ filled }: IconProps) {
         d="m15.5 15.5 4.25 4.25"
         fill="none"
         stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function MarketplaceIcon({ filled }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden>
+      <path
+        d="M5.5 8.5h13l-1 11a1.5 1.5 0 0 1-1.5 1.35H8A1.5 1.5 0 0 1 6.5 19.5z"
+        fill={filled ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 10.5V7a3 3 0 0 1 6 0v3.5"
+        fill="none"
+        stroke={filled ? "var(--color-ink)" : "currentColor"}
         strokeWidth="1.75"
         strokeLinecap="round"
       />

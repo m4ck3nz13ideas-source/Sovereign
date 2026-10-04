@@ -1,7 +1,7 @@
 import { TabBar } from "@/components/nav/TabBar";
 
 /**
- * The app shell. Three tabs, always visible; every screen clears them with its
+ * The app shell. Five tabs, always visible; every screen clears them with its
  * own bottom padding.
  */
 export default function AppLayout({ children }: { children: React.ReactNode }) {

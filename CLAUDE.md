@@ -325,6 +325,44 @@ on purpose, in a commit that says so.
     measure of anything the ledger records. Groups only, same group, for the
     same reason as rule 30.
 
+36. **A record is written once.** What a law reading said, what a flag
+    raised and what somebody said in a debate never change after the fact,
+    and an answer to any of them is written once and stays signed by whoever
+    wrote it — `freeze_law_assessment()`, `freeze_proposal_flag()` and
+    `freeze_contribution()`, on top of `frozen_once()` and `frozen_person()`.
+    The three UPDATE policies that used to admit an answer (`law_resolve`,
+    `flags_resolve`, `comments_answer`) are gone and must not come back: a
+    policy's `with check` sees the row after the update, so it could insist an
+    answer was present and could not see that the same statement had also set
+    `verdict = 'aligned'`. Every answer goes through its security definer
+    function. A contribution can be taken back only while nobody has answered,
+    adopted or replied to it and the decision is still open
+    (`guard_contribution_delete()`). A proposal's status moves by hand in two
+    ways only — into deliberation, and withdrawn before a vote — and every other
+    move belongs to the decision functions (`guard_proposal_status()`).
+    `24_record.sql` opens with the exploit itself. Recovered from the live
+    database in 0029; it had been applied there as "0027" and never committed.
+
+37. **Nobody approves a listing; a group admits it.** A listing is attached to
+    one of its author's own proposals, before anybody has responded, by
+    `offer_listing()` — and it is listed exactly when that proposal passes.
+    `listing_state()` derives where it stands from the proposals and there is
+    no status column anybody can set. It comes down the same way: a
+    revocation rides on a proposal to the same group, scale and place as the
+    one that admitted it (anything else is venue-shopping), and the listing
+    is revoked when that passes. The offerer can withdraw it with a reason and
+    cannot undo that. The words are frozen once attached because people
+    resonated with those words; only `contact` changes. Neither table has a
+    write policy. Reach is `can_reach_proposal()` on the carrying proposal, and
+    `marketplace()` is security invoker so it cannot add any. It is ordered by
+    scale and then by decision date and nothing else: there is no boost,
+    promoted, sponsored, rating, review, view or click column, no price or
+    currency column (terms are the seller's words), no SOV spent and none
+    minted, and nothing that decides a proposal reads these tables.
+    `23_marketplace.sql` holds it to all of that. The proposal page shows what
+    a proposal carries above the AI layer, because resonating with it IS
+    admitting the listing. Recovered from the live database in 0030.
+
 ## On the surface, not in the schema
 
 These are interface conventions rather than rules the database enforces, but
@@ -367,6 +405,8 @@ line.
 - `src/app/(app)/collective/people/` — the graph: follow, friendship, the
   handle lookup and the public profile. Its `actions.ts` is imported from the
   profile screen too, because the handle belongs to the same feature.
+- `src/lib/marketplace.ts` — pure helpers for the marketplace screens, and
+  the form limits mirroring 0030's checks.
 - `src/lib/collective.ts` — pure helpers for the collective screens. A
   `"use server"` file may only export async functions, so anything synchronous
   belongs here rather than in `actions.ts`.
@@ -437,3 +477,13 @@ database in one run.
 The voice is the product. Plain words, no exclamation marks, no congratulation,
 no "oops". Where a constraint exists, say what it is and why — the components
 in `ResonancePanel.tsx` and `FlagList.tsx` are the reference for tone.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
