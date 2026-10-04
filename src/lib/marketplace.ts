@@ -86,6 +86,10 @@ export interface Ad {
   offering_id: string | null;
   headline: string;
   body: string;
+  /** 0 to 1: how well this business fits the viewer's own values and the laws. */
+  fit: number;
+  /** Which of the viewer's own values it matched. Never shown to the business. */
+  matched: string[];
 }
 
 export const STATUS_COPY: Record<VendorStatus, { label: string; tone: "neutral" | "gold" | "alarm" | "calm"; next: string }> = {

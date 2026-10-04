@@ -153,8 +153,10 @@ export function SellerConsole({
         <section className="pb-4">
           <SectionLabel>Advertising</SectionLabel>
           <p className="mb-3 text-sm leading-relaxed text-paper-faint">
-            Pay per click. The highest live bid takes the one sponsored slot, labelled as an ad.
-            Each person is charged once per campaign per day, and never past your budget.
+            Pay per click. The one sponsored slot goes to the business that best fits each
+            viewer&apos;s own values and the Universal Laws — your bid only breaks ties and sets
+            what a click costs. The clearer your description and evidence, the more people
+            you will fit. Each person is charged once per campaign per day, never past your budget.
             {approved ? "" : " Only an approved business can advertise — approval cannot be bought, so it comes first."}
           </p>
           {campaigns.length ? (

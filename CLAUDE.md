@@ -370,7 +370,13 @@ on purpose, in a commit that says so.
     can start a campaign, an ad stops the moment approval lapses, and a click
     is charged once per person per campaign per day, never for the
     advertiser's own clicks and never past budget. The one sponsored slot is
-    labelled. **No approval or ordering function may read anything on the
+    labelled, and since 0033 it goes to the **best fit for the viewer, not the
+    highest bid**: `ad_fit()` is 70% full-text match between the business's
+    words and the viewer's own `profile_values`, 30% how cleanly it passed
+    vetting; the bid only breaks ties. Fit is computed per viewer and never
+    stored, and the slot names which of the viewer's values it matched;
+    advertisers see clicks and spend, never fit. `27_ad_alignment.sql` fails
+    if a fit function reads the money side. **No approval or ordering function may read anything on the
     money side** — `25_trade.sql` reads their source for campaign, click,
     bid, spend and budget and fails if any appears. Organic listings are
     newest first and not for sale. A concern is seen by whoever raised it and

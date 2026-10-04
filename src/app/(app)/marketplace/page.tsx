@@ -15,9 +15,12 @@ export const metadata = { title: "Marketplace · Sovereign" };
  * by a reviewer, for the words it stands on now. Buying happens on the
  * business's own site; a listing links out.
  *
- * One slot is sponsored, and says so. It is the highest live pay-per-click
- * bid among businesses that are already approved — paying buys that slot and
- * nothing else. The list below it is newest first and is not for sale.
+ * One slot is sponsored, and says so. Of the approved businesses running a
+ * campaign, it goes to the one that best fits the person looking — their own
+ * values first, then how cleanly the business passed its vetting — and the
+ * bid only breaks ties (0033). Paying makes a business eligible for the slot
+ * and sets what a click costs; it does not decide who gets it. The list below
+ * is newest first and is not for sale.
  */
 export default async function MarketplacePage({
   searchParams,
@@ -96,6 +99,12 @@ export default async function MarketplacePage({
             </div>
             <p className="mt-1.5 font-serif text-lg leading-snug text-paper">{ad.headline}</p>
             <p className="mt-1 text-sm leading-relaxed text-paper-dim">{ad.body}</p>
+            {ad.matched?.length ? (
+              <p className="mt-2 text-xs text-paper-faint">
+                Shown because it fits your {ad.matched.length === 1 ? "value" : "values"}:{" "}
+                {ad.matched.join(", ")}
+              </p>
+            ) : null}
           </a>
         ) : null}
       </Gutter>
