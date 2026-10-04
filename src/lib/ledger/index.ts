@@ -264,7 +264,7 @@ export interface Coordination {
   /** Your own entries, most recent first. */
   entries(limit?: number): Promise<SovEntry[]>;
   /** The Proof of Alignment schedule, as everybody can read it. */
-  schedule(): Promise<{ kind: string; amount: number; rationale: string }[]>;
+  schedule(): Promise<{ kind: string; amount: number; tier: number; rationale: string }[]>;
   /** True where this is a simulation. The UI says so wherever a figure appears. */
   readonly simulated: boolean;
   describe(): string;
@@ -295,7 +295,7 @@ class SimulatedSov implements Coordination {
   async schedule() {
     const supabase = await createClient();
     const { data } = await supabase.rpc("sov_schedule");
-    return (data ?? []) as { kind: string; amount: number; rationale: string }[];
+    return (data ?? []) as { kind: string; amount: number; tier: number; rationale: string }[];
   }
 
   describe() {

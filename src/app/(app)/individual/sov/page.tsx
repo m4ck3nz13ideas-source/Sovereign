@@ -26,6 +26,24 @@ export const metadata = { title: "SOV · Sovereign" };
  * impossible rather than merely absent, because no policy lets one person read
  * another's account.
  */
+const ACT_LABEL: Record<string, string> = {
+  "project.completed": "Finishing a project, with the reflection written",
+  "proposal.decided": "A proposal you wrote passing",
+  "flag.answered": "Answering a critical flag on the record",
+  "projection.resolved": "Marking a prediction against what happened",
+  "law.tension_answered": "Answering a Universal Law tension",
+  "debate.adopted": "An amendment you wrote being adopted",
+  "debate.answered": "Answering a question or concern",
+  "resonance.recorded": "Resonating with a proposal you read",
+  "projection.recorded": "Recording a prediction",
+};
+
+const TIER_LABEL: Record<number, string> = {
+  1: "participation",
+  2: "work",
+  3: "outcome",
+};
+
 export default async function SovPage() {
   const { userId } = await requireSession();
   const supabase = await createClient();
@@ -102,11 +120,8 @@ export default async function SovPage() {
               <div key={s.kind}>
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="text-[0.9375rem] text-paper">
-                    {s.kind === "project.completed"
-                      ? "Finishing a project, with the reflection written"
-                      : s.kind === "flag.answered"
-                        ? "Answering a critical flag on the record"
-                        : "Marking a prediction against what happened"}
+                    {ACT_LABEL[s.kind] ?? s.kind}
+                    <span className="ml-2 text-xs text-paper-faint">{TIER_LABEL[s.tier] ?? ""}</span>
                   </p>
                   <p className="tabular-nums text-gold">{Number(s.amount).toLocaleString()}</p>
                 </div>
@@ -114,9 +129,10 @@ export default async function SovPage() {
               </div>
             ))}
             <p className="border-t border-line-soft pt-3 text-xs leading-relaxed text-paper-faint">
-              Nothing mints for posting, following, being kept, turning up, or
-              holding an opinion. Every issuance points at an act on the ledger
-              and happens once.
+              Participation is capped per day: full rate for the first five,
+              half up to fifteen, then nothing until tomorrow. Nothing mints for
+              following, being kept or just turning up. Every issuance points at
+              an act on the ledger and happens once.
             </p>
           </Card>
         </section>

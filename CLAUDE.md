@@ -287,6 +287,18 @@ on purpose, in a commit that says so.
     absent. There is no price, conversion, market or fee column and no function
     named for one. It is a SIMULATION and every surface that shows it says so.
 
+    **Widened in 0032** on Mackenzie's direction that activity is
+    contribution. The schedule now has tiers: 1 participation (resonating,
+    recording a prediction) at 1 SOV, once per subject and capped per person
+    per day — full rate for five, half to fifteen, then nothing; 2 work
+    (answering a question or concern, a law tension, a flag, an adopted
+    amendment, a marked prediction); 3 outcomes others confirmed (your
+    proposal passing pays its author, never its closer; a project
+    completed). Following, being kept and joining still mint nothing, and
+    posting and deliberation comments cannot until they are ledgered on
+    purpose. `26_mint_schedule.sql` holds the cap, the once-per-subject rule
+    and the recipients.
+
 34. **A vote racing a close is refused, and three other things cannot happen
     twice.** The proposal row is the lock: `close_proposal()` takes it `for
     update` and `cast_resonance()` takes the same one, so a vote arriving while

@@ -70,8 +70,8 @@ begin
 
   ------------------------------------------------- and the amounts are the schedule
   select count(*)::int into n from sov_schedule();
-  if n = 3 then passes := passes + 1; else fails := fails + 1;
-    raise warning 'FAIL: the issuance schedule has % entries, expected 3', n; end if;
+  if n = 9 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: the issuance schedule has % entries, expected 9 (0032)', n; end if;
 
   select count(*)::int into n from sov_schedule() where kind = 'project.completed' and amount = 100;
   if n = 1 then passes := passes + 1; else fails := fails + 1;
@@ -384,7 +384,7 @@ begin
   ---------------------------------------- posting does not mint, and cannot later
   select count(*)::int into n from sov_issuance
    where kind in ('post.published', 'follow', 'post.kept', 'proposal.submitted',
-                  'resonance.recorded', 'member.joined');
+                  'member.joined');
   if n = 0 then passes := passes + 1; else fails := fails + 1;
     raise warning 'FAIL: the schedule pays for % act(s) that are not finished work', n; end if;
 
