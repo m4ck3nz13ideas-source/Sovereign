@@ -18,6 +18,38 @@ const REFUSALS: { line: string; rule: string }[] = [
   { line: "Ask shows you positions, never a verdict.", rule: "29" },
   { line: "What you agreed to stays what you agreed to — an amendment cannot rewrite it.", rule: "28" },
   { line: "No follower counts, no directory, no read receipts.", rule: "19, 23" },
+  { line: "Nobody approves, ranks or sells placement in the Marketplace — a group admits a listing by passing a proposal.", rule: "37" },
+];
+
+/**
+ * What is inside, tab by tab, in the order the tab bar shows them.
+ *
+ * The door is the only page somebody sees before they are invited in, so it
+ * says what they are being invited into. Each line describes something that
+ * exists and works today — not a roadmap. When a tab changes, this changes in
+ * the same commit as TabBar.tsx.
+ */
+const TABS: { name: string; line: string }[] = [
+  {
+    name: "Individual",
+    line: "Your profile, values, journal, ideas, drafts, a private guardian, chats with friends, and your SOV — all yours alone unless you share them.",
+  },
+  {
+    name: "Home",
+    line: "A feed of first-hand posts and the decisions the people you know have made, in time order, and what is waiting on you.",
+  },
+  {
+    name: "Search",
+    line: "Find what you or your group have already written, or ask a question and see what several ways of knowing hold about it.",
+  },
+  {
+    name: "Marketplace",
+    line: "Products, services and businesses your groups and places have admitted by passing a proposal. No ads, no rankings, nothing paid to be shown.",
+  },
+  {
+    name: "Collective",
+    line: "Proposals, sharpened and audited against the ten Universal Laws, debated and resonated with — then projects, outcomes, the words a group uses, and the people in it.",
+  },
 ];
 
 export default async function LoginPage({
@@ -46,6 +78,18 @@ export default async function LoginPage({
         ) : null}
 
         <div className="mt-10 border-t border-line-soft pt-6">
+          <p className="smallcaps mb-3 text-[10px] text-paper-faint">What is inside</p>
+          <dl className="space-y-3">
+            {TABS.map((t) => (
+              <div key={t.name}>
+                <dt className="text-[0.875rem] font-medium text-paper">{t.name}</dt>
+                <dd className="mt-0.5 text-[0.875rem] leading-snug text-paper-dim">{t.line}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <div className="mt-8 border-t border-line-soft pt-6">
           <p className="smallcaps mb-3 text-[10px] text-paper-faint">What this place will not do</p>
           <ul className="space-y-2">
             {REFUSALS.map((r) => (
