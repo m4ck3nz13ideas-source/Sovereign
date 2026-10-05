@@ -45,7 +45,7 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
 
   return (
     <>
-      <TopBar title={vendor.name} back="/marketplace?view=businesses" />
+      <TopBar title={vendor.name} back="/market?view=businesses" />
       <Page>
         <header className="mb-6">
           {status === "approved" ? (

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * Five tabs, left to right: Individual, Home, Search, Marketplace, Collective.
+ * Five tabs, left to right: Individual, Home, Search, Market, Collective.
  * Icons only, by Mackenzie's direction: the names stay as aria-label and
  * title, so screen readers and a desktop hover still say where you are.
  *
@@ -33,7 +33,7 @@ const TABS = [
   { href: "/individual", label: "Individual", Icon: IndividualIcon },
   { href: "/home", label: "Home", Icon: HomeIcon },
   { href: "/ask", label: "Search", Icon: AskIcon },
-  { href: "/marketplace", label: "Marketplace", Icon: MarketplaceIcon },
+  { href: "/market", label: "Market", Icon: MarketplaceIcon },
   { href: "/collective", label: "Collective", Icon: CollectiveIcon },
 ] as const;
 

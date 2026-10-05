@@ -27,8 +27,16 @@ import type { MineHit, SearchHit } from "@/lib/types";
  * wrong would break the product's central promise quietly, which is the worst
  * way for a promise to break.
  */
+export type SearchAd = {
+  campaign_id: string;
+  vendor_name: string;
+  headline: string;
+  body: string;
+  matched: string[];
+};
+
 export async function find(query: string): Promise<
-  | { ok: true; shared: SearchHit[]; mine: MineHit[] }
+  | { ok: true; shared: SearchHit[]; mine: MineHit[]; ad?: SearchAd | null }
   | { ok: false; error: string }
 > {
   const q = query.trim();
@@ -37,9 +45,11 @@ export async function find(query: string): Promise<
   await requireSession();
   const supabase = await createClient();
 
-  const [collective, own] = await Promise.all([
+  const [collective, own, adRow] = await Promise.all([
     supabase.rpc("search_collective", { p_query: q, p_limit: 20 }),
     supabase.rpc("search_mine", { p_query: q, p_limit: 20 }),
+    // One labelled ad, only if a vetted advertiser is relevant to this search.
+    supabase.rpc("search_ad", { p_q: q }),
   ]);
 
   if (collective.error) return { ok: false as const, error: collective.error.message };
@@ -49,6 +59,7 @@ export async function find(query: string): Promise<
     ok: true as const,
     shared: (collective.data ?? []) as SearchHit[],
     mine: (own.data ?? []) as MineHit[],
+    ad: ((adRow.data ?? []) as SearchAd[])[0] ?? null,
   };
 }
 

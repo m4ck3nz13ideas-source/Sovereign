@@ -8,7 +8,7 @@ import { ago } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import type { InquiryLens, MineHit, MyInquiry, Position, SearchHit } from "@/lib/types";
 
-import { askStandingQuestion, find, forgetInquiry } from "./actions";
+import { askStandingQuestion, find, forgetInquiry, type SearchAd } from "./actions";
 
 const LENS_NAME: Record<InquiryLens, string> = {
   empirical: "The literature",
@@ -76,6 +76,7 @@ export function AskPanel({ mine }: { mine: MyInquiry[] }) {
   const [q, setQ] = useState("");
   const [shared, setShared] = useState<SearchHit[] | null>(null);
   const [mine_, setMine] = useState<MineHit[] | null>(null);
+  const [ad, setAd] = useState<SearchAd | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [open, setOpen] = useState<string | null>(null);
@@ -91,6 +92,7 @@ export function AskPanel({ mine }: { mine: MyInquiry[] }) {
         else {
           setShared(r.shared);
           setMine(r.mine);
+                        setAd(r.ad ?? null);
         }
       } else {
         const r = await askStandingQuestion(q);
@@ -157,6 +159,7 @@ export function AskPanel({ mine }: { mine: MyInquiry[] }) {
                       else {
                         setShared(r.shared);
                         setMine(r.mine);
+                        setAd(r.ad ?? null);
                       }
                     });
                   }
@@ -167,17 +170,22 @@ export function AskPanel({ mine }: { mine: MyInquiry[] }) {
               </button>
             ))}
           </div>
-          {mode === "ask" ? (
-            <p className="mt-3 text-[0.8125rem] leading-relaxed text-paper-faint">
-              What a word means to your group is not a question for here — the
-              people you decide with are the only ones who can answer it.{" "}
-              <Link href="/collective/lexicon" className="underline decoration-line">
-                Raise it in Words
-              </Link>
-              .
-            </p>
-          ) : null}
         </div>
+      ) : null}
+
+      {mode === "find" && ad ? (
+        <a
+          href={`/market/ad/${ad.campaign_id}`}
+          rel="sponsored noopener"
+          className="press block rounded-card border border-gold/40 bg-surface-soft px-4 py-3 active:bg-surface"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <span className="smallcaps text-[10px] text-gold">Sponsored</span>
+            <span className="text-xs text-paper-faint">{ad.vendor_name}</span>
+          </div>
+          <p className="mt-1 font-serif text-base leading-snug text-paper">{ad.headline}</p>
+          <p className="mt-0.5 text-sm text-paper-dim">{ad.body}</p>
+        </a>
       ) : null}
 
       {mode === "find" && shared !== null && mine_ !== null ? (
@@ -191,7 +199,7 @@ export function AskPanel({ mine }: { mine: MyInquiry[] }) {
             {shared.length ? (
               <div>
                 <p className="smallcaps text-[10px] text-paper-faint">
-                  The collective half — others can see these too
+                  Shared
                 </p>
                 {shared.map((h) => (
                   <Link
@@ -350,10 +358,7 @@ function Asked({
               ) : null}
 
               <p className="border-t border-line-soft pt-4 text-sm leading-relaxed text-paper-faint">
-                These are {inquiry.model}&rsquo;s account of what each of these
-                holds, not a literature review and not verified. A named work is
-                somewhere to start reading, not evidence that the claim is true.
-                Nothing here has been reconciled into an answer.
+                Unverified. A place to start reading.
               </p>
 
               <button

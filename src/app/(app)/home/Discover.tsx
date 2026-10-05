@@ -119,13 +119,6 @@ export function Dormant({ items }: { items: DormantProposal[] }) {
     <section className="mb-10">
       <SectionLabel right={`${items.length}`}>Deserves another look</SectionLabel>
 
-      <p className="mb-3 text-sm leading-relaxed text-paper-faint">
-        These did not fail on their merits. They ran out of people, or they were
-        agreed and then nobody committed what they needed. Taking one up writes
-        a new proposal from it — it goes through the sharpening and the audit
-        again, because a clearance from one moment is not a clearance now.
-      </p>
-
       <ul className="space-y-2">
         {items.map((d) => (
           <li key={d.proposal_id}>
@@ -222,10 +215,6 @@ export function Signal({ events }: { events: SignalEvent[] }) {
         })}
       </ul>
 
-      <p className="mt-3 text-xs leading-relaxed text-paper-faint">
-        Read off the ledger, not assembled from the tables — these are the
-        governance acts themselves, in the order they were recorded.
-      </p>
     </section>
   );
 }

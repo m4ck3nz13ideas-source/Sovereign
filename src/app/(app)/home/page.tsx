@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { ScaleSelector } from "@/components/nav/ScaleSelector";
+import { ChatsLink, TabActions } from "@/components/nav/TabActions";
 import {
   Empty,
   Gutter,
@@ -24,7 +25,6 @@ import type {
 import { Attention, Dormant, Signal } from "./Discover";
 import { Compose } from "./Compose";
 import { Feed } from "./Feed";
-import { TheRuleHere } from "./TheRuleHere";
 
 export const metadata = { title: "Sovereign" };
 
@@ -96,14 +96,6 @@ export default async function HomePage() {
   // The bar every decision at this address has to clear. Shown because it was
   // invisible: the numbers live in scope_rules, which is readable by everyone
   // and was read by nothing.
-  const { data: ruleRow } =
-    scope !== null
-      ? await supabase
-          .from("scope_rules")
-          .select("min_voices, threshold_alignment, deliberation_days")
-          .eq("scope", scope)
-          .maybeSingle()
-      : { data: null };
 
   const here =
     address?.kind === "group"
@@ -118,37 +110,8 @@ export default async function HomePage() {
         title={here}
         action={
           <div className="flex items-center">
-            {/* Writing lives here rather than in the tab bar. A raised centre
-                button is the shape of an app whose purpose is posting. */}
-            <Link
-              href="/write"
-              aria-label="Write"
-              className="press flex h-10 w-10 items-center justify-center rounded-full text-gold active:bg-surface"
-            >
-              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
-                <path
-                  d="M12 5v14M5 12h14"
-                  stroke="currentColor"
-                  strokeWidth="2.25"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </Link>
-            <Link
-              href="/settings"
-              aria-label="Settings"
-              className="press flex h-10 w-10 items-center justify-center rounded-full text-paper-dim active:bg-surface"
-            >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
-                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.75" />
-                <path
-                  d="M12 3.5v2M12 18.5v2M20.5 12h-2M5.5 12h-2M18 6l-1.4 1.4M7.4 16.6 6 18M18 18l-1.4-1.4M7.4 7.4 6 6"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </Link>
+            <ChatsLink />
+            <TabActions plus="/home#compose" plusLabel="New post" />
           </div>
         }
       >
@@ -165,14 +128,6 @@ export default async function HomePage() {
       </TopBar>
 
       <Screen>
-        {scope !== null && ruleRow ? (
-          <TheRuleHere
-            scope={scope}
-            minVoices={ruleRow.min_voices as number}
-            threshold={Number(ruleRow.threshold_alignment)}
-            deliberationDays={ruleRow.deliberation_days as number}
-          />
-        ) : null}
 
         {ready?.length ? (
           <section className="pt-4">
@@ -245,7 +200,9 @@ export default async function HomePage() {
           </Gutter>
 
           <Gutter className="space-y-3">
-            <Compose hasGroup={Boolean(group)} />
+            <div id="compose" className="scroll-mt-16">
+              <Compose hasGroup={Boolean(group)} />
+            </div>
             <Feed items={items} kept={kept} />
           </Gutter>
         </section>
@@ -259,10 +216,7 @@ export default async function HomePage() {
                 </LinkButton>
               }
             >
-              Nobody has to invite you into anything. Write down where you are —
-              a street, a city, a country — and the proposals addressed to those
-              places become yours to read, answer and write. A group is the other
-              way in, and entirely optional.
+              Where are you?
             </Empty>
           </Gutter>
         ) : null}

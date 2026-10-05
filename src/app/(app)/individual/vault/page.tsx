@@ -33,6 +33,9 @@ export default async function VaultPage() {
       supabase.from("commitments").select("id", { count: "exact", head: true }).eq("profile_id", userId),
     ]);
 
+  const { data: sovRows } = await supabase.rpc("my_sov");
+  const sov = (Array.isArray(sovRows) ? sovRows[0] : sovRows) as { balance: number } | null;
+
   const shared = [
     profile.share_values ? "your values" : null,
     profile.share_purpose ? "your purpose" : null,
@@ -42,13 +45,15 @@ export default async function VaultPage() {
   return (
     <Screen>
       <Gutter className="space-y-8 pt-6">
-        <div>
-          <h2 className="display text-[1.75rem] text-paper">Vault</h2>
-          <p className="mt-2 text-[0.9375rem] leading-relaxed text-paper-dim">
-            Everything belongs to you. This is what is here, what is shared, and
-            what has not been built.
-          </p>
-        </div>
+        <Link
+          href="/individual/sov"
+          className="press flex items-center justify-between rounded-card border border-gold/40 bg-surface-soft px-4 py-4 active:bg-surface"
+        >
+          <span className="smallcaps text-[11px] text-gold">SOV</span>
+          <span className="font-serif text-2xl tabular-nums text-paper">
+            {sov ? Number(sov.balance).toLocaleString("en-GB", { maximumFractionDigits: 2 }) : "0"}
+          </span>
+        </Link>
 
         {/* ------------------------------------------------------- WHAT IS HERE */}
         <section>

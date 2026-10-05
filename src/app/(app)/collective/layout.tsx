@@ -1,3 +1,4 @@
+import { TabActions } from "@/components/nav/TabActions";
 import { TopBar } from "@/components/ui";
 import { COLLECTIVE_TABS, SubTabs } from "@/components/nav/SubTabs";
 
@@ -14,7 +15,7 @@ export default function CollectiveLayout({
 }) {
   return (
     <>
-      <TopBar title="Collective">
+      <TopBar title="Collective" action={<TabActions plus="/collective/proposals/new" plusLabel="New proposal" />}>
         <SubTabs tabs={COLLECTIVE_TABS} />
       </TopBar>
       {children}

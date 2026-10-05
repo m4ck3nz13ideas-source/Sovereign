@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 type Result = { ok: true; id?: string } | { ok: false; error: string };
 
 function done(id?: string): Result {
-  revalidatePath("/marketplace", "layout");
+  revalidatePath("/market", "layout");
   return { ok: true, id };
 }
 

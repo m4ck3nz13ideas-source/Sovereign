@@ -31,7 +31,7 @@ export default async function SellPage() {
   if (!vendor) {
     return (
       <>
-        <TopBar title="Sell here" back="/marketplace" />
+        <TopBar title="Sell here" back="/market" />
         <Page>
           <SellerConsole vendor={null} status={null} vetting={null} offerings={[]} campaigns={[]} laws={[]} />
         </Page>
@@ -70,7 +70,7 @@ export default async function SellPage() {
 
   return (
     <>
-      <TopBar title={vendor.name} back="/marketplace" />
+      <TopBar title={vendor.name} back="/market" />
       <Page>
         <SellerConsole
           vendor={vendor}

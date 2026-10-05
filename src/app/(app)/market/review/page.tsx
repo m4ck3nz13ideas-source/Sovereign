@@ -54,7 +54,7 @@ export default async function ReviewPage() {
 
   return (
     <>
-      <TopBar title="Review queue" back="/marketplace" />
+      <TopBar title="Review queue" back="/market" />
       <Page>
         <ReviewConsole
           queue={queue}

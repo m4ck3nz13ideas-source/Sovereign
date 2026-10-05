@@ -13,5 +13,5 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const supabase = await createClient();
   const { data } = await supabase.rpc("record_ad_click", { p_campaign_id: id });
   const target = safeUrl(data as string | null);
-  return NextResponse.redirect(target ?? new URL("/marketplace", request.url));
+  return NextResponse.redirect(target ?? new URL("/market", request.url));
 }

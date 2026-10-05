@@ -1,12 +1,14 @@
 import Link from "next/link";
 
+import { TabActions } from "@/components/nav/TabActions";
+
 import { Empty, Gutter, inputClass, PillLink, Rail, Screen, Tag, TopBar } from "@/components/ui";
 import { firstLine } from "@/lib/format";
 import { isOfferingKind, safeUrl, type Ad, type MarketOffering } from "@/lib/marketplace";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Marketplace · Sovereign" };
+export const metadata = { title: "Market · Sovereign" };
 
 /**
  * Marketplace — trade with businesses that align with the Universal Laws.
@@ -58,18 +60,18 @@ export default async function MarketplacePage({
 
   return (
     <Screen>
-      <TopBar title="Marketplace">
+      <TopBar title="Market" action={<TabActions plus="/market/sell" plusLabel="Sell" />}>
         <Rail>
-          {tab("All", `/marketplace?${qs.slice(1)}`, !kind && !businesses)}
-          {tab("Products", `/marketplace?kind=product${qs}`, kind === "product")}
-          {tab("Services", `/marketplace?kind=service${qs}`, kind === "service")}
-          {tab("Businesses", `/marketplace?view=businesses${qs}`, businesses)}
+          {tab("All", `/market?${qs.slice(1)}`, !kind && !businesses)}
+          {tab("Products", `/market?kind=product${qs}`, kind === "product")}
+          {tab("Services", `/market?kind=service${qs}`, kind === "service")}
+          {tab("Businesses", `/market?view=businesses${qs}`, businesses)}
         </Rail>
       </TopBar>
 
       <Gutter>
         <p className="mt-4 font-serif text-lg text-paper">For people, not profit.</p>
-        <form action="/marketplace" className="mt-3">
+        <form action="/market" className="mt-3">
           {kind ? <input type="hidden" name="kind" value={kind} /> : null}
           {businesses ? <input type="hidden" name="view" value="businesses" /> : null}
           <input
@@ -90,7 +92,7 @@ export default async function MarketplacePage({
 
         {ad ? (
           <a
-            href={`/marketplace/ad/${ad.campaign_id}`}
+            href={`/market/ad/${ad.campaign_id}`}
             rel="sponsored noopener"
             className="press mt-5 block rounded-card border border-gold/40 bg-surface-soft px-4 py-3.5 active:bg-surface"
           >
@@ -116,7 +118,7 @@ export default async function MarketplacePage({
               {vendors.map((v) => (
                 <li key={v.id}>
                   <Link
-                    href={`/marketplace/v/${v.id}`}
+                    href={`/market/v/${v.id}`}
                     className="press block rounded-card border border-line bg-surface-soft px-4 py-3.5 active:bg-surface"
                   >
                     <span className="font-serif text-lg leading-snug text-paper">{v.name}</span>
@@ -141,7 +143,7 @@ export default async function MarketplacePage({
                   </div>
                   <p className="mt-1.5 text-sm leading-relaxed text-paper-dim">{firstLine(o.description, 160)}</p>
                   <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-                    <Link href={`/marketplace/v/${o.vendor_id}`} className="text-paper-faint hover:text-paper">
+                    <Link href={`/market/v/${o.vendor_id}`} className="text-paper-faint hover:text-paper">
                       {o.vendor_name}
                     </Link>
                     <span className="text-paper">{o.price}</span>
@@ -167,11 +169,11 @@ export default async function MarketplacePage({
 
       <Gutter className="mt-10 pb-4">
         <div className="flex flex-wrap gap-4 text-sm">
-          <Link href="/marketplace/sell" className="text-gold hover:underline">
+          <Link href="/market/sell" className="text-gold hover:underline">
             Sell here
           </Link>
           {reviewer ? (
-            <Link href="/marketplace/review" className="text-gold hover:underline">
+            <Link href="/market/review" className="text-gold hover:underline">
               Review queue
             </Link>
           ) : null}
