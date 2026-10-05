@@ -55,7 +55,7 @@ export default async function PipelinePage() {
 
   return (
     <Page>
-      <ScreenHead sub="Where ideas are triaged and concepts are built.">Ideas</ScreenHead>
+      <ScreenHead>Ideas</ScreenHead>
       <Readers className="-mt-2 mb-5">Only you, until you turn one into a proposal and submit it.</Readers>
 
       <section className="mb-10">

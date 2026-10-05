@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 
 /**
  * Five tabs, left to right: Individual, Home, Search, Marketplace, Collective.
+ * Icons only, by Mackenzie's direction: the names stay as aria-label and
+ * title, so screen readers and a desktop hover still say where you are.
  *
  * The first three come straight from the overview's architecture diagram —
  * SOVEREIGN APP branching into HOME, INDIVIDUAL and COLLECTIVE — with Home
@@ -54,14 +56,17 @@ export function TabBar() {
               <Link
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
-                className={`press flex flex-col items-center gap-0.5 rounded-xl py-1.5 ${
+                aria-label={tab.label}
+                title={tab.label}
+                className={`press flex flex-col items-center gap-1 rounded-xl py-2.5 ${
                   active ? "text-paper" : "text-paper-faint"
                 }`}
               >
                 <tab.Icon filled={active} />
-                <span className="text-[0.625rem] font-medium tracking-wide">
-                  {tab.label}
-                </span>
+                <span
+                  aria-hidden
+                  className={`h-1 w-1 rounded-full ${active ? "bg-gold" : "bg-transparent"}`}
+                />
               </Link>
             </li>
           );

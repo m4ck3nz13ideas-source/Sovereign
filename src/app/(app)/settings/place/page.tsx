@@ -36,7 +36,7 @@ export default async function PlacePage() {
         ← Settings
       </Link>
 
-      <PageTitle sub="What decides which proposals reach you.">
+      <PageTitle>
         Where you are
       </PageTitle>
 

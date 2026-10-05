@@ -27,7 +27,7 @@ export default async function PromptsPage() {
         ← Settings
       </Link>
 
-      <PageTitle sub="What the AI layer is actually told to do.">
+      <PageTitle>
         The prompts
       </PageTitle>
 

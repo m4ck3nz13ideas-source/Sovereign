@@ -38,7 +38,7 @@ export default async function ProjectsPage() {
 
   return (
     <Page>
-      <ScreenHead sub="What passed, and what became of it.">Projects</ScreenHead>
+      <ScreenHead>Projects</ScreenHead>
       <ScaleSelector
         options={addressOptions(session)}
         current={

@@ -45,7 +45,7 @@ export default async function LawPage() {
         ← Settings
       </Link>
 
-      <PageTitle sub="The constitution. Ten laws, above every decision this app can make.">
+      <PageTitle>
         Universal Law
       </PageTitle>
 

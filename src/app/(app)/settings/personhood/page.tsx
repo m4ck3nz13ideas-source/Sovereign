@@ -45,7 +45,7 @@ export default async function PersonhoodPage() {
         ← Settings
       </Link>
 
-      <PageTitle sub="One human, one voice — and nothing else known about you.">
+      <PageTitle>
         One person
       </PageTitle>
 

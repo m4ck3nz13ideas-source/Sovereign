@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Empty, Gutter, inputClass, PillLink, Rail, Screen, SectionLabel, Tag, TopBar } from "@/components/ui";
+import { Empty, Gutter, inputClass, PillLink, Rail, Screen, Tag, TopBar } from "@/components/ui";
 import { firstLine } from "@/lib/format";
 import { isOfferingKind, safeUrl, type Ad, type MarketOffering } from "@/lib/marketplace";
 import { requireSession } from "@/lib/session";
@@ -101,8 +101,7 @@ export default async function MarketplacePage({
             <p className="mt-1 text-sm leading-relaxed text-paper-dim">{ad.body}</p>
             {ad.matched?.length ? (
               <p className="mt-2 text-xs text-paper-faint">
-                Shown because it fits your {ad.matched.length === 1 ? "value" : "values"}:{" "}
-                {ad.matched.join(", ")}
+                Fits: {ad.matched.join(", ")}
               </p>
             ) : null}
           </a>
@@ -166,14 +165,7 @@ export default async function MarketplacePage({
       </Gutter>
 
       <Gutter className="mt-10 pb-4">
-        <SectionLabel>How a business gets in</SectionLabel>
-        <p className="text-sm leading-relaxed text-paper-faint">
-          It describes what it does and gives its evidence. The AI reads that against all ten
-          Universal Laws, and a reviewer checks the evidence and signs it off. Changing the
-          description means being read again. Advertising can buy the sponsored slot — never a
-          place in the marketplace.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-4 text-sm">
+        <div className="flex flex-wrap gap-4 text-sm">
           <Link href="/marketplace/sell" className="text-gold hover:underline">
             Sell here
           </Link>

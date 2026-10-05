@@ -44,8 +44,7 @@ export function LoginForm({ next }: { next?: string }) {
       <div className="rounded-card border border-gold-dim bg-gold-wash px-4 py-5">
         <p className="font-serif text-lg text-paper">Check your email.</p>
         <p className="mt-2 text-sm leading-relaxed text-paper-dim">
-          A sign-in link is on its way to {email}. It opens Sovereign directly —
-          there is nothing to remember and nothing to type back.
+          Tap the link we sent to {email}.
         </p>
         <button
           type="button"
@@ -74,7 +73,7 @@ export function LoginForm({ next }: { next?: string }) {
       </Field>
 
       <Button type="submit" disabled={state === "sending"} className="w-full">
-        {state === "sending" ? "Sending…" : "Send sign-in link"}
+        {state === "sending" ? "Sending…" : "Get in"}
       </Button>
 
       {state === "error" ? (

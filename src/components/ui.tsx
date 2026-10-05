@@ -568,15 +568,23 @@ export function Readers({
   className?: string;
 }) {
   return (
-    <p
-      className={cx(
-        "flex items-baseline gap-1.5 text-[0.8125rem] leading-snug text-paper-faint",
-        className,
-      )}
-    >
-      <span className="smallcaps shrink-0 text-[10px] text-paper-dim">Who can read this</span>
-      <span aria-hidden>·</span>
-      <span>{children}</span>
-    </p>
+    <details className={cx("group text-[0.8125rem] leading-snug text-paper-faint", className)}>
+      <summary
+        className="inline-flex cursor-pointer list-none items-center text-paper-faint hover:text-paper-dim [&::-webkit-details-marker]:hidden"
+        aria-label="Who can read this"
+        title="Who can read this"
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
+          <path
+            d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+          />
+          <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        </svg>
+      </summary>
+      <p className="mt-1.5">{children}</p>
+    </details>
   );
 }

@@ -53,7 +53,7 @@ export default async function ReflectionPage() {
 
   return (
     <Page>
-      <ScreenHead sub="Where what you wrote gets sat with.">Journal</ScreenHead>
+      <ScreenHead>Journal</ScreenHead>
       <Readers className="-mt-2 mb-5">Only you. No group, friend or steward has a way in — the database has no policy that would let them.</Readers>
 
       <section className="mb-10">
