@@ -14,6 +14,7 @@ import { addressOptions, currentAddress } from "@/lib/address";
 import { ago } from "@/lib/format";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
+import type { Ad } from "@/lib/marketplace";
 import type {
   AttentionItem,
   DormantProposal,
@@ -24,7 +25,7 @@ import type {
 
 import { Attention, Dormant, Signal } from "./Discover";
 import { Compose } from "./Compose";
-import { Feed } from "./Feed";
+import { Feed, type Counts } from "./Feed";
 
 export const metadata = { title: "Sovereign" };
 
@@ -93,6 +94,21 @@ export default async function HomePage() {
   const items = (feed ?? []) as WitnessFeedItem[];
   const kept = new Set(((keeps ?? []) as { post_id: string }[]).map((k) => k.post_id));
 
+  // Likes and comments for what is on screen (public counts; the order above
+  // never reads them), and one ad chosen by fit with this viewer.
+  const postIds = items.filter((i) => i.source === "post").map((i) => i.item_id);
+  const [{ data: countRows }, { data: adRows }] = await Promise.all([
+    postIds.length
+      ? supabase.rpc("post_counts", { p_ids: postIds })
+      : Promise.resolve({ data: [] }),
+    supabase.rpc("pick_ad"),
+  ]);
+  const counts: Counts = {};
+  for (const c of (countRows ?? []) as { post_id: string; likes: number; comments: number; i_liked: boolean }[]) {
+    counts[c.post_id] = { likes: c.likes, comments: c.comments, i_liked: c.i_liked };
+  }
+  const ad = ((adRows ?? []) as Ad[])[0] ?? null;
+
   // The bar every decision at this address has to clear. Shown because it was
   // invisible: the numbers live in scope_rules, which is readable by everyone
   // and was read by nothing.
@@ -148,7 +164,33 @@ export default async function HomePage() {
           </section>
         ) : null}
 
+        {/* ------------------------------------------------------------ FEED */}
+        {/* What people wrote and what they did, in one stream in time order.
+            Likes are counted and shown but never order it, and resonance is absent on
+            purpose — see Feed.tsx and rule 20. */}
+        <section className="pt-2">
+          <Gutter>
+            <SectionLabel
+              right={
+                <Link href="/settings/feed" className="text-gold">
+                  filter
+                </Link>
+              }
+            >
+              Feed
+            </SectionLabel>
+          </Gutter>
+
+          <Gutter className="space-y-3">
+            <div id="compose" className="scroll-mt-16">
+              <Compose hasGroup={Boolean(group)} />
+            </div>
+            <Feed items={items} kept={kept} counts={counts} ad={ad} />
+          </Gutter>
+        </section>
+
         {/* ------------------------------------------------- WAITING ON YOU */}
+        {queue.length ? (
         <section className="pt-5">
           <Gutter>
             <SectionLabel
@@ -166,14 +208,8 @@ export default async function HomePage() {
             <Attention items={queue} />
           </Gutter>
 
-          {!queue.length ? (
-            <Gutter className="mt-4">
-              <LinkButton href="/collective/proposals/new" tone="gold">
-                Write a proposal
-              </LinkButton>
-            </Gutter>
-          ) : null}
         </section>
+        ) : null}
 
         <div className="pt-8">
           <Gutter>
@@ -181,31 +217,6 @@ export default async function HomePage() {
             <Signal events={events} />
           </Gutter>
         </div>
-
-        {/* ------------------------------------------------------------ FEED */}
-        {/* What people wrote and what they did, in one stream in time order.
-            Nothing is ranked, nothing is counted, and resonance is absent on
-            purpose — see Feed.tsx and rule 20. */}
-        <section className="pt-2">
-          <Gutter>
-            <SectionLabel
-              right={
-                <Link href="/settings/feed" className="text-gold">
-                  filter
-                </Link>
-              }
-            >
-              What people are doing
-            </SectionLabel>
-          </Gutter>
-
-          <Gutter className="space-y-3">
-            <div id="compose" className="scroll-mt-16">
-              <Compose hasGroup={Boolean(group)} />
-            </div>
-            <Feed items={items} kept={kept} />
-          </Gutter>
-        </section>
 
         {!profile.place_set_at ? (
           <Gutter className="mt-8">

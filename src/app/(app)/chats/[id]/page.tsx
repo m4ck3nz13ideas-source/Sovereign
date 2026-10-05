@@ -34,7 +34,7 @@ export default async function ChatPage({
       <Gutter className="space-y-5 pt-6">
         <div>
           <Link
-            href="/individual/chats"
+            href="/chats"
             className="smallcaps text-[11px] text-paper-faint hover:text-gold"
           >
             ← Chats

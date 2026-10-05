@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 
-import { markRead, sendMessage, unsay } from "@/app/(app)/individual/chats/actions";
+import { markRead, sendMessage, unsay } from "@/app/(app)/chats/actions";
 import { Button, cx, inputClass } from "@/components/ui";
 import { ago } from "@/lib/format";
 import type { Message } from "@/lib/types";

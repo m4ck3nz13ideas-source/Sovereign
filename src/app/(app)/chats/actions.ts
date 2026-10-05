@@ -21,8 +21,8 @@ export async function sendMessage(to: string, body: string) {
   const { error } = await supabase.rpc("send_message", { p_to: to, p_body: body });
   if (error) return { ok: false as const, error: error.message };
 
-  revalidatePath(`/individual/chats/${to}`);
-  revalidatePath("/individual/chats");
+  revalidatePath(`/chats/${to}`);
+  revalidatePath("/chats");
   return { ok: true as const };
 }
 
@@ -34,7 +34,7 @@ export async function markRead(other: string) {
   const { error } = await supabase.rpc("mark_conversation_read", { p_other: other });
   if (error) return { ok: false as const, error: error.message };
 
-  revalidatePath("/individual/chats");
+  revalidatePath("/chats");
   return { ok: true as const };
 }
 
@@ -52,6 +52,6 @@ export async function unsay(messageId: string, other: string) {
   const { error } = await supabase.from("messages").delete().eq("id", messageId);
   if (error) return { ok: false as const, error: error.message };
 
-  revalidatePath(`/individual/chats/${other}`);
+  revalidatePath(`/chats/${other}`);
   return { ok: true as const };
 }

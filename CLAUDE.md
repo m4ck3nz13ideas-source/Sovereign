@@ -261,9 +261,16 @@ on purpose, in a commit that says so.
     one. `posts` has no likes, reactions, score, rank, views, shares, boost,
     pinned, trending, reach, impressions or engagement column, `witness_feed()`
     orders by `happened_at desc` with no second key, and resonance stays out of
-    it for the reason rule 20 keeps it out of `people_feed()`. A reaction is now
-    a KEEP: private to the person who made it, no count, no notification, and no
-    policy by which an author learns of one. Posting reaches no decision and
+    it for the reason rule 20 keeps it out of `people_feed()`. A KEEP (now
+    shown as Save) is private to the person who made it. **Revised in 0036 on
+    Mackenzie's direction:** a LIKE is public — `post_likes`, readable by
+    anybody who can see the post, counted by `post_counts()` and shown on the
+    card — and comments are threads anybody who can see the post can join. The
+    line that holds: likes are shown, never ranked by. `witness_feed()` does
+    not read them and `30_social.sql` fails if it does, and they reach no
+    decision, SOV or standing. The gate (prompt `post.witness` 1.1.0) now
+    passes a post that is truthful to its author OR positive or productive
+    for others, told straight. Posting reaches no decision and
     appears nowhere in `person_standing()` — the moment it does, this rewards
     posting. What the reader controls is their own: `feed_settings` and
     `feed_mutes` narrow one person's feed and are invisible to everybody else,

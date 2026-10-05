@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
     return [
       { source: "/marketplace", destination: "/market", permanent: false },
       { source: "/marketplace/:path*", destination: "/market/:path*", permanent: false },
+      // Chats moved from Individual to Home's side of the app.
+      { source: "/individual/chats", destination: "/chats", permanent: false },
+      { source: "/individual/chats/:path*", destination: "/chats/:path*", permanent: false },
     ];
   },
 };

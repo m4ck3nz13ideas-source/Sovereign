@@ -115,7 +115,7 @@ export default async function PersonPage({
 
         {standing.you_are_friends ? (
           <Link
-            href={`/individual/chats/${id}`}
+            href={`/chats/${id}`}
             className="smallcaps inline-block text-[11px] text-gold hover:underline"
           >
             Say something →

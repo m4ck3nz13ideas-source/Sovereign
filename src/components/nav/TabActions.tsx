@@ -42,7 +42,7 @@ export function TabActions({ plus, plusLabel }: { plus: string; plusLabel: strin
 export function ChatsLink() {
   return (
     <Link
-      href="/individual/chats"
+      href="/chats"
       aria-label="Chats"
       title="Chats"
       className="press flex h-10 w-10 items-center justify-center rounded-full text-paper-dim active:bg-surface"

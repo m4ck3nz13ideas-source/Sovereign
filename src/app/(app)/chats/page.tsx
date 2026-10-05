@@ -43,7 +43,7 @@ export default async function ChatsPage() {
           <ul className="space-y-2">
             {threads.map((t) => (
               <li key={t.profile_id}>
-                <Link href={`/individual/chats/${t.profile_id}`} className="press block">
+                <Link href={`/chats/${t.profile_id}`} className="press block">
                   <Card className={t.unread ? "border-gold-dim" : undefined}>
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="text-[0.95rem] text-paper">
