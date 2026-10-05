@@ -29,6 +29,10 @@ on purpose, in a commit that says so.
    no policy permitting a verdict to change and none permitting a delete; the
    only recourse is a challenge, which re-runs the audit. The WORDING may be
    amended — see rule 24 — but no amendment can set a verdict aside.
+    A challenge clears a reading only through `record_challenge_audit()`
+    (0034), which supersedes the readings in force and records the new ten in
+    one transaction — never one without the other, because a proposal with no
+    readings in force would look as if it had no violations.
 9. **Ratification is not activation.** `close_proposal()` stops at `passed`.
    Only `activate_proposal()` creates a project, and only once every need has
    a name against it.
@@ -317,6 +321,11 @@ on purpose, in a commit that says so.
     outcomes there, never lock mechanics: "uses never exceeds max_uses" survives
     a better fix, "takes FOR UPDATE" does not.
 
+    **0034 adds a fifth lock:** a transaction-scoped advisory lock per SOV
+    holder, taken by `send_sov()` and `back_project()` before the balance is
+    read, so one holding cannot be spent twice at once. The concurrency suite
+    proved the hole (eight sends of 30 from 100 all went through, leaving
+    -140) before the fix closed it.
 35. **A word raised from a proposal is a quotation, not an attachment.**
     `term_sightings` records that a person, reading a proposal, stopped at a
     word in it: the word, the proposal, their name, and the sentence they

@@ -850,33 +850,38 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
       laws,
     });
 
-    // Supersede rather than delete, so a changed verdict leaves a trail.
-    await supabase
-      .from("law_assessments")
-      .update({ superseded_at: new Date().toISOString() })
-      .eq("proposal_id", proposalId)
-      .is("superseded_at", null);
-
-    const { error } = await supabase.from("law_assessments").insert(
-      readings.map((r) => ({
-        proposal_id: proposalId,
-        law_id: r.law_id,
-        verdict: r.verdict,
-        reasoning: r.reasoning,
-        law_revision: revisionOf.get(r.law_id) ?? 1,
-        prompt_id: prompt.id,
-        prompt_version: prompt.version,
-        model,
-      })),
-    );
-
-    if (error) return { ok: false as const, error: error.message };
-
     if (challengeId) {
-      await supabase
-        .from("law_challenges")
-        .update({ answered_at: new Date().toISOString() })
-        .eq("id", challengeId);
+      // One transaction: check the challenge, supersede the readings in force,
+      // record these ten, mark the challenge answered (0034). Done in the
+      // database because the old readings must never be superseded without
+      // new ones taking their place.
+      const { error } = await supabase.rpc("record_challenge_audit", {
+        p_challenge_id: challengeId,
+        p_readings: readings.map((r) => ({
+          law_id: r.law_id,
+          verdict: r.verdict,
+          reasoning: r.reasoning,
+        })),
+        p_prompt_id: prompt.id,
+        p_prompt_version: prompt.version,
+        p_model: model,
+      });
+      if (error) return { ok: false as const, error: error.message };
+    } else {
+      // The first audit of a proposal: nothing to supersede.
+      const { error } = await supabase.from("law_assessments").insert(
+        readings.map((r) => ({
+          proposal_id: proposalId,
+          law_id: r.law_id,
+          verdict: r.verdict,
+          reasoning: r.reasoning,
+          law_revision: revisionOf.get(r.law_id) ?? 1,
+          prompt_id: prompt.id,
+          prompt_version: prompt.version,
+          model,
+        })),
+      );
+      if (error) return { ok: false as const, error: error.message };
     }
 
     const violations = readings.filter((r) => r.verdict === "violation").length;

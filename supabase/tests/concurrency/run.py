@@ -465,6 +465,106 @@ def vote_vs_close(o: psycopg.Connection) -> None:
 
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# 5. One holding, spent twice at once (0034)
+# ---------------------------------------------------------------------------
+
+
+def give_sov(o: psycopg.Connection, uid: str, n_projects: int = 1) -> None:
+    """Mint SOV to somebody the only way it can be minted: off a ledger act."""
+    for _ in range(n_projects):
+        o.execute("select set_config('test.uid', %s, false)", (uid,))
+        o.execute(
+            "select record_ledger_event(null, 'project.completed', 'project', gen_random_uuid())"
+        )
+
+
+def balance(o: psycopg.Connection, uid: str) -> float:
+    return float(
+        o.execute(
+            "select coalesce(sum(amount), 0) from sov_entries where account_profile = %s", (uid,)
+        ).fetchone()[0]
+    )
+
+
+def sov_double_spend_interleaved(o: psycopg.Connection) -> None:
+    """Both sends read the same balance before either writes.
+
+    100 held, two sends of 80. Each alone is affordable; together they are not.
+    """
+    spender, to = U[7], U[8]
+    give_sov(o, spender)
+    start = balance(o, spender)
+    a, b = member(spender), member(spender)
+    err_b: list[str] = []
+
+    try:
+        with a.cursor() as ca:
+            ca.execute("select send_sov(%s, 80, 'first of two sends racing each other')", (to,))
+
+        def run_b() -> None:
+            try:
+                with b.cursor() as cb:
+                    cb.execute("select send_sov(%s, 80, 'second of two sends racing each other')", (to,))
+                b.commit()
+            except Exception as e:  # noqa: BLE001 — the refusal is the result
+                err_b.append(str(e).strip().splitlines()[0])
+                b.rollback()
+
+        t = threading.Thread(target=run_b)
+        t.start()
+        t.join(timeout=2)
+        a.commit()
+        t.join(timeout=20)
+        check(not t.is_alive(), "the second send finished rather than hanging")
+    finally:
+        for c in (a, b):
+            try:
+                c.close()
+            except Exception:  # noqa: BLE001
+                pass
+
+    end = balance(o, spender)
+    check(end >= 0, "a holding never went below nothing", f"started {start}, ended {end}")
+    check(abs((start - end) - 80) < 1e-9, "exactly one send of 80 went through", f"sent {start - end}")
+    check(len(err_b) == 1, "the send that lost was told why", f"errors: {err_b}")
+
+
+def sov_double_spend_thrash(o: psycopg.Connection) -> None:
+    """Eight sends of 30 from a holding of 100, all at once."""
+    spender, to = U[9], U[8]
+    give_sov(o, spender)
+    start = balance(o, spender)
+    barrier = threading.Barrier(8)
+    ok: list[int] = []
+    lock = threading.Lock()
+
+    def go(i: int) -> None:
+        c = member(spender)
+        try:
+            barrier.wait(timeout=10)
+            with c.cursor() as cur:
+                cur.execute("select send_sov(%s, 30, %s)", (to, f"thrash send number {i} of eight"))
+            c.commit()
+            with lock:
+                ok.append(i)
+        except Exception:  # noqa: BLE001
+            c.rollback()
+        finally:
+            c.close()
+
+    threads = [threading.Thread(target=go, args=(i,)) for i in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+
+    end = balance(o, spender)
+    check(end >= 0, "eight simultaneous sends never overdrew", f"started {start}, ended {end}")
+    check(len(ok) == int(start // 30), "as many sends went through as the holding could cover",
+          f"{len(ok)} of 8 from {start}")
+
+
 TESTS = [
     ("an invite with one seat, taken twice", invite_interleaved),
     ("eight people, one seat, at once", invite_thrash),
@@ -472,6 +572,8 @@ TESTS = [
     ("twenty-four ledger writes at once", ledger_thrash),
     ("two people closing one proposal", close_interleaved),
     ("a vote arriving mid-close", vote_vs_close),
+    ("one holding, two sends", sov_double_spend_interleaved),
+    ("one holding, eight sends at once", sov_double_spend_thrash),
 ]
 
 
