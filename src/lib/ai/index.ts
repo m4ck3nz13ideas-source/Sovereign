@@ -18,6 +18,7 @@ import {
   SYNTHESIS_PROMPT,
   QUESTION_POSITIONS,
   VENDOR_VETTING,
+  AI_CHAT,
 } from "./prompts";
 import { AiError, type AiProvider } from "./provider";
 import {
@@ -54,6 +55,8 @@ import {
   positionsSchema,
   positionsJsonSchema,
   type PositionsOutput,
+  chatJsonSchema,
+  chatSchema,
 } from "./schemas";
 
 /**
@@ -805,4 +808,30 @@ the thing you are keeping out.`
   }
 
   return { witness: parsed.data, model, prompt: POST_WITNESS };
+}
+
+/** One turn of the private chat. Nothing is stored. */
+export async function chatTurn(
+  history: { role: "you" | "ai"; text: string }[],
+  values: { name: string; definition: string | null }[],
+): Promise<string> {
+  const vals = values.length
+    ? values.map((v) => `- ${v.name}${v.definition ? `: ${v.definition}` : ""}`).join("\n")
+    : "(none written yet)";
+  const convo = history
+    .slice(-20)
+    .map((m) => `${m.role === "you" ? "THEM" : "YOU"}: ${m.text}`)
+    .join("\n\n");
+  const input = `THEIR VALUES, IN THEIR WORDS\n${vals}\n\nTHE CONVERSATION SO FAR\n${convo}\n\nReply to their last message.`;
+
+  const { data } = await provider().complete({
+    prompt: AI_CHAT,
+    input,
+    schema: chatJsonSchema as unknown as Record<string, unknown>,
+    schemaName: "record_chat",
+    maxTokens: 1500,
+  });
+  const parsed = chatSchema.safeParse(data);
+  if (!parsed.success) throw new AiError("The reply did not come back in the expected shape.");
+  return parsed.data.reply;
 }

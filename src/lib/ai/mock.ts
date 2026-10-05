@@ -60,6 +60,15 @@ export class MockProvider implements AiProvider {
         return { data: this.reflection(input), model: "mock" };
       case "record_synthesis":
         return { data: this.synthesis(input), model: "mock" };
+      case "record_chat":
+        return {
+          data: {
+            reply:
+              "I'm running offline, so I can't think this through with you properly yet. " +
+              "Once an AI key is set, I'll answer here.",
+          },
+          model: "mock",
+        };
       default:
         throw new AiError(`The mock provider has no response for ${schemaName}.`);
     }

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { askGuardian } from "@/lib/ai";
+import { askGuardian, chatTurn } from "@/lib/ai";
+import { AiError } from "@/lib/ai/provider";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 
@@ -89,4 +90,35 @@ export async function forgetGuardian() {
 
   revalidatePath("/individual/ai");
   return { ok: true as const };
+}
+
+/**
+ * One turn of the private chat. The history lives in the browser and is sent
+ * with each turn; nothing is written to the database, so there is nothing to
+ * forget and nothing anybody else could ever read.
+ */
+export async function chatWithAi(
+  history: { role: "you" | "ai"; text: string }[],
+): Promise<{ ok: true; reply: string } | { ok: false; error: string }> {
+  const last = history[history.length - 1];
+  if (!last || last.role !== "you" || !last.text.trim()) return { ok: false, error: "Say something first." };
+  if (last.text.length > 4000) return { ok: false, error: "That is too long for one message." };
+
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return { ok: false, error: "Sign in again." };
+
+  const { data: values } = await supabase.rpc("guardian_context");
+  try {
+    const reply = await chatTurn(
+      history,
+      ((values ?? []) as { value_name: string; definition: string | null }[]).map((v) => ({
+        name: v.value_name,
+        definition: v.definition,
+      })),
+    );
+    return { ok: true, reply };
+  } catch (e) {
+    return { ok: false, error: e instanceof AiError ? e.message : "No reply this time. Try again." };
+  }
 }

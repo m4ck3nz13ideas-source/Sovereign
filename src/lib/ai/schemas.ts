@@ -561,3 +561,12 @@ export const witnessJsonSchema = {
     },
   },
 } as const;
+
+export const chatJsonSchema = {
+  type: "object",
+  properties: { reply: { type: "string" } },
+  required: ["reply"],
+  additionalProperties: false,
+} as const;
+
+export const chatSchema = z.object({ reply: z.string().min(1).max(8000) });
