@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth", "/setup", "/join"];
+const PUBLIC_PATHS = ["/login", "/auth", "/setup", "/join", "/explore"];
 
 /**
  * Refreshes the Supabase session on every request and keeps unauthenticated
@@ -49,6 +49,11 @@ export default async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+
+  // A visitor arriving at the front door sees what Sovereign is first.
+  if (!user && pathname === "/") {
+    return NextResponse.redirect(new URL("/explore", request.url));
+  }
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();

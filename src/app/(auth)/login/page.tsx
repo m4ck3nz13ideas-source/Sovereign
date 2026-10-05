@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LoginForm } from "./LoginForm";
 
 export const metadata = { title: "Sign in · Sovereign" };
@@ -42,6 +43,10 @@ export default async function LoginPage({
             {error}
           </p>
         ) : null}
+
+        <Link href="/explore" className="mt-5 inline-block text-sm text-gold hover:underline">
+          See how it works →
+        </Link>
 
         <ul className="mt-12 space-y-3 border-t border-line-soft pt-6">
           {LINES.map((l) => (
