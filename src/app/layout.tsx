@@ -20,7 +20,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Sovereign",
   description:
-    "Decide what matters, together. Vote on ideas, not politicians.",
+    "Better decisions. Greater alignment. Collective action.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

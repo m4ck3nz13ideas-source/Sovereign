@@ -12,12 +12,12 @@ export const metadata = { title: "Sign in · Sovereign" };
  * commit. No line may promise what no policy or function enforces.
  */
 const LINES: { line: string; rule: string }[] = [
-  { line: "Vote on ideas, not politicians.", rule: "3, 13" },
-  { line: "Nobody sees which way a vote is leaning until it closes.", rule: "3" },
-  { line: "What you write for yourself, only you can read.", rule: "1" },
-  { line: "No likes. No follower counts.", rule: "19, 23, 32" },
-  { line: "Every business here passed ten laws before it could sell to you.", rule: "37" },
-  { line: "The work you put in earns SOV.", rule: "33" },
+  { line: "Vote on policies, not politicians.", rule: "3, 13" },
+  { line: "Your data belongs to you.", rule: "1" },
+  { line: "Turn ideas into action.", rule: "5, 6" },
+  { line: "Positive, productive social media.", rule: "19, 20, 32" },
+  { line: "Built on trust, transparency and sovereignty.", rule: "2, 36" },
+  { line: "Propose. Participate. Play.", rule: "33" },
 ];
 
 export default async function LoginPage({
@@ -31,7 +31,7 @@ export default async function LoginPage({
     <main className="flex min-h-dvh items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm">
         <h1 className="font-serif text-4xl tracking-tight text-paper">Sovereign</h1>
-        <p className="mt-3 text-xl leading-snug text-paper">Decide what matters. Together.</p>
+        <p className="mt-3 text-xl leading-snug text-paper">Better decisions. Together.</p>
 
         <div className="mt-10">
           <LoginForm next={next} />
