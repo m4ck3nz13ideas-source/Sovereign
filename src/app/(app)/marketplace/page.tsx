@@ -68,7 +68,8 @@ export default async function MarketplacePage({
       </TopBar>
 
       <Gutter>
-        <form action="/marketplace" className="mt-4">
+        <p className="mt-4 font-serif text-lg text-paper">For people, not profit.</p>
+        <form action="/marketplace" className="mt-3">
           {kind ? <input type="hidden" name="kind" value={kind} /> : null}
           {businesses ? <input type="hidden" name="view" value="businesses" /> : null}
           <input
