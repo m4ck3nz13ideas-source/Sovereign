@@ -60,6 +60,7 @@ begin
     || 'and a published list of every supplier with their audit dates.', 'https://refill.example');
   vet := record_vendor_vetting(v, readings, 'marketplace.vetting', '1.0.0', 'test');
   perform set_config('test.uid', r::text, true);
+  perform record_vendor_verification(v, 'domain', 'refill.example', true, 'TXT record found');
   perform sign_off_vetting(vet, 'approved', 'Supplier list checked.');
   perform set_config('test.uid', a::text, true);
   c := create_campaign(v, null, 'Refill, not rebuy', 'Bring your jars.', 20, 2000);

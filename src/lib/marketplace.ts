@@ -24,8 +24,15 @@ export interface Vendor {
   evidence: string;
   website: string;
   location: string | null;
+  company_number: string | null;
+  verify_token: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface Verification {
+  website: boolean;
+  company: { verified: boolean; detail: string } | null;
 }
 
 export interface Offering {

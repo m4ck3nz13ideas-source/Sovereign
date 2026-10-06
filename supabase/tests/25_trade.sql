@@ -121,6 +121,7 @@ begin
   exception when others then passes := passes + 1; end;
 
   perform set_config('test.uid', rev::text, true);
+  perform record_vendor_verification(v, 'domain', (select website_host(website) from vendors where id = v), true, 'TXT record found');
   perform sign_off_vetting(vet, 'approved', 'Evidence checked against their website.');
   st := vendor_status(v);
   if st = 'approved' then passes := passes + 1; else fails := fails + 1;
@@ -219,6 +220,7 @@ begin
   perform set_config('test.uid', owner_::text, true);
   vet := record_vendor_vetting(v, test_readings(0), 'marketplace.vetting', '1.0.0', 'test');
   perform set_config('test.uid', rev::text, true);
+  perform record_vendor_verification(v, 'domain', (select website_host(website) from vendors where id = v), true, 'TXT record found');
   perform sign_off_vetting(vet, 'approved', 'Imported range checked, supplier is fair trade.');
 
   -------------------------------------------------------------- concerns

@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button, Card, Empty, inputClass, Prose, SectionLabel, Tag } from "@/components/ui";
-import type { Vendor, Vetting } from "@/lib/marketplace";
+import type { Vendor, Verification, Vetting } from "@/lib/marketplace";
 
-import { closeConcern, liftSuspension, signOff, suspendVendor } from "../actions";
+import { checkCompany, checkWebsite, closeConcern, liftSuspension, signOff, suspendVendor } from "../actions";
 
 type Res = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -16,7 +16,7 @@ export function ReviewConsole({
   suspensions,
   laws,
 }: {
-  queue: (Vetting & { vendors: Vendor })[];
+  queue: (Vetting & { vendors: Vendor; verification: Verification })[];
   concerns: { id: string; vendor_id: string; law_id: string; reason: string; vendors: { name: string } | null }[];
   suspensions: { vendor_id: string; reason: string; vendors: { name: string } | null }[];
   laws: { id: string; name: string }[];
@@ -78,6 +78,51 @@ export function ReviewConsole({
                       ))}
                   </ul>
                 </details>
+                <div className="mt-3 space-y-2 rounded-2xl border border-line px-3 py-3 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-paper">Website</span>
+                    <span className="flex items-center gap-2">
+                      <Tag tone={v.verification.website ? "calm" : "gold"}>
+                        {v.verification.website ? "verified" : "not verified"}
+                      </Tag>
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => run(() => checkWebsite(v.vendor_id))}
+                        className="text-gold hover:underline disabled:opacity-40"
+                      >
+                        Check
+                      </button>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-paper">
+                      Company{v.vendors.company_number ? ` · ${v.vendors.company_number}` : ""}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      {v.verification.company ? (
+                        <Tag tone={v.verification.company.verified ? "calm" : "alarm"}>
+                          {v.verification.company.verified ? "active" : "not active"}
+                        </Tag>
+                      ) : (
+                        <Tag>{v.vendors.company_number ? "unchecked" : "none given"}</Tag>
+                      )}
+                      {v.vendors.company_number ? (
+                        <button
+                          type="button"
+                          disabled={pending}
+                          onClick={() => run(() => checkCompany(v.vendor_id))}
+                          className="text-gold hover:underline disabled:opacity-40"
+                        >
+                          Check
+                        </button>
+                      ) : null}
+                    </span>
+                  </div>
+                  {v.verification.company ? (
+                    <p className="text-xs text-paper-faint">{v.verification.company.detail}</p>
+                  ) : null}
+                </div>
                 <textarea
                   className={`${inputClass} mt-3 min-h-20`}
                   placeholder="Your note — what you checked, or what they need to change"
@@ -85,7 +130,12 @@ export function ReviewConsole({
                   onChange={(e) => setNote(v.id, e.target.value)}
                 />
                 <div className="mt-3 flex gap-2">
-                  <Button type="button" disabled={pending} onClick={() => run(() => signOff(v.id, "approved", note(v.id)))}>
+                  <Button
+                    type="button"
+                    disabled={pending || !v.verification.website}
+                    title={v.verification.website ? undefined : "Check the website first"}
+                    onClick={() => run(() => signOff(v.id, "approved", note(v.id)))}
+                  >
                     Approve
                   </Button>
                   <Button type="button" tone="danger" disabled={pending} onClick={() => run(() => signOff(v.id, "refused", note(v.id)))}>

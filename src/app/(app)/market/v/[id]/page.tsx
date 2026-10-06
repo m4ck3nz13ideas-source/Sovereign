@@ -28,11 +28,20 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
   if (!raw) notFound();
   const vendor = raw as Vendor;
 
-  const [{ data: status }, { data: offeringsRaw }, { data: approvedRaw }] = await Promise.all([
+  const [
+    { data: status },
+    { data: offeringsRaw },
+    { data: approvedRaw },
+    { data: siteVerified },
+    { data: companyRows },
+  ] = await Promise.all([
     supabase.rpc("vendor_status", { p_vendor_id: id }),
     supabase.rpc("market_offerings", { p_kind: null, p_q: null }),
     supabase.rpc("market_vendors", { p_q: null }),
+    supabase.rpc("vendor_domain_verified", { p_vendor_id: id }),
+    supabase.rpc("vendor_company", { p_vendor_id: id }),
   ]);
+  const company = ((companyRows ?? []) as { verified: boolean; detail: string }[])[0] ?? null;
 
   const offerings = ((offeringsRaw ?? []) as (Offering & { vendor_id: string })[]).filter(
     (o) => o.vendor_id === id,
@@ -55,6 +64,10 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
           ) : (
             <Tag tone="gold">not currently approved</Tag>
           )}
+          <div className="mt-2 flex flex-wrap gap-2">
+            {siteVerified ? <Tag>website verified</Tag> : null}
+            {company?.verified ? <Tag>registered company · active</Tag> : null}
+          </div>
           <h2 className="display mt-3 text-[1.5rem] text-paper">{vendor.name}</h2>
           <p className="mt-1 text-sm text-paper-faint">
             {vendor.location ? `${vendor.location} · ` : ""}

@@ -231,3 +231,136 @@ export async function removeOffering(offeringId: string, note: string): Promise<
   if (error) return { ok: false, error: error.message };
   return done();
 }
+
+/* --------------------------------------------------------- verification */
+
+/** The business sets its Companies House number; a reviewer checks it. */
+export async function setCompanyNumber(vendorId: string, number: string): Promise<Result> {
+  const n = number.trim().toUpperCase();
+  if (n && !/^[A-Z0-9]{8}$/.test(n)) return { ok: false, error: "A company number is 8 characters, like 01234567 or SC123456." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_company_number", { p_vendor_id: vendorId, p_number: n });
+  if (error) return { ok: false, error: error.message };
+  return done();
+}
+
+async function vendorForCheck(vendorId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("vendors")
+    .select("website, verify_token, company_number, name")
+    .eq("id", vendorId)
+    .maybeSingle();
+  return { supabase, v: data as { website: string; verify_token: string; company_number: string | null; name: string } | null };
+}
+
+function hostOf(url: string): string | null {
+  try {
+    return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Reviewer: does the business control its website? Looks for the token in a
+ * DNS TXT record, then in /.well-known/sovereign-verify.txt. Whatever it finds
+ * is recorded, pass or fail.
+ */
+export async function checkWebsite(vendorId: string): Promise<Result> {
+  const { supabase, v } = await vendorForCheck(vendorId);
+  if (!v) return { ok: false, error: "Business not found." };
+  const host = hostOf(v.website);
+  if (!host) return { ok: false, error: "That website address cannot be read." };
+  const want = `sovereign-verify=${v.verify_token}`;
+
+  let passed = false;
+  let detail = "No token found in DNS or at /.well-known/sovereign-verify.txt.";
+
+  try {
+    const { resolveTxt } = await import("node:dns/promises");
+    const records = (await resolveTxt(host)).map((r) => r.join(""));
+    if (records.some((r) => r.trim() === want)) {
+      passed = true;
+      detail = `DNS TXT record found on ${host}.`;
+    }
+  } catch {
+    /* no TXT records, or DNS unreachable: try the file */
+  }
+
+  if (!passed) {
+    for (const base of [`https://${host}`, `https://www.${host}`]) {
+      try {
+        const res = await fetch(`${base}/.well-known/sovereign-verify.txt`, {
+          signal: AbortSignal.timeout(6000),
+          redirect: "follow",
+          cache: "no-store",
+        });
+        if (res.ok && (await res.text()).includes(v.verify_token)) {
+          passed = true;
+          detail = `Verification file found at ${base}/.well-known/sovereign-verify.txt.`;
+          break;
+        }
+      } catch {
+        /* unreachable: keep looking */
+      }
+    }
+  }
+
+  const { error } = await supabase.rpc("record_vendor_verification", {
+    p_vendor_id: vendorId,
+    p_kind: "domain",
+    p_subject: host,
+    p_passed: passed,
+    p_detail: detail,
+  });
+  if (error) return { ok: false, error: error.message };
+  return done();
+}
+
+/**
+ * Reviewer: is it a real, active company? Asks Companies House and records the
+ * registered name and status. Needs COMPANIES_HOUSE_API_KEY (free from
+ * developer.company-information.service.gov.uk).
+ */
+export async function checkCompany(vendorId: string): Promise<Result> {
+  const key = process.env.COMPANIES_HOUSE_API_KEY?.trim();
+  if (!key) return { ok: false, error: "Add COMPANIES_HOUSE_API_KEY in Vercel to run this check." };
+  const { supabase, v } = await vendorForCheck(vendorId);
+  if (!v) return { ok: false, error: "Business not found." };
+  if (!v.company_number) return { ok: false, error: "This business has not given a company number." };
+
+  let passed = false;
+  let detail: string;
+  try {
+    const res = await fetch(
+      `https://api.company-information.service.gov.uk/company/${encodeURIComponent(v.company_number)}`,
+      {
+        headers: { Authorization: `Basic ${Buffer.from(`${key}:`).toString("base64")}` },
+        signal: AbortSignal.timeout(8000),
+        cache: "no-store",
+      },
+    );
+    if (res.status === 404) {
+      detail = "No company with that number.";
+    } else if (!res.ok) {
+      return { ok: false, error: `Companies House answered ${res.status}. Try again shortly.` };
+    } else {
+      const c = (await res.json()) as { company_name?: string; company_status?: string };
+      passed = c.company_status === "active";
+      detail = `${c.company_name ?? "Unknown name"} — ${c.company_status ?? "unknown status"}`;
+    }
+  } catch {
+    return { ok: false, error: "Companies House could not be reached. Try again shortly." };
+  }
+
+  const { error } = await supabase.rpc("record_vendor_verification", {
+    p_vendor_id: vendorId,
+    p_kind: "companies_house",
+    p_subject: v.company_number,
+    p_passed: passed,
+    p_detail: detail,
+  });
+  if (error) return { ok: false, error: error.message };
+  return done();
+}

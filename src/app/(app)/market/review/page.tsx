@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { Page, TopBar } from "@/components/ui";
-import type { Vendor, Vetting } from "@/lib/marketplace";
+import type { Vendor, Verification, Vetting } from "@/lib/marketplace";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { UNIVERSAL_LAWS } from "@/lib/universal-law";
@@ -46,10 +46,21 @@ export default async function ReviewPage() {
 
   // A vetting of words the business has since changed cannot be signed; the
   // database refuses it, so do not offer it.
-  const queue = [] as (Vetting & { vendors: Vendor })[];
+  const queue = [] as (Vetting & { vendors: Vendor; verification: Verification })[];
   for (const v of (queueRaw ?? []) as (Vetting & { vendors: Vendor })[]) {
     const { data: status } = await supabase.rpc("vendor_status", { p_vendor_id: v.vendor_id });
-    if (status === "awaiting_sign_off") queue.push(v);
+    if (status !== "awaiting_sign_off") continue;
+    const [{ data: site }, { data: company }] = await Promise.all([
+      supabase.rpc("vendor_domain_verified", { p_vendor_id: v.vendor_id }),
+      supabase.rpc("vendor_company", { p_vendor_id: v.vendor_id }),
+    ]);
+    queue.push({
+      ...v,
+      verification: {
+        website: !!site,
+        company: ((company ?? []) as { verified: boolean; detail: string }[])[0] ?? null,
+      },
+    });
   }
 
   return (

@@ -27,10 +27,11 @@ export const metadata = { title: "Market · Sovereign" };
 export default async function MarketplacePage({
   searchParams,
 }: {
-  searchParams: Promise<{ kind?: string; view?: string; q?: string }>;
+  searchParams: Promise<{ kind?: string; view?: string; q?: string; mode?: string }>;
 }) {
   await requireSession();
-  const { kind: rawKind, view, q: rawQ } = await searchParams;
+  const { kind: rawKind, view, q: rawQ, mode } = await searchParams;
+  const selling = mode === "sell";
   const kind = isOfferingKind(rawKind) ? rawKind : null;
   const businesses = view === "businesses";
   const q = (rawQ ?? "").trim().slice(0, 80);
@@ -61,13 +62,58 @@ export default async function MarketplacePage({
   return (
     <Screen>
       <TopBar title="Market" action={<TabActions plus="/market/sell" plusLabel="Sell" />}>
-        <Rail>
-          {tab("All", `/market?${qs.slice(1)}`, !kind && !businesses)}
-          {tab("Products", `/market?kind=product${qs}`, kind === "product")}
-          {tab("Services", `/market?kind=service${qs}`, kind === "service")}
-          {tab("Businesses", `/market?view=businesses${qs}`, businesses)}
-        </Rail>
+        <div className="grid grid-cols-2 gap-2 px-4 pb-2.5">
+          <Link
+            href="/market"
+            aria-current={!selling ? "page" : undefined}
+            className={`press rounded-pill py-2 text-center text-sm font-semibold ${
+              !selling ? "bg-gold text-ink" : "border border-line text-paper-dim"
+            }`}
+          >
+            Buy
+          </Link>
+          <Link
+            href="/market?mode=sell"
+            aria-current={selling ? "page" : undefined}
+            className={`press rounded-pill py-2 text-center text-sm font-semibold ${
+              selling ? "bg-gold text-ink" : "border border-line text-paper-dim"
+            }`}
+          >
+            Sell
+          </Link>
+        </div>
+        {!selling ? (
+          <Rail>
+            {tab("All", `/market?${qs.slice(1)}`, !kind && !businesses)}
+            {tab("Products", `/market?kind=product${qs}`, kind === "product")}
+            {tab("Services", `/market?kind=service${qs}`, kind === "service")}
+            {tab("Businesses", `/market?view=businesses${qs}`, businesses)}
+          </Rail>
+        ) : null}
       </TopBar>
+
+      {selling ? (
+        <Gutter className="space-y-3 pt-5 pb-6">
+          {[
+            ["product", "A product", "Something you make or stock."],
+            ["service", "A service", "Work you do for people."],
+            ["business", "My business", "Get your business vetted and listed."],
+          ].map(([k, t, d]) => (
+            <Link
+              key={k}
+              href={`/market/sell?start=${k}`}
+              className="press flex items-center justify-between rounded-card border border-line bg-surface-soft px-4 py-4 active:bg-surface"
+            >
+              <span>
+                <span className="block font-serif text-lg text-paper">{t}</span>
+                <span className="mt-0.5 block text-sm text-paper-dim">{d}</span>
+              </span>
+              <span aria-hidden className="text-paper-faint">→</span>
+            </Link>
+          ))}
+        </Gutter>
+      ) : (
+      <>
 
       <Gutter>
         <p className="mt-4 font-serif text-lg text-paper">For people, not profit.</p>
@@ -179,6 +225,8 @@ export default async function MarketplacePage({
           ) : null}
         </div>
       </Gutter>
+      </>
+      )}
     </Screen>
   );
 }

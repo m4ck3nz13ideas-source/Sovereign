@@ -1,5 +1,5 @@
 import { Page, TopBar } from "@/components/ui";
-import type { Campaign, Offering, Vendor, VendorStatus, Vetting } from "@/lib/marketplace";
+import type { Campaign, Offering, Vendor, VendorStatus, Verification, Vetting } from "@/lib/marketplace";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { UNIVERSAL_LAWS } from "@/lib/universal-law";
@@ -15,7 +15,13 @@ export const metadata = { title: "Sell · Sovereign" };
  * below the vetting works until the business is approved, and the page says
  * why rather than hiding the controls.
  */
-export default async function SellPage() {
+export default async function SellPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ start?: string }>;
+}) {
+  const { start: rawStart } = await searchParams;
+  const start = rawStart === "product" || rawStart === "service" ? rawStart : null;
   const { userId } = await requireSession();
   const supabase = await createClient();
 
@@ -33,7 +39,7 @@ export default async function SellPage() {
       <>
         <TopBar title="Sell here" back="/market" />
         <Page>
-          <SellerConsole vendor={null} status={null} vetting={null} offerings={[]} campaigns={[]} laws={[]} />
+          <SellerConsole vendor={null} status={null} vetting={null} offerings={[]} campaigns={[]} laws={[]} start={start} verification={null} />
         </Page>
       </>
     );
@@ -62,6 +68,13 @@ export default async function SellPage() {
     spend.set(c.campaign_id, s);
   }
 
+  const [{ data: site }, { data: companyRows }] = await Promise.all([
+    supabase.rpc("vendor_domain_verified", { p_vendor_id: vendor.id }),
+    supabase.rpc("vendor_company", { p_vendor_id: vendor.id }),
+  ]);
+  const company = ((companyRows ?? []) as { verified: boolean; detail: string }[])[0] ?? null;
+  const verification: Verification = { website: !!site, company };
+
   const campaigns = ((campRaw ?? []) as Campaign[]).map((c) => ({
     ...c,
     clicks: spend.get(c.id)?.clicks ?? 0,
@@ -79,6 +92,8 @@ export default async function SellPage() {
           offerings={(offRaw ?? []) as Offering[]}
           campaigns={campaigns}
           laws={UNIVERSAL_LAWS.map((l) => ({ id: l.id, name: l.name }))}
+          start={start}
+          verification={verification}
         />
       </Page>
     </>

@@ -48,6 +48,7 @@ begin
     'https://tideline.example');
   vet := record_vendor_vetting(v_ocean, readings, 'marketplace.vetting', '1.0.0', 'test');
   perform set_config('test.uid', rev::text, true);
+  perform record_vendor_verification(v_ocean, 'domain', (select website_host(website) from vendors where id = v_ocean), true, 'TXT record found');
   perform sign_off_vetting(vet, 'approved', 'Monthly haul reports checked.');
   perform set_config('test.uid', ocean::text, true);
   c_ocean := create_campaign(v_ocean, null, 'Clean seas, school benches', 'Every bench was once ocean plastic.', 10, 5000);
@@ -61,6 +62,7 @@ begin
     'https://fairway.example');
   vet := record_vendor_vetting(v_bank, readings, 'marketplace.vetting', '1.0.0', 'test');
   perform set_config('test.uid', rev::text, true);
+  perform record_vendor_verification(v_bank, 'domain', (select website_host(website) from vendors where id = v_bank), true, 'TXT record found');
   perform sign_off_vetting(vet, 'approved', 'Lending book and audit checked.');
   perform set_config('test.uid', bank::text, true);
   c_bank := create_campaign(v_bank, null, 'Banking that funds no weapons', 'Switch in ten minutes.', 500, 50000);

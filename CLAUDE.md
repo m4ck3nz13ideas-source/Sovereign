@@ -398,6 +398,14 @@ on purpose, in a commit that says so.
     newest first and not for sale. A concern is seen by whoever raised it and
     the reviewers, never by the business. Not here yet: in-app checkout
     (listings link out), card billing for ads, ratings, SOV.
+    **0038 adds proof of identity.** Approval also needs a verified website:
+    the business publishes its token as a DNS TXT record or at
+    /.well-known/sovereign-verify.txt, and a reviewer runs the check, which
+    records what it found. A UK business may give a Companies House number,
+    which a reviewer looks up (registered name and status, shown publicly).
+    Verifications are written only by reviewers, never for their own
+    business, and are tied to the exact domain or number checked.
+    `32_market_verify.sql`.
 
 ## On the surface, not in the schema
 

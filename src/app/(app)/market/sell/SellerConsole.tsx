@@ -12,6 +12,7 @@ import {
   type OfferingKind,
   type Vendor,
   type VendorStatus,
+  type Verification,
   type Vetting,
 } from "@/lib/marketplace";
 
@@ -20,6 +21,7 @@ import {
   createCampaign,
   registerVendor,
   requestVetting,
+  setCompanyNumber,
   setCampaignPaused,
   updateVendor,
   withdrawOffering,
@@ -34,6 +36,8 @@ export function SellerConsole({
   offerings,
   campaigns,
   laws,
+  start: startKind = null,
+  verification = null,
 }: {
   vendor: Vendor | null;
   status: VendorStatus | null;
@@ -41,6 +45,8 @@ export function SellerConsole({
   offerings: Offering[];
   campaigns: (Campaign & { clicks: number; spent_pence: number })[];
   laws: { id: string; name: string }[];
+  start?: OfferingKind | null;
+  verification?: Verification | null;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -111,6 +117,15 @@ export function SellerConsole({
         </section>
       ) : null}
 
+      {vendor && verification ? (
+        <VerificationPanel
+          vendor={vendor}
+          verification={verification}
+          pending={pending}
+          onCompany={(n) => run(() => setCompanyNumber(vendor.id, n))}
+        />
+      ) : null}
+
       {vendor ? (
         <section>
           <SectionLabel>Products and services</SectionLabel>
@@ -145,7 +160,11 @@ export function SellerConsole({
               </li>
             ))}
           </ul>
-          <OfferingForm pending={pending} onAdd={(o, reset) => run(() => addOffering({ vendorId: vendor.id, ...o }), reset)} />
+          <OfferingForm
+            pending={pending}
+            initial={startKind}
+            onAdd={(o, reset) => run(() => addOffering({ vendorId: vendor.id, ...o }), reset)}
+          />
         </section>
       ) : null}
 
@@ -267,13 +286,15 @@ function BusinessForm({
 
 function OfferingForm({
   pending,
+  initial = null,
   onAdd,
 }: {
   pending: boolean;
+  initial?: OfferingKind | null;
   onAdd: (o: { kind: OfferingKind; name: string; description: string; price: string; url: string }, reset: () => void) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const [kind, setKind] = useState<OfferingKind>("product");
+  const [open, setOpen] = useState(initial !== null);
+  const [kind, setKind] = useState<OfferingKind>(initial ?? "product");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
@@ -400,5 +421,82 @@ function CampaignForm({
         </div>
       </div>
     </Card>
+  );
+}
+
+function VerificationPanel({
+  vendor,
+  verification,
+  pending,
+  onCompany,
+}: {
+  vendor: Vendor;
+  verification: Verification;
+  pending: boolean;
+  onCompany: (n: string) => void;
+}) {
+  const [number, setNumber] = useState(vendor.company_number ?? "");
+  let host = "";
+  try {
+    host = new URL(vendor.website).hostname.replace(/^www\./, "");
+  } catch {
+    host = vendor.website;
+  }
+  return (
+    <section>
+      <SectionLabel>Prove it&apos;s you</SectionLabel>
+
+      <div className="rounded-card border border-line px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[0.95rem] text-paper">Website · {host}</span>
+          <Tag tone={verification.website ? "calm" : "gold"}>{verification.website ? "verified" : "required"}</Tag>
+        </div>
+        {!verification.website ? (
+          <div className="mt-2 space-y-2 text-sm leading-relaxed text-paper-dim">
+            <p>Add this as a DNS TXT record on {host}:</p>
+            <code className="block select-all break-all rounded-md bg-surface px-3 py-2 text-paper">
+              sovereign-verify={vendor.verify_token}
+            </code>
+            <p>
+              Or publish a file at <span className="text-paper">https://{host}/.well-known/sovereign-verify.txt</span>{" "}
+              containing the same line. A reviewer checks it before approving you.
+            </p>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mt-3 rounded-card border border-line px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[0.95rem] text-paper">Companies House</span>
+          {verification.company ? (
+            <Tag tone={verification.company.verified ? "calm" : "alarm"}>
+              {verification.company.verified ? "active" : "not active"}
+            </Tag>
+          ) : (
+            <Tag>optional</Tag>
+          )}
+        </div>
+        {verification.company ? (
+          <p className="mt-1 text-sm text-paper-dim">{verification.company.detail}</p>
+        ) : null}
+        <div className="mt-2 flex gap-2">
+          <input
+            className={`${inputClass} flex-1 uppercase`}
+            value={number}
+            maxLength={8}
+            placeholder="Company number"
+            onChange={(e) => setNumber(e.target.value)}
+          />
+          <Button
+            type="button"
+            tone="quiet"
+            disabled={pending || number.trim().toUpperCase() === (vendor.company_number ?? "")}
+            onClick={() => onCompany(number)}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    </section>
   );
 }
