@@ -419,6 +419,19 @@ on purpose, in a commit that says so.
     business, and are tied to the exact domain or number checked.
     `32_market_verify.sql`.
 
+38. **What the AI says is signed by the server.** Every AI artefact that
+    decides something — a proposal review and its flags, a Universal Law
+    reading or re-reading, a post's witness reading, a proposal's conditions,
+    a business's vetting — is written only through `ai_write()` (0040), with
+    an HMAC-SHA256 signature over the kind and exact payload, keyed by a
+    secret held in Vercel (AI_SIGNING_SECRET) and in `private.ai_signing_key`.
+    A trigger on each of those tables refuses an insert that did not come
+    through a valid, fresh (15 minute) signature. The function runs as the
+    caller, so every policy still applies. A vetting payload carries the hash
+    of the business it read and is refused if the business has changed.
+    Enforcement starts when the database row exists; switch on Vercel first,
+    then the database. `34_signed_ai.sql`, `src/lib/ai/sign.test.ts`.
+
 ## On the surface, not in the schema
 
 These are interface conventions rather than rules the database enforces, but

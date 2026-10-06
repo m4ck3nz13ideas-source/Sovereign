@@ -183,6 +183,13 @@ def invite_thrash(o: psycopg.Connection) -> None:
     nobody wrote down.
     """
     people = U[2:10]
+    # Some of these are already members (the fixture and the interleaved case
+    # above put them there), and redeem_invite returns early for a member
+    # without taking a seat. So count new memberships, not successful calls.
+    before = o.execute(
+        "select count(*) from group_members gm join group_invites gi on gi.group_id = gm.group_id "
+        "where gi.code = 'one-seat-left'"
+    ).fetchone()[0]
     start = threading.Barrier(len(people))
     results: list[str] = []
     lock = threading.Lock()
@@ -217,7 +224,11 @@ def invite_thrash(o: psycopg.Connection) -> None:
         "select uses, max_uses from group_invites where code = 'one-seat-left'"
     ).fetchone()
     check(row[0] <= row[1], "eight at once did not exceed max_uses", f"uses={row[0]}")
-    check(results.count("in") <= 1, "at most one of the eight got in", f"{results}")
+    after = o.execute(
+        "select count(*) from group_members gm join group_invites gi on gi.group_id = gm.group_id "
+        "where gi.code = 'one-seat-left'"
+    ).fetchone()[0]
+    check(after - before <= 1, "at most one of the eight got in", f"{after - before} new members; {results}")
 
 
 # ---------------------------------------------------------------------------

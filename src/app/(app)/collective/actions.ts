@@ -18,6 +18,7 @@ import {
   type Draft,
 } from "@/lib/ai";
 import { AiError } from "@/lib/ai/provider";
+import { aiWrite } from "@/lib/ai/sign";
 import { shortDate } from "@/lib/format";
 import { READINESS_THRESHOLD, sha256 } from "@/lib/readiness";
 import { POST_KINDS, type ContributionKind, type MediaKind, type PostKind } from "@/lib/types";
@@ -103,8 +104,7 @@ export async function publishPost(input: {
 
   const { witness, model, prompt } = reading;
 
-  const { error: wErr } = await supabase.from("post_witness").insert({
-    author_id: userId,
+  const { error: wErr } = await aiWrite(supabase, "post.witness", {
     body_sha256: await sha256(text),
     first_hand: witness.first_hand,
     verdict: witness.verdict,
@@ -606,46 +606,17 @@ export async function runReview(proposalId: string) {
         lesson: m.lesson,
       }));
 
-    const { data: saved, error } = await supabase
-      .from("proposal_reviews")
-      .insert({
-        proposal_id: proposalId,
-        prompt_id: prompt.id,
-        prompt_version: prompt.version,
-        model,
-        clarity: review.clarity,
-        evidence: review.evidence,
-        feasibility: review.feasibility,
-        reversibility: review.reversibility,
-        values_alignment: review.values_alignment,
-        risks: review.risks,
-        questions: review.questions,
-        memory_used: memoryUsed,
-        summary: review.summary,
-      })
-      .select("id")
-      .single();
-
-    if (error) return { ok: false as const, error: error.message };
-
     // Critical flags: any value below the group's floor, and any high-severity
     // risk. Each needs a written answer before the proposal can pass.
     // A place has no group to set a floor, so the protocol default stands.
+    // Written in the same signed call as the review (0040), so a review can
+    // never land without the flags it raises.
     const floor = group ? Number(group.threshold_values_floor) : 0.3;
-    const flags: {
-      proposal_id: string;
-      review_id: string;
-      kind: "values" | "risk";
-      label: string;
-      severity: string;
-      detail: string;
-    }[] = [];
+    const flags: { kind: "values" | "risk"; label: string; severity: string; detail: string }[] = [];
 
     for (const [name, score] of Object.entries(review.values_alignment)) {
       if (score < floor) {
         flags.push({
-          proposal_id: proposalId,
-          review_id: saved.id,
           kind: "values",
           label: `Scores ${score.toFixed(2)} against ${name}`,
           severity: "high",
@@ -656,18 +627,28 @@ export async function runReview(proposalId: string) {
 
     for (const risk of review.risks) {
       if (risk.severity === "high") {
-        flags.push({
-          proposal_id: proposalId,
-          review_id: saved.id,
-          kind: "risk",
-          label: risk.title,
-          severity: "high",
-          detail: risk.note,
-        });
+        flags.push({ kind: "risk", label: risk.title, severity: "high", detail: risk.note });
       }
     }
 
-    if (flags.length) await supabase.from("proposal_flags").insert(flags);
+    const { error } = await aiWrite(supabase, "proposal.review", {
+      proposal_id: proposalId,
+      prompt_id: prompt.id,
+      prompt_version: prompt.version,
+      model,
+      clarity: review.clarity,
+      evidence: review.evidence,
+      feasibility: review.feasibility,
+      reversibility: review.reversibility,
+      values_alignment: review.values_alignment,
+      risks: review.risks,
+      questions: review.questions,
+      memory_used: memoryUsed,
+      summary: review.summary,
+      flags,
+    });
+
+    if (error) return { ok: false as const, error: error.message };
 
     await supabase
       .from("proposals")
@@ -859,32 +840,32 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
       // record these ten, mark the challenge answered (0034). Done in the
       // database because the old readings must never be superseded without
       // new ones taking their place.
-      const { error } = await supabase.rpc("record_challenge_audit", {
-        p_challenge_id: challengeId,
-        p_readings: readings.map((r) => ({
+      const { error } = await aiWrite(supabase, "law.challenge", {
+        challenge_id: challengeId,
+        readings: readings.map((r) => ({
           law_id: r.law_id,
           verdict: r.verdict,
           reasoning: r.reasoning,
         })),
-        p_prompt_id: prompt.id,
-        p_prompt_version: prompt.version,
-        p_model: model,
+        prompt_id: prompt.id,
+        prompt_version: prompt.version,
+        model,
       });
       if (error) return { ok: false as const, error: error.message };
     } else {
       // The first audit of a proposal: nothing to supersede.
-      const { error } = await supabase.from("law_assessments").insert(
-        readings.map((r) => ({
-          proposal_id: proposalId,
+      const { error } = await aiWrite(supabase, "law.audit", {
+        proposal_id: proposalId,
+        readings: readings.map((r) => ({
           law_id: r.law_id,
           verdict: r.verdict,
           reasoning: r.reasoning,
           law_revision: revisionOf.get(r.law_id) ?? 1,
-          prompt_id: prompt.id,
-          prompt_version: prompt.version,
-          model,
         })),
-      );
+        prompt_id: prompt.id,
+        prompt_version: prompt.version,
+        model,
+      });
       if (error) return { ok: false as const, error: error.message };
     }
 
@@ -1776,15 +1757,15 @@ export async function runConditions(proposalId: string) {
       budget: proposal.budget_amount ? `${proposal.budget_currency} ${proposal.budget_amount}` : null,
     });
     const minVoices = members ? Math.min(conditions.min_voices, members) : conditions.min_voices;
-    const { error } = await supabase.rpc("record_proposal_conditions", {
-      p_proposal_id: proposalId,
-      p_min_voices: minVoices,
-      p_window_hours: conditions.window_hours,
-      p_requirements: conditions.requirements,
-      p_rationale: conditions.rationale,
-      p_prompt_id: prompt.id,
-      p_prompt_version: prompt.version,
-      p_model: model,
+    const { error } = await aiWrite(supabase, "proposal.conditions", {
+      proposal_id: proposalId,
+      min_voices: minVoices,
+      window_hours: conditions.window_hours,
+      requirements: conditions.requirements,
+      rationale: conditions.rationale,
+      prompt_id: prompt.id,
+      prompt_version: prompt.version,
+      model,
     });
     if (error) return { ok: false as const, error: error.message };
     revalidatePath(`/collective/proposals/${proposalId}`);

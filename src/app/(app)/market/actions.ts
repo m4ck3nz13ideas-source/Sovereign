@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { AiError } from "@/lib/ai/provider";
 import { vetVendor } from "@/lib/ai";
+import { aiWrite } from "@/lib/ai/sign";
 import { isOfferingKind, type OfferingKind } from "@/lib/marketplace";
 import { createClient } from "@/lib/supabase/server";
 
@@ -79,12 +80,15 @@ export async function requestVetting(vendorId: string): Promise<Result> {
 
   try {
     const { readings, model, prompt } = await vetVendor(v);
-    const { error } = await supabase.rpc("record_vendor_vetting", {
-      p_vendor_id: vendorId,
-      p_readings: readings,
-      p_prompt_id: prompt.id,
-      p_prompt_version: prompt.version,
-      p_model: model,
+    // Signed, and pinned to the exact business it read (0040).
+    const { data: hash } = await supabase.rpc("vendor_current_hash", { p_vendor_id: vendorId });
+    const { error } = await aiWrite(supabase, "marketplace.vetting", {
+      vendor_id: vendorId,
+      content_hash: hash,
+      readings,
+      prompt_id: prompt.id,
+      prompt_version: prompt.version,
+      model,
     });
     if (error) return { ok: false, error: error.message };
     return done();
