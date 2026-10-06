@@ -7,6 +7,7 @@ import {
   auditAgainstLaw,
   draftBody,
   reviewProposal,
+  setConditions,
   sharpenDraft,
   simulateImpact,
   surveyPositions,
@@ -16,6 +17,7 @@ import {
   POST_FLOOR,
   type Draft,
 } from "@/lib/ai";
+import { AiError } from "@/lib/ai/provider";
 import { shortDate } from "@/lib/format";
 import { READINESS_THRESHOLD, sha256 } from "@/lib/readiness";
 import { POST_KINDS, type ContributionKind, type MediaKind, type PostKind } from "@/lib/types";
@@ -488,6 +490,8 @@ export async function submitProposal(input: ProposalInput) {
   // can run either step from its page.
   await runLawAudit(proposal.id).catch(() => undefined);
   await runReview(proposal.id).catch(() => undefined);
+  // Then its own conditions: voices, window and what must be answered (0039).
+  await runConditions(proposal.id).catch(() => undefined);
 
   return { ok: true as const, id: proposal.id };
 }
@@ -1733,5 +1737,75 @@ export async function enactAmendment(proposalId: string) {
 
   revalidatePath(`/collective/proposals/${proposalId}`);
   revalidatePath("/settings/law");
+  return { ok: true as const };
+}
+
+/**
+ * Set a proposal's conditions (0039): how many people must respond, how long
+ * it stays open, and what must be answered first. Once, before anybody
+ * responds; the database refuses a second set or a late one. Any member can
+ * run it from the proposal page if it did not run at submission.
+ */
+export async function runConditions(proposalId: string) {
+  const supabase = await createClient();
+  const { data: proposal } = await supabase
+    .from("proposals")
+    .select("*, groups(*)")
+    .eq("id", proposalId)
+    .maybeSingle();
+  if (!proposal) return { ok: false as const, error: "No such proposal." };
+
+  const group = proposal.groups as unknown as { id: string; name: string } | null;
+  let members: number | null = null;
+  if (group) {
+    const { count } = await supabase
+      .from("group_members")
+      .select("profile_id", { count: "exact", head: true })
+      .eq("group_id", group.id);
+    members = count ?? null;
+  }
+
+  try {
+    const { conditions, model, prompt } = await setConditions({
+      title: proposal.title,
+      summary: proposal.summary,
+      body: proposal.body,
+      scale: group ? "group" : proposal.scope,
+      where: group?.name ?? placeName(proposal),
+      members,
+      budget: proposal.budget_amount ? `${proposal.budget_currency} ${proposal.budget_amount}` : null,
+    });
+    const minVoices = members ? Math.min(conditions.min_voices, members) : conditions.min_voices;
+    const { error } = await supabase.rpc("record_proposal_conditions", {
+      p_proposal_id: proposalId,
+      p_min_voices: minVoices,
+      p_window_hours: conditions.window_hours,
+      p_requirements: conditions.requirements,
+      p_rationale: conditions.rationale,
+      p_prompt_id: prompt.id,
+      p_prompt_version: prompt.version,
+      p_model: model,
+    });
+    if (error) return { ok: false as const, error: error.message };
+    revalidatePath(`/collective/proposals/${proposalId}`);
+    return { ok: true as const };
+  } catch (e) {
+    return {
+      ok: false as const,
+      error: e instanceof AiError ? e.message : "The conditions could not be set. Try again in a moment.",
+    };
+  }
+}
+
+export async function answerRequirement(proposalId: string, idx: number, answer: string) {
+  if (answer.trim().length < 20) return { ok: false as const, error: "Answer in at least twenty characters." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("answer_requirement", {
+    p_proposal_id: proposalId,
+    p_idx: idx,
+    p_answer: answer,
+  });
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/collective/proposals/${proposalId}`);
   return { ok: true as const };
 }

@@ -570,3 +570,23 @@ export const chatJsonSchema = {
 } as const;
 
 export const chatSchema = z.object({ reply: z.string().min(1).max(8000) });
+
+export const conditionsJsonSchema = {
+  type: "object",
+  properties: {
+    min_voices: { type: "integer" },
+    window_hours: { type: "integer" },
+    requirements: { type: "array", items: { type: "string" } },
+    rationale: { type: "string" },
+  },
+  required: ["min_voices", "window_hours", "requirements", "rationale"],
+  additionalProperties: false,
+} as const;
+
+export const conditionsSchema = z.object({
+  min_voices: z.number().int().min(1).max(1000000),
+  window_hours: z.number().int().min(1).max(10000),
+  requirements: z.array(z.string().min(5).max(300)).max(8),
+  rationale: z.string().min(10).max(2000),
+});
+export type ConditionsOutput = z.infer<typeof conditionsSchema>;

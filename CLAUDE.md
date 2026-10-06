@@ -51,6 +51,18 @@ on purpose, in a commit that says so.
     writing and counted onto the decision; they never fail a proposal. Only a
     review flag does, because that is the rubric against the group's own floor
     rather than one person disagreeing.
+    **0039: each proposal is decided by its own conditions**, set by the AI
+    (prompt `proposal.conditions`) for that proposal alone — how many voices,
+    how long it stays open, and up to eight requirements that must be
+    answered on the record before it can pass. Set once, before anybody
+    responds; public with the AI's reasons; never changed. Floors the AI
+    cannot go under: two voices and 24 hours. Nobody — not a steward —
+    closes a proposal with conditions before its window ends. The Universal
+    Law audit, the alignment threshold, the review-before-resonance rule and
+    personhood at wide scales are NOT conditions: they are the constitution
+    and stay fixed. Proposals from before 0039 keep the old per-scale and
+    participation rules. (Named "conditions", not "terms", because `terms` is
+    the lexicon.) `33_proposal_conditions.sql`.
 14. **A split is never reported as a consensus.** Every decision carries
     `dispersion` and `polarized` from `alignment_shape()`. Do not add a screen
     that shows a mean without them.

@@ -19,6 +19,7 @@ import {
   QUESTION_POSITIONS,
   VENDOR_VETTING,
   AI_CHAT,
+  PROPOSAL_CONDITIONS,
 } from "./prompts";
 import { AiError, type AiProvider } from "./provider";
 import {
@@ -57,6 +58,9 @@ import {
   type PositionsOutput,
   chatJsonSchema,
   chatSchema,
+  conditionsJsonSchema,
+  conditionsSchema,
+  type ConditionsOutput,
 } from "./schemas";
 
 /**
@@ -834,4 +838,36 @@ export async function chatTurn(
   const parsed = chatSchema.safeParse(data);
   if (!parsed.success) throw new AiError("The reply did not come back in the expected shape.");
   return parsed.data.reply;
+}
+
+/** Sets one proposal's conditions: voices, window and what must be answered. */
+export async function setConditions(ctx: {
+  title: string;
+  summary: string | null;
+  body: string;
+  scale: string;
+  where: string;
+  members: number | null;
+  budget: string | null;
+}): Promise<{ conditions: ConditionsOutput; model: string; prompt: typeof PROPOSAL_CONDITIONS }> {
+  const input = `THE PROPOSAL
+title: ${ctx.title}
+summary: ${ctx.summary ?? "(none)"}
+scale: ${ctx.scale}
+addressed to: ${ctx.where}
+members: ${ctx.members ?? "n/a"}
+budget: ${ctx.budget ?? "none"}
+
+${ctx.body}`;
+
+  const { data, model } = await provider().complete({
+    prompt: PROPOSAL_CONDITIONS,
+    input,
+    schema: conditionsJsonSchema as unknown as Record<string, unknown>,
+    schemaName: "record_conditions",
+    maxTokens: 1500,
+  });
+  const parsed = conditionsSchema.safeParse(data);
+  if (!parsed.success) throw new AiError(`The conditions did not match the expected shape: ${parsed.error.message}`);
+  return { conditions: parsed.data, model, prompt: PROPOSAL_CONDITIONS };
 }

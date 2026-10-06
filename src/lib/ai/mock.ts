@@ -60,6 +60,8 @@ export class MockProvider implements AiProvider {
         return { data: this.reflection(input), model: "mock" };
       case "record_synthesis":
         return { data: this.synthesis(input), model: "mock" };
+      case "record_conditions":
+        return { data: this.conditions(input), model: "mock" };
       case "record_chat":
         return {
           data: {
@@ -584,6 +586,33 @@ export class MockProvider implements AiProvider {
       discipline: "",
     };
   }
+
+  /**
+   * Offline conditions: proportionate defaults by reach, plus the questions
+   * almost every proposal leaves open. Says it is offline in the rationale.
+   */
+  private conditions(input: string) {
+    const scale = /scale: (\w+)/.exec(input)?.[1] ?? "local";
+    const members = Number(/members: (\d+)/.exec(input)?.[1] ?? "0");
+    const byScale: Record<string, [number, number]> = {
+      group: [Math.max(2, Math.ceil(members * 0.5)), 48],
+      local: [3, 72],
+      regional: [12, 168],
+      national: [50, 336],
+      continental: [200, 504],
+      global: [1000, 720],
+    };
+    const [v, h] = byScale[scale] ?? [3, 72];
+    const requirements = ["Who is most affected by this, and have they been asked?"];
+    if (/budget: (?!none)/i.test(input)) requirements.push("Who pays, and is the money actually there?");
+    return {
+      min_voices: scale === "group" && members ? Math.min(v, members) : v,
+      window_hours: h,
+      requirements,
+      rationale:
+        "Set offline from the proposal's reach rather than read from its content. With an AI key these are tailored to the proposal itself.",
+    };
+  }
 }
 
 function clamp(n: number): number {
@@ -600,4 +629,5 @@ function hash(s: string): number {
     h = (h * 31 + s.charCodeAt(i)) % 100000;
   }
   return h;
+
 }

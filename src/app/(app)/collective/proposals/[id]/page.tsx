@@ -42,6 +42,7 @@ import { CloseButton } from "./CloseButton";
 import { DebateSummary } from "./DebateSummary";
 import { Deliberation, type Contribution } from "./Deliberation";
 import { Activation } from "./Activation";
+import { ConditionsSection, type Conditions } from "./Conditions";
 import { LawLayer } from "./LawLayer";
 import { FlagList } from "./FlagList";
 import { Outcome } from "./Outcome";
@@ -137,11 +138,24 @@ export default async function ProposalPage({
   // Who may close it. A group has stewards. A place does not, so the window
   // holds it open and then anyone it was addressed to can perform the closing
   // — the database refuses an early one either way.
-  const windowOpen = Boolean(
-    proposal.closes_at && new Date(proposal.closes_at) > new Date(),
-  );
+  // 0039: a proposal with its own conditions opens and closes by them.
+  const { data: conditionsRow } = await supabase
+    .from("proposal_conditions")
+    .select("*")
+    .eq("proposal_id", id)
+    .maybeSingle();
+  const conditions = conditionsRow as Conditions | null;
+  const { data: answerRows } = conditions
+    ? await supabase.from("proposal_requirement_answers").select("idx").eq("proposal_id", id)
+    : { data: [] };
+  const openRequirements = conditions
+    ? conditions.requirements.length - ((answerRows ?? []) as { idx: number }[]).length
+    : 0;
+
+  const closesAt = conditions?.closes_at ?? proposal.closes_at;
+  const windowOpen = Boolean(closesAt && new Date(closesAt) > new Date());
   const canClose = proposal.group_id
-    ? Boolean(myRole && isSteward(myRole))
+    ? Boolean(myRole && isSteward(myRole)) && !(conditions && windowOpen)
     : !windowOpen;
 
   const [
@@ -649,6 +663,14 @@ export default async function ProposalPage({
         />
       </section>
 
+      {/* ------------------------------------------------------ CONDITIONS */}
+      <ConditionsSection
+        proposalId={id}
+        conditions={conditions}
+        open={open || proposal.status === "in_review"}
+        voters={summary?.voter_count ?? 0}
+      />
+
       {/* ----------------------------------------------------- HUMAN LAYER */}
       <section className="mb-10">
         <SectionLabel>Critical flags</SectionLabel>
@@ -785,20 +807,18 @@ export default async function ProposalPage({
               proposalId={id}
               lawViolations={standing?.violations ?? 0}
               lawTensions={standing?.unanswered_tensions ?? 0}
-              unanswered={unanswered.length}
+              unanswered={unanswered.length + openRequirements}
               voters={summary?.voter_count ?? 0}
-              members={summary?.member_count ?? null}
-              minVoices={rule?.min_voices ?? 1}
+              members={conditions ? null : summary?.member_count ?? null}
+              minVoices={conditions?.min_voices ?? rule?.min_voices ?? 1}
               thresholds={thresholds}
             />
           </div>
         ) : null}
 
-        {open && !canClose && !proposal.group_id && windowOpen ? (
+        {open && windowOpen && (conditions || !proposal.group_id) ? (
           <p className="mt-4 text-sm leading-relaxed text-paper-faint">
-            Deliberation is open until {shortDate(proposal.closes_at!)}. Nobody
-            can close it sooner — a place has no steward to pick the moment, so
-            the window does it instead.
+            Open until {shortDate(closesAt!)}.
           </p>
         ) : null}
 
