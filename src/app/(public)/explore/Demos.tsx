@@ -3,14 +3,16 @@
 import { useMemo, useState } from "react";
 
 /**
- * Three demos a visitor can play with before signing in. Everything here is
+ * Four demos a visitor can play with before signing in. Everything here is
  * simulated in the browser — nothing is sent anywhere — and each one shows a
- * real rule of the app working, with the same numbers the app uses.
+ * real rule of the app working: a proposal decided by its own conditions, the
+ * Universal Law review, the check on posts, and the market's fit-based ad.
  */
 
 const TABS = [
-  { id: "vote", label: "Vote" },
+  { id: "vote", label: "Decide" },
   { id: "review", label: "AI review" },
+  { id: "post", label: "Post" },
   { id: "market", label: "Market" },
 ] as const;
 
@@ -20,7 +22,7 @@ export function Demos() {
   const [tab, setTab] = useState<Tab>("vote");
   return (
     <div className="rounded-3xl border border-line bg-surface-soft p-4 sm:p-6">
-      <div className="mb-5 flex gap-2" role="tablist">
+      <div className="mb-5 flex flex-wrap gap-2" role="tablist">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -35,19 +37,24 @@ export function Demos() {
           </button>
         ))}
       </div>
-      {tab === "vote" ? <VoteDemo /> : tab === "review" ? <ReviewDemo /> : <MarketDemo />}
+      {tab === "vote" ? (
+        <VoteDemo />
+      ) : tab === "review" ? (
+        <ReviewDemo />
+      ) : tab === "post" ? (
+        <PostDemo />
+      ) : (
+        <MarketDemo />
+      )}
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ vote */
 
-const OTHERS = [
-  { a: 0.82, w: 0.7 },
-  { a: 0.64, w: 0.4 },
-  { a: 0.9, w: 0.8 },
-  { a: 0.55, w: 0.3 },
-];
+// Four neighbours have already responded; how they lean stays hidden until close.
+const OTHERS = [0.82, 0.64, 0.9, 0.71];
+const NEEDS = { voices: 5, threshold: 0.618, requirement: "Who opens up on Saturday mornings?" };
 
 function Slider({
   label,
@@ -80,32 +87,61 @@ function Slider({
 function VoteDemo() {
   const [align, setAlign] = useState(0.7);
   const [conf, setConf] = useState(0.6);
-  const [will, setWill] = useState(0.5);
+  const [urgency, setUrgency] = useState(0.5);
+  const [answered, setAnswered] = useState(false);
   const [closed, setClosed] = useState(false);
 
-  const avgA = (OTHERS.reduce((s, o) => s + o.a, 0) + align) / (OTHERS.length + 1);
-  const avgW = (OTHERS.reduce((s, o) => s + o.w, 0) + will) / (OTHERS.length + 1);
-  const passes = avgA >= 0.7 && avgW >= 0.5;
+  const voices = OTHERS.length + 1;
+  const avg = (OTHERS.reduce((s, a) => s + a, 0) + align) / voices;
+  const missing: string[] = [];
+  if (voices < NEEDS.voices) missing.push(`${NEEDS.voices} voices`);
+  if (!answered) missing.push("its open question answered");
+  if (avg < NEEDS.threshold) missing.push(`alignment of ${NEEDS.threshold}`);
+  const passes = missing.length === 0;
 
   return (
     <div>
       <p className="font-serif text-xl text-paper">Turn the empty shop on the high street into a repair café.</p>
-      <p className="mt-1 text-sm text-paper-faint">Local · 5 people responding</p>
+      <p className="mt-1 text-sm text-paper-faint">Local · checked against the ten laws: no violations</p>
+
+      <div className="mt-4 rounded-2xl border border-line p-3">
+        <p className="smallcaps text-[10px] text-paper-faint">What it needs — set by the AI for this proposal</p>
+        <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+          <p className="text-paper">
+            <span className="font-serif text-xl tabular-nums">{voices}</span>
+            <span className="text-paper-faint"> / {NEEDS.voices} voices</span>
+          </p>
+          <p className="text-paper-dim">Open 3 days</p>
+        </div>
+        <div className="mt-2 flex items-start justify-between gap-3 text-sm">
+          <span className="text-paper">{NEEDS.requirement}</span>
+          {answered ? (
+            <span className="shrink-0 text-calm">Answered</span>
+          ) : (
+            <button onClick={() => setAnswered(true)} className="shrink-0 text-gold hover:underline">
+              Answer
+            </button>
+          )}
+        </div>
+        {answered ? (
+          <p className="mt-1 text-xs text-paper-dim">“Priya and Tom, alternating weeks — keys at the bakery.”</p>
+        ) : null}
+      </div>
 
       <div className="mt-5 space-y-4">
         <Slider label="Does it feel right?" value={align} onChange={setAlign} />
         <Slider label="Will it work?" value={conf} onChange={setConf} />
-        <Slider label="Will you help make it happen?" value={will} onChange={setWill} />
+        <Slider label="How much does it matter now?" value={urgency} onChange={setUrgency} />
       </div>
 
       {!closed ? (
         <div className="mt-5 flex items-center justify-between gap-3">
-          <p className="text-sm text-paper-faint">How everyone else leans stays hidden until it closes.</p>
+          <p className="text-sm text-paper-faint">Nobody sees which way it leans until it closes.</p>
           <button
             onClick={() => setClosed(true)}
             className="press shrink-0 rounded-pill bg-gold px-4 py-2 text-sm font-semibold text-ink"
           >
-            Close the vote
+            Close it
           </button>
         </div>
       ) : (
@@ -114,12 +150,12 @@ function VoteDemo() {
             {passes ? "Passed." : "Not yet."}
           </p>
           <p className="mt-2 text-sm text-paper-dim">
-            Alignment {avgA.toFixed(2)} (needs 0.70) · Willingness {avgW.toFixed(2)} (needs 0.50)
+            Alignment {avg.toFixed(2)} (needs {NEEDS.threshold}) · {voices} of {NEEDS.voices} voices
           </p>
           <p className="mt-2 text-sm text-paper-faint">
             {passes
-              ? "It becomes a project, with people who said they would help."
-              : "Nobody lost. The idea gets better and comes back."}
+              ? "It becomes a project, with the people who offered to help."
+              : `Still needs ${missing.join(" and ")}. Nobody lost — it gets better and comes back.`}
           </p>
           <button onClick={() => setClosed(false)} className="mt-3 text-sm text-gold hover:underline">
             Try again
@@ -201,6 +237,80 @@ function ReviewDemo() {
           ? "A violation stops it before anyone votes. Fix it, and it is read again."
           : "Tensions get answered on the record. Then everyone votes, knowing the trade-offs."}
       </p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ post */
+
+const SAMPLES = [
+  "Planted forty hedging whips along the school fence this morning with the kids.",
+  "50% OFF today only!! Click the link in my bio to buy now.",
+  "Apparently the council is secretly selling the park. Share before it gets deleted!",
+];
+
+function readPost(text: string): { ok: boolean; why: string } {
+  const t = text.toLowerCase();
+  if (/(buy now|% off|discount|link in (my )?bio|subscribe|dm me to order)/.test(t))
+    return { ok: false, why: "This is selling. Businesses reach people through the Market." };
+  if (/(apparently|i heard|they say|share before|wake up|everyone knows)/.test(t))
+    return { ok: false, why: "A claim passed on as fact, written to spread. Say what you saw, or where it comes from." };
+  if (t.trim().length < 15) return { ok: false, why: "Say a little more." };
+  return { ok: true, why: "True to you, or useful to others — and told straight." };
+}
+
+function PostDemo() {
+  const [text, setText] = useState(SAMPLES[0]);
+  const [result, setResult] = useState<{ ok: boolean; why: string } | null>(null);
+  const [liked, setLiked] = useState(false);
+  return (
+    <div>
+      <p className="text-sm text-paper-dim">Post anything that is true to you or useful to others. Try one:</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {SAMPLES.map((s, i) => (
+          <button
+            key={i}
+            onClick={() => {
+              setText(s);
+              setResult(null);
+            }}
+            className="press rounded-pill border border-line px-3 py-1.5 text-xs text-paper-dim"
+          >
+            Example {i + 1}
+          </button>
+        ))}
+      </div>
+      <textarea
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+          setResult(null);
+        }}
+        rows={3}
+        className="mt-3 w-full rounded-2xl border border-line bg-ink px-3.5 py-3 text-[0.95rem] text-paper outline-none focus:border-gold"
+      />
+      <button
+        onClick={() => setResult(readPost(text))}
+        className="press mt-3 rounded-pill bg-gold px-4 py-2 text-sm font-semibold text-ink"
+      >
+        Post
+      </button>
+
+      {result && !result.ok ? (
+        <p className="mt-4 rounded-2xl border border-alarm/40 px-4 py-3 text-sm text-alarm">{result.why}</p>
+      ) : null}
+      {result && result.ok ? (
+        <div className="mt-4 rounded-2xl border border-line p-4">
+          <p className="text-[0.95rem] leading-relaxed text-paper">{text}</p>
+          <div className="mt-3 flex items-center gap-4 text-sm text-paper-faint">
+            <button onClick={() => setLiked(!liked)} className={liked ? "text-gold" : ""}>
+              ♥ {12 + (liked ? 1 : 0)}
+            </button>
+            <span>💬 3</span>
+          </div>
+          <p className="mt-3 text-xs text-paper-faint">Likes are shown, never used to rank. Your feed stays in time order.</p>
+        </div>
+      ) : null}
     </div>
   );
 }

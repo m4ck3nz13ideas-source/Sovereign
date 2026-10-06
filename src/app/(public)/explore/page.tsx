@@ -88,7 +88,8 @@ export default async function ExplorePage() {
           </p>
           <p className="text-paper">
             Sovereign flips it. You vote on ideas, not personalities. AI checks every proposal
-            against ten shared laws before anyone votes. Decisions happen at the smallest scale
+            against ten shared laws before anyone votes, and sets what each one needs to be decided
+            fairly. Decisions happen at the smallest scale
             that can make them — your street before your city, your city before the world. And
             every decision is measured afterwards, so the next one is better.
           </p>
@@ -110,8 +111,8 @@ export default async function ExplorePage() {
         <ol className="mt-6 space-y-5">
           {[
             ["Propose", "Anyone can put an idea forward, at any scale from their street to the planet."],
-            ["Check", "AI reads it against the ten Universal Laws and flags what could go wrong."],
-            ["Decide", "People say how aligned, confident and willing they are. No yes/no tribes."],
+            ["Check", "AI reads it against the ten Universal Laws, then sets what this proposal needs: how many voices, how long, what must be answered first."],
+            ["Decide", "People say how aligned, how confident and how urgent. No yes/no tribes, and nobody sees the lean until it closes."],
             ["Act", "What passes becomes a project, with the people who said they'd help."],
             ["Learn", "Every outcome is recorded against what was predicted. The system gets wiser."],
           ].map(([t, d], i) => (
@@ -150,7 +151,7 @@ export default async function ExplorePage() {
         {[
           ["Your space", "Journal, ideas, to-dos and a private AI. Only you can read it."],
           ["Home", "Posts that are true or useful. Likes, comments, chats. Ordered by time, not by outrage."],
-          ["Market", "Only businesses that pass the ten laws. For people, not profit."],
+          ["Market", "Buy and sell with businesses that passed the ten laws and proved they're real. For people, not profit."],
           ["Collective", "Proposals, debates, projects and their results, from local to global."],
         ].map(([t, d]) => (
           <div key={t} className="rounded-3xl border border-line p-5">
