@@ -590,3 +590,12 @@ export const conditionsSchema = z.object({
   rationale: z.string().min(10).max(2000),
 });
 export type ConditionsOutput = z.infer<typeof conditionsSchema>;
+
+export const focusJsonSchema = {
+  type: "object",
+  properties: { focus: { type: "string" } },
+  required: ["focus"],
+  additionalProperties: false,
+} as const;
+
+export const focusSchema = z.object({ focus: z.string().min(20).max(3000) });

@@ -62,6 +62,8 @@ export class MockProvider implements AiProvider {
         return { data: this.synthesis(input), model: "mock" };
       case "record_conditions":
         return { data: this.conditions(input), model: "mock" };
+      case "record_focus":
+        return { data: { focus: this.focus(input) }, model: "mock" };
       case "record_chat":
         return {
           data: {
@@ -613,6 +615,19 @@ export class MockProvider implements AiProvider {
         "Set offline from the proposal's reach rather than read from its content. With an AI key these are tailored to the proposal itself.",
     };
   }
+
+  /** Offline focus: the driving needs and first goal, said plainly. */
+  private focus(input: string) {
+    const top = /TOP NEEDS: (.+)/.exec(input)?.[1] ?? "growth and connection";
+    const val = /TOWARD: (.+)/.exec(input)?.[1]?.split(",")[0]?.trim() ?? "what you value";
+    const goal = /GOAL 1: (.+)/.exec(input)?.[1]?.trim();
+    return (
+      `You're driven most by ${top}. Your first value is ${val}, so the next month is best spent on ` +
+      (goal ? `"${goal}" — take its first action this week. ` : "naming one goal that serves it. ") +
+      "This is the offline reader; with an AI key this becomes a proper reading of everything you wrote."
+    );
+  }
+
 }
 
 function clamp(n: number): number {

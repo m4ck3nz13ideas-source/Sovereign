@@ -432,6 +432,17 @@ on purpose, in a commit that says so.
     Enforcement starts when the database row exists; switch on Vercel first,
     then the database. `34_signed_ai.sql`, `src/lib/ai/sign.test.ts`.
 
+39. **Know yourself is yours alone and reaches nothing collective.** The
+    assessment in Individual → Self (0041) draws on Tony Robbins' frameworks —
+    six human needs, a values hierarchy toward and away, limiting and
+    empowering beliefs, goals as result/purpose/actions — in Sovereign's own
+    words (`src/lib/know.ts`). Only its owner can read it; answers are frozen
+    (retaking writes a new one); the AI's focus (prompt `self.focus`) is
+    written once. It is the centre of what the person's own AI chat
+    understands about them, and nothing else: no decision, review,
+    condition, ad, feed or SOV function may read `self_assessments`, and
+    `35_self_assessment.sql` fails if one does.
+
 ## On the surface, not in the schema
 
 These are interface conventions rather than rules the database enforces, but

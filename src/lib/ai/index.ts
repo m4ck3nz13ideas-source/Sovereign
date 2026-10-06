@@ -20,6 +20,7 @@ import {
   VENDOR_VETTING,
   AI_CHAT,
   PROPOSAL_CONDITIONS,
+  SELF_FOCUS,
 } from "./prompts";
 import { AiError, type AiProvider } from "./provider";
 import {
@@ -61,6 +62,8 @@ import {
   conditionsJsonSchema,
   conditionsSchema,
   type ConditionsOutput,
+  focusJsonSchema,
+  focusSchema,
 } from "./schemas";
 
 /**
@@ -818,6 +821,7 @@ the thing you are keeping out.`
 export async function chatTurn(
   history: { role: "you" | "ai"; text: string }[],
   values: { name: string; definition: string | null }[],
+  self: { description: string; focus: string | null } | null = null,
 ): Promise<string> {
   const vals = values.length
     ? values.map((v) => `- ${v.name}${v.definition ? `: ${v.definition}` : ""}`).join("\n")
@@ -826,7 +830,12 @@ export async function chatTurn(
     .slice(-20)
     .map((m) => `${m.role === "you" ? "THEM" : "YOU"}: ${m.text}`)
     .join("\n\n");
-  const input = `THEIR VALUES, IN THEIR WORDS\n${vals}\n\nTHE CONVERSATION SO FAR\n${convo}\n\nReply to their last message.`;
+  const know = self
+    ? `\n\nWHAT THEY FOUND IN KNOW YOURSELF — the centre of what you understand about them\n${self.description}${
+        self.focus ? `\nTHEIR FOCUS: ${self.focus}` : ""
+      }`
+    : "";
+  const input = `THEIR VALUES, IN THEIR WORDS\n${vals}${know}\n\nTHE CONVERSATION SO FAR\n${convo}\n\nReply to their last message.`;
 
   const { data } = await provider().complete({
     prompt: AI_CHAT,
@@ -870,4 +879,48 @@ ${ctx.body}`;
   const parsed = conditionsSchema.safeParse(data);
   if (!parsed.success) throw new AiError(`The conditions did not match the expected shape: ${parsed.error.message}`);
   return { conditions: parsed.data, model, prompt: PROPOSAL_CONDITIONS };
+}
+
+export interface SelfAssessmentInput {
+  needs: Record<string, number>;
+  topNeeds: string[];
+  toward: string[];
+  away: string[];
+  beliefs: { area: string; limiting: string; empowering: string }[];
+  goals: { result: string; purpose: string; actions: string[] }[];
+}
+
+export function describeSelf(a: SelfAssessmentInput): string {
+  const needs = Object.entries(a.needs)
+    .map(([k, v]) => `${k} ${v.toFixed(2)}`)
+    .join(", ");
+  const beliefs = a.beliefs.length
+    ? a.beliefs.map((b) => `- ${b.area}: holds "${b.limiting}"; would rather believe "${b.empowering}"`).join("\n")
+    : "(none given)";
+  const goals = a.goals.length
+    ? a.goals
+        .map((g, i) => `GOAL ${i + 1}: ${g.result}\n  purpose: ${g.purpose}\n  first actions: ${g.actions.join("; ")}`)
+        .join("\n")
+    : "(none given)";
+  return `NEEDS: ${needs}
+TOP NEEDS: ${a.topNeeds.join(" and ")}
+TOWARD: ${a.toward.join(", ")}
+AWAY FROM: ${a.away.join(", ") || "(none)"}
+BELIEFS:
+${beliefs}
+${goals}`;
+}
+
+/** What to focus on, from one person's own assessment. */
+export async function readFocus(a: SelfAssessmentInput): Promise<{ focus: string; model: string }> {
+  const { data, model } = await provider().complete({
+    prompt: SELF_FOCUS,
+    input: describeSelf(a),
+    schema: focusJsonSchema as unknown as Record<string, unknown>,
+    schemaName: "record_focus",
+    maxTokens: 800,
+  });
+  const parsed = focusSchema.safeParse(data);
+  if (!parsed.success) throw new AiError("The focus did not come back in the expected shape.");
+  return { focus: parsed.data.focus, model };
 }

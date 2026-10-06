@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import { askGuardian, chatTurn } from "@/lib/ai";
+import { askGuardian, chatTurn, describeSelf, type SelfAssessmentInput } from "@/lib/ai";
+import { NEED_LABEL, topNeeds, type NeedScores } from "@/lib/know";
 import { AiError } from "@/lib/ai/provider";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
@@ -108,7 +109,31 @@ export async function chatWithAi(
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { ok: false, error: "Sign in again." };
 
-  const { data: values } = await supabase.rpc("guardian_context");
+  const [{ data: values }, { data: latest }] = await Promise.all([
+    supabase.rpc("guardian_context"),
+    supabase
+      .from("self_assessments")
+      .select("needs, values_toward, values_away, beliefs, goals, focus")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  // Know yourself (0041) is the centre of what this AI understands.
+  const self = latest
+    ? {
+        description: describeSelf({
+          needs: latest.needs as Record<string, number>,
+          topNeeds: topNeeds(latest.needs as NeedScores).map((n) => NEED_LABEL[n]),
+          toward: latest.values_toward as string[],
+          away: latest.values_away as string[],
+          beliefs: latest.beliefs as SelfAssessmentInput["beliefs"],
+          goals: latest.goals as SelfAssessmentInput["goals"],
+        }),
+        focus: (latest.focus as string | null) ?? null,
+      }
+    : null;
+
   try {
     const reply = await chatTurn(
       history,
@@ -116,6 +141,7 @@ export async function chatWithAi(
         name: v.value_name,
         definition: v.definition,
       })),
+      self,
     );
     return { ok: true, reply };
   } catch (e) {
