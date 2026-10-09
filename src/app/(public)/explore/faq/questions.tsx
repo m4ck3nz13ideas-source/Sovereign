@@ -24,6 +24,10 @@ export const FAQ_GROUPS: { title: string; items: QA[] }[] = [
         a: "Nothing, for people. Sovereign is paid for by aligned businesses, who pay per click to advertise. Paying never buys approval or the top slot.",
       },
       {
+        q: "Can under-18s join?",
+        a: "Not yet. Sovereign is 18+ while it's being made ready. We plan to open it to 16 and 17 year olds in 2027 with stronger privacy settings by default.",
+      },
+      {
         q: "Is it a political party?",
         a: "No. There are no candidates and nobody to elect. Sovereign is a way of deciding, bound by ten Universal Laws that apply to everyone equally.",
       },
@@ -39,6 +43,14 @@ export const FAQ_GROUPS: { title: string; items: QA[] }[] = [
       {
         q: "Can I take my data with me, or delete it?",
         a: "Yes, both, instantly, from Settings → Your data. Deleting removes everything that is yours alone. Proposals, responses and debate stay in the record of decisions others relied on, shown as written by a former member and no longer linked to you.",
+      },
+      {
+        q: "Can anyone see how I voted?",
+        a: "No. Once a proposal closes, the group sees every response's numbers and notes, without names. Whether you responded is on the record; how you responded is not.",
+      },
+      {
+        q: "Can Sovereign read my private notes?",
+        a: "Other people can't — that's enforced by the database. Whoever runs the database technically could, and we don't look. An encrypted private space, where only your device holds the key, is on the roadmap to make that impossible rather than a promise.",
       },
       {
         q: "Do you sell my data?",

@@ -227,10 +227,17 @@ export default async function ProposalPage({
       .maybeSingle(),
     supabase.rpc("resonance_summary", { p_proposal_id: id }),
     supabase.from("decisions").select("*").eq("proposal_id", id).maybeSingle(),
-    supabase
-      .from("resonance_votes")
-      .select("*, profiles(display_name)")
-      .eq("proposal_id", id),
+    // Open tallies, secret ballots (0046): the numbers without names, and
+    // the notes without numbers. Both empty until it closes.
+    Promise.all([
+      supabase.rpc("closed_responses", { p_proposal_id: id }),
+      supabase.rpc("closed_response_notes", { p_proposal_id: id }),
+    ]).then(([r, n]) => ({
+      data: {
+        responses: (r.data ?? []) as { alignment: number; confidence: number; urgency: number }[],
+        notes: ((n.data ?? []) as { note: string }[]).map((x) => x.note),
+      },
+    })),
     supabase
       .from("law_assessments")
       .select("*, profiles:resolved_by(display_name)")
@@ -792,19 +799,16 @@ export default async function ProposalPage({
           proposalId={id}
           thresholds={thresholds}
           minVoices={rule?.min_voices ?? null}
-          votes={
+          responses={
             decision
-              ? ((voteRows ?? []) as unknown as (ResonanceVote & {
-                  profiles: { display_name: string } | null;
-                })[]).map((v) => ({
-                  name: v.profiles?.display_name ?? "A member",
+              ? voteRows.responses.map((v) => ({
                   alignment: Number(v.alignment),
                   confidence: Number(v.confidence),
                   urgency: Number(v.urgency),
-                  note: v.note,
                 }))
               : []
           }
+          notes={decision ? voteRows.notes : []}
         />
 
         {proposal.status === "passed" ? (

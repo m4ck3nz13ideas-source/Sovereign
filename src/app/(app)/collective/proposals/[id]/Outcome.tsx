@@ -8,8 +8,9 @@ import type { Decision } from "@/lib/types";
  * The outcome layer.
  *
  * Shows the decision, the numbers it was made on, the rationale written at the
- * time, and every member's resonance with their note — all of it only after
- * the proposal closed. Before that this section says so and nothing else.
+ * time, every response's numbers without a name, and the notes people left
+ * without their numbers — all of it only after the proposal closed. Open
+ * tallies, secret ballots (0046): who said what is never shown.
  */
 export function Outcome({
   decision,
@@ -17,7 +18,8 @@ export function Outcome({
   proposalId,
   thresholds,
   minVoices,
-  votes,
+  responses,
+  notes,
 }: {
   decision: Decision | null;
   /** Whether the proposal has moved past 'passed' into a live project. */
@@ -29,19 +31,16 @@ export function Outcome({
    * for a group proposal, which has a participation share instead.
    */
   minVoices: number | null;
-  votes: {
-    name: string;
-    alignment: number;
-    confidence: number;
-    urgency: number;
-    note: string | null;
-  }[];
+  /** Every response, no name, sorted by the numbers. */
+  responses: { alignment: number; confidence: number; urgency: number }[];
+  /** The notes people left, no name and no numbers, in no telling order. */
+  notes: string[];
 }) {
   if (!decision) {
     return (
       <Empty>
         No decision yet. When this closes, the group&rsquo;s numbers, the
-        rationale and everyone&rsquo;s resonance appear here at once.
+        rationale and every response appear here at once — without names.
       </Empty>
     );
   }
@@ -170,27 +169,47 @@ export function Outcome({
         ) : null}
       </Card>
 
-      {votes.length ? (
+      {responses.length ? (
         <Card>
-          <h3 className="smallcaps mb-4 text-[11px] text-paper-faint">
-            How each member responded
+          <h3 className="smallcaps mb-1 text-[11px] text-paper-faint">
+            Every response
           </h3>
-          <ul className="space-y-4">
-            {votes.map((v, i) => (
-              <li key={i} className="border-b border-line pb-4 last:border-0 last:pb-0">
-                <p className="text-[0.95rem] text-paper">{v.name}</p>
-                <p className="mt-1 text-sm tabular-nums text-paper-dim">
-                  alignment {v.alignment.toFixed(2)} · confidence{" "}
-                  {v.confidence.toFixed(2)} · urgency {v.urgency.toFixed(2)}
-                </p>
-                {v.note ? (
-                  <p className="mt-1.5 text-sm leading-relaxed text-paper-dim">
-                    &ldquo;{v.note}&rdquo;
-                  </p>
-                ) : null}
+          <p className="mb-4 text-[0.8125rem] leading-relaxed text-paper-faint">
+            Open tally, secret ballot. Each line is one person; nobody can see
+            whose. Your own is in your response above.
+          </p>
+          <ul className="space-y-2.5">
+            {responses.map((v, i) => (
+              <li key={i}>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 flex-1 rounded-full bg-surface">
+                    <div
+                      className="h-1.5 rounded-full bg-paper-faint"
+                      style={{ width: `${Math.round(v.alignment * 100)}%` }}
+                    />
+                  </div>
+                  <span className="w-44 shrink-0 text-right text-xs tabular-nums text-paper-dim">
+                    {v.alignment.toFixed(2)} · {v.confidence.toFixed(2)} · {v.urgency.toFixed(2)}
+                  </span>
+                </div>
               </li>
             ))}
           </ul>
+          <p className="mt-3 text-[11px] text-paper-faint">alignment · confidence · urgency</p>
+          {notes.length ? (
+            <>
+              <h3 className="smallcaps mt-6 mb-3 text-[11px] text-paper-faint">
+                What people said
+              </h3>
+              <ul className="space-y-3">
+                {notes.map((n, i) => (
+                  <li key={i} className="text-sm leading-relaxed text-paper-dim">
+                    &ldquo;{n}&rdquo;
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
         </Card>
       ) : null}
 

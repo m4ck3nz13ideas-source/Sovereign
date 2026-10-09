@@ -19,6 +19,8 @@ export const ROADMAP: { stage: string; live: boolean; lead: string; items: Roadm
       { title: "Verified Market", detail: "Businesses prove their website, are read against the laws and signed off by a person. Ads go to the best fit." },
       { title: "Home feed, likes and chats", detail: "Time order, posts checked at the door, chats with no read receipts." },
       { title: "SOV simulation", detail: "Balances, transfers and minting for finished acts. A simulation, and labelled as one." },
+      { title: "Secret ballots, open tallies", detail: "Everyone sees every response's numbers and notes once a proposal closes. Nobody sees whose is whose." },
+      { title: "Your data, yours to take or delete", detail: "Explicit consent before anything sensitive is collected. A full copy, or deleting your account, at any time." },
     ],
   },
   {
@@ -37,6 +39,10 @@ export const ROADMAP: { stage: string; live: boolean; lead: string; items: Roadm
     live: false,
     lead: "On the way to opening in 2027.",
     items: [
+      { title: "Encrypted private space", detail: "Your journal, ideas and values encrypted on your device. Sovereign stores what it cannot read." },
+      { title: "Ballots secret from us too", detail: "Proof that an eligible person responded once, with nothing linking the response to who." },
+      { title: "Your own data vault", detail: "Identity and data held by you and shared by consent — the whitepaper's Individual Chain." },
+      { title: "Open to 16 and 17 year olds", detail: "With stronger privacy defaults for them, after a proper risk assessment." },
       { title: "Budget envelopes", detail: "Say where shared money goes, sphere by sphere, the way tax could be allocated." },
       { title: "Sovereign-run escrow", detail: "Held payments moved onto Sovereign's own ledger." },
       { title: "Open to everyone", detail: "After the founding 50 have shaped it." },

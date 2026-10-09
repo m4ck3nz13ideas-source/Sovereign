@@ -160,7 +160,7 @@ export function ResonancePanel({
                 onChange={(e) => setNote(e.target.value)}
                 rows={2}
                 disabled={locked}
-                placeholder="Optional. Read by the group once this closes."
+                placeholder="Optional. Shown to the group once this closes, without your name."
                 className={`${inputClass} resize-y`}
               />
             </div>

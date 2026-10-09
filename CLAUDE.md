@@ -12,9 +12,18 @@ on purpose, in a commit that says so.
    If you find yourself adding one, you are building a different product.
 2. **Drafts never reach the shared store.** A proposal exists in Postgres only
    once submitted. The compose screen keeps drafts in `localStorage`.
-3. **Resonance averages stay hidden until a proposal closes.** Enforced by the
-   RLS policy on `resonance_votes` and by `resonance_summary()`. A live average
-   recreates the bandwagon dynamic resonance exists to remove. Counts are fine.
+3. **Resonance averages stay hidden until a proposal closes, and who said
+   what is never shown.** Enforced by the RLS policy on `resonance_votes` and
+   by `resonance_summary()`. A live average recreates the bandwagon dynamic
+   resonance exists to remove. Counts are fine. **Open tallies, secret
+   ballots (0046):** a response row is readable by its author alone, open or
+   closed — `resonance_read_own` is the only select policy and
+   `40_secret_responses.sql` fails if another appears. After close,
+   `closed_responses()` gives every response's numbers with no name, sorted
+   by the numbers, and `closed_response_notes()` the notes with no name and
+   no numbers. The ledger still says THAT somebody responded, never how. The
+   database still knows who; ballots secret from Sovereign itself are on the
+   roadmap.
 4. **Understanding before action.** `cast_resonance()` refuses without a review
    on file and a row in `proposal_reads`. The disabled sliders are a courtesy;
    the function is the rule.
@@ -514,7 +523,10 @@ on purpose, in a commit that says so.
     would make decisions untrue (rules 34, 36). `profiles.id` no longer
     cascades from `auth.users` for exactly this reason. The map is data, not
     function source, so the absence checks in rules 39 and 41 still hold.
-    `docs/dpia.md`, `docs/gdpr-checklist.md`.
+    18+ for now (Mackenzie, 9 October 2026); 16+ planned for 2027 with
+    under-18 privacy defaults and a children's risk assessment first, never
+    under 16. The tickbox is not age assurance and the site does not claim
+    it is. `docs/dpia.md`, `docs/gdpr-checklist.md`.
 
 ## On the surface, not in the schema
 

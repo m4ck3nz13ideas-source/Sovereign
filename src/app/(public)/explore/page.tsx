@@ -217,6 +217,7 @@ export default async function ExplorePage() {
           {[
             ["You vote for", "People, every few years", "Ideas, whenever they come up"],
             ["The running result", "Shown, so people pile on", "Hidden until it closes"],
+            ["Who voted how", "Visible to the group", "Secret. Only the tally is shown"],
             ["Your feed", "Ranked by engagement", "Time order. Likes never rank it"],
             ["Follower counts", "Front and centre", "None, anywhere"],
             ["Your private notes", "Mined for targeting", "Owner-only. Never shown to advertisers"],

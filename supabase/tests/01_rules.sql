@@ -384,9 +384,14 @@ begin
     raise warning 'FAIL: a proposal needing nothing did not activate'; end if;
 
   perform set_config('test.uid', ben::text, true);
+  -- 0046: open tallies, secret ballots. Ben reads only his own row after
+  -- close too; the three responses come back without anybody's name.
   select count(*) into n from resonance_votes where proposal_id = pid;
+  if n = 1 then passes := passes + 1; else fails := fails + 1;
+    raise warning 'FAIL: Ben read % response rows after close, expected only his own', n; end if;
+  select count(*) into n from closed_responses(pid);
   if n = 3 then passes := passes + 1; else fails := fails + 1;
-    raise warning 'FAIL: Ben saw % votes after close, expected 3', n; end if;
+    raise warning 'FAIL: the anonymous tally after close had % responses, expected 3', n; end if;
 
   select avg_alignment is not null into ok_flag from resonance_summary(pid);
   if ok_flag then passes := passes + 1; else fails := fails + 1;

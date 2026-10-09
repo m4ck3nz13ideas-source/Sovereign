@@ -85,8 +85,12 @@ export default function PrivacyPage() {
               </p>
               <p>
                 We process all of this on the basis of your explicit consent (UK GDPR Article 9(2)(a)), which we ask
-                for in plain words before you start and record with the date and the wording you agreed to. You must
-                be 18 or over to use Sovereign.
+                for in plain words before you start and record with the date and the wording you agreed to.
+              </p>
+              <p>
+                You must be 18 or over to use Sovereign today. We plan to open it to 16 and 17 year olds in 2027,
+                with stronger privacy settings by default for them, once we&apos;ve assessed the risks properly. We
+                will not offer it to under-16s.
               </p>
             </>
           ),
@@ -133,13 +137,21 @@ export default function PrivacyPage() {
                 submit.
               </p>
               <p>
-                Posts, proposals and what you say in a group or place can be read by the people it&apos;s for, and
-                every screen says who that is. Nobody can see who you follow or who follows you, whether you&apos;ve
+                Posts, proposals and what you say in debate can be read by the people they&apos;re for, and every
+                screen says who that is. <strong className="text-paper">How you responded to a proposal is
+                secret</strong>: the group sees the tally — every response&apos;s numbers and notes, without names
+                — but never whose is whose. Whether you responded is on the record; how is not. Nobody can see who you follow or who follows you, whether you&apos;ve
                 read their messages, who you&apos;ve muted, or your SOV.
               </p>
               <p>
                 Advertisers see clicks and spend. Never who clicked, never your values, never why an ad was shown to
                 you.
+              </p>
+              <p>
+                <strong className="text-paper">What we can&apos;t promise yet:</strong> these rules protect you from
+                other people, not from whoever runs the database. Today the people who run Sovereign, and our hosting
+                providers, could technically read what&apos;s stored. We don&apos;t look. Making it impossible rather
+                than a promise is the next section.
               </p>
             </>
           ),
@@ -201,6 +213,43 @@ export default function PrivacyPage() {
                 entries — is kept, shown as written by a &ldquo;Former member&rdquo;, and no longer linked to your
                 email or name. A decision is a record of what people said when it closed; removing a response
                 afterwards would make it untrue. Deleted data leaves our hosts&apos; backups as they roll over.
+              </p>
+            </>
+          ),
+        },
+        {
+          h: "Where privacy is going",
+          body: (
+            <>
+              <p>
+                Sovereign&apos;s principle is that your data belongs to you. Today that&apos;s enforced between
+                people. These are the steps that will enforce it against Sovereign too. They are plans, not features,
+                and this notice will change when each one is real.
+              </p>
+              <ul>
+                <li>
+                  <strong className="text-paper">An encrypted private space.</strong> Your journal, ideas, values and
+                  Know yourself encrypted on your device with a key only you hold. We would store text we cannot read.
+                  The cost: lose the key and the data is gone, and your private AI would run on your device.
+                </li>
+                <li>
+                  <strong className="text-paper">Ballots secret from us too.</strong> A response recorded with proof
+                  that an eligible person cast it once, and nothing linking it to who. The tally stays public and
+                  checkable. Leaving would then remove nothing from a decision, because nothing in it was ever yours by
+                  name.
+                </li>
+                <li>
+                  <strong className="text-paper">Your own data vault.</strong> Your identity and data held by you and
+                  shared by consent, one use at a time — the &ldquo;Individual Chain&rdquo; in the Sovereign
+                  whitepaper.
+                </li>
+              </ul>
+              <p>
+                Progress is on the{" "}
+                <Link href="/explore/roadmap" className="text-gold hover:underline">
+                  roadmap
+                </Link>
+                .
               </p>
             </>
           ),

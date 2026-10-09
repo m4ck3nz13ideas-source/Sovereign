@@ -9,7 +9,9 @@ privacy notice and the DPIA once before launch.
 - [x] Explicit consent to special category data, in words that name it, before
       anything is collected — `/consent`, recorded in `data_consents` with the
       wording version. Existing members are asked on their next visit.
-- [x] 18 or over, confirmed at the same step.
+- [x] 18 or over, confirmed at the same step (16+ planned for 2027).
+- [x] Secret ballots between members: only the tally is shown, never who
+      responded how (0046).
 - [x] A copy of everything, instantly — Settings → Your data → Download.
 - [x] Delete my account, instantly — same screen. Private data deleted; the
       collective record kept and no longer linked to the person.
@@ -60,6 +62,13 @@ privacy notice and the DPIA once before launch.
    don't train on your data, and that the privacy notice still matches.
 10. **Before billing advertisers:** add Stripe as a processor in the privacy
     notice, and keep invoices for six years (HMRC).
+
+11. **Online Safety Act.** Sovereign has posts, comments and chats, so it is a
+    user-to-user service. Do the illegal-content risk assessment now (Ofcom has
+    a tool for small services). A tickbox saying "18 or over" is not highly
+    effective age assurance, so before opening publicly Sovereign must either
+    use real age assurance or do the children's access and risk assessments.
+    Plan: 16+ in 2027 with high-privacy defaults for 16–17s.
 
 ## Re-check when
 

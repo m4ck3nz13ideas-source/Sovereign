@@ -87,6 +87,7 @@ Likelihood and severity: remote / possible / probable; minimal / significant / s
 | R2 | Private journal or Know yourself read by someone else (bug, misconfigured policy, admin access) | Remote | Severe | Medium |
 | R3 | An AI reading wrongly ends someone's proposal or blocks a post — unfair treatment, chilling effect | Possible | Significant | Medium |
 | R4 | Members of a group learn how someone voted, or are pressured by a visible lean | Remote | Significant | Low |
+| R11 | The operator (or a host) reads private writing or links responses to people, because the database can technically be read by whoever runs it | Possible | Severe | **High** |
 | R5 | After deleting their account, a person's past responses and debate remain and could identify them by content | Possible | Significant | Medium |
 | R6 | Ad matching is perceived as profiling on political beliefs | Possible | Significant | Medium |
 | R7 | A child joins and has political or belief data processed | Possible | Significant | Medium |
@@ -101,10 +102,11 @@ Likelihood and severity: remote / possible / probable; minimal / significant / s
 | R1 | Supabase encryption at rest and TLS; RLS on every table; no service key in the app; email is the only identifier held; breach plan (checklist item 8); MFA on Supabase, Vercel, GitHub, GoDaddy and email accounts | Reduced | Medium |
 | R2 | Owner-only policies with no group path (rule 1), tested in SQL suites on every run; security definer functions carry their own checks; the export reads only the caller's rows | Reduced | Low |
 | R3 | Every AI reading signed, published with reasons, challengeable (re-runs it); businesses need human sign-off; a person reviews any complaint about an AI decision; privacy notice explains (Arts 22A–22D safeguards) | Reduced | Low |
-| R4 | Averages hidden until close (rule 3); no "people you follow responded" (rule 20); splits reported as splits (rule 14) | Reduced | Low |
+| R4 | Averages hidden until close (rule 3); responses readable by their author only, open or closed — the group sees an anonymous tally (0046); no "people you follow responded" (rule 20); splits reported as splits (rule 14) | Reduced | Low |
+| R11 | Today: policy (the operator does not query private tables), MFA, separate admin account, the notice says so plainly. Planned: client-side encryption of the private space (key on the device) and anonymous ballots (eligibility proof with no link to the person). Until those exist this is the main residual risk and the one to explain to members. | Reduced | Medium |
 | R5 | Profile scrubbed to "Former member", email and sign-in deleted, private data deleted, group memberships removed; notice and the delete screen say exactly what stays and why. **Open question for a solicitor:** whether keeping unattributed responses after a consent withdrawal is defensible, or whether responses to proposals that are still open should also be removed. | Reduced | Medium |
 | R6 | Fit computed per view, never stored, never shown to the business; the slot says which of the viewer's own values it matched; values are the person's own words, not inferred; covered by explicit consent | Reduced | Low |
-| R7 | 18+ confirmed at consent; terms say so; no features aimed at children. Consider age assurance if Sovereign opens widely. | Reduced | Low |
+| R7 | 18+ confirmed at consent; terms say so; no features aimed at children. A tickbox is not age assurance, so this is honest only while the founding 50 are invited. Before opening in 2027: 16+ with high-privacy defaults for under-18s (Children's Code), an Online Safety Act children's access and risk assessment, and either highly effective age assurance or the children's safety measures. Never under 16. | Reduced | Medium |
 | R8 | Optional, off unless the person chooses it; only needed at national scale and above; Sovereign receives a nullifier only; personhood screen to say plainly that the verifier processes a biometric and link to its notice before launch | Reduced | Low |
 | R9 | Data bridge / IDTA; minimise what goes to the AI provider (only the text involved in a request) | Accepted | Low |
 | R10 | Separate admin account; MFA; avoid reading private tables in the SQL editor; consider Supabase audit logs | Reduced | Low |

@@ -75,6 +75,27 @@ export default async function DataPage() {
       </section>
 
       <section className="mb-10">
+        <SectionLabel>Who can read what</SectionLabel>
+        <Card>
+          <div className="space-y-3 text-[0.95rem] leading-relaxed text-paper-dim">
+            <p>
+              <span className="text-paper">Other people</span> can&apos;t read your private space, and can&apos;t
+              see how you responded to a proposal — only the tally, without names. That&apos;s enforced by the
+              database.
+            </p>
+            <p>
+              <span className="text-paper">Whoever runs Sovereign</span> technically could, today. We don&apos;t
+              look. Next: your private space encrypted on your device with a key only you hold, and ballots that
+              are secret from us too.{" "}
+              <Link href="/explore/privacy" className="text-gold hover:underline">
+                Where privacy is going →
+              </Link>
+            </p>
+          </div>
+        </Card>
+      </section>
+
+      <section className="mb-10">
         <SectionLabel right={<Tag tone="alarm">permanent</Tag>}>Delete my account</SectionLabel>
         <Card>
           <div className="space-y-3 text-[0.95rem] leading-relaxed text-paper-dim">
@@ -86,9 +107,9 @@ export default async function DataPage() {
             </p>
             <p className="text-paper">Kept, but no longer linked to anyone:</p>
             <p>
-              proposals, responses and debate, flags, predictions, decisions, projects and SOV entries. A decision is
-              a record of what people said when it closed; removing a response afterwards would make it untrue. These
-              will show as written by a &ldquo;Former member&rdquo;.
+              proposals and debate you wrote (shown as by a &ldquo;Former member&rdquo;), your responses (already
+              secret — they stay in the tally), flags, predictions, decisions, projects and SOV entries. A decision is
+              a record of what people said when it closed; removing a response afterwards would make it untrue.
             </p>
           </div>
           <div className="mt-5">
