@@ -23,6 +23,11 @@ import type {
   WitnessFeedItem,
 } from "@/lib/types";
 
+import { PriorityTally, type TallyRow } from "@/components/spheres/PriorityTally";
+import { SphereRatings } from "@/components/spheres/SphereRatings";
+import { forYouFeed, topSpheres, type Rating } from "@/lib/foryou";
+import { sphereName } from "@/lib/spheres";
+
 import { Attention, Dormant, Signal } from "./Discover";
 import { Compose } from "./Compose";
 import { Feed, type Counts } from "./Feed";
@@ -47,7 +52,14 @@ export const metadata = { title: "Sovereign" };
  * Nothing here is ranked by attention, and there is no count on anything you
  * could compete over. Rule 1: calm over noise.
  */
-export default async function HomePage() {
+type FeedTab = "foryou" | "following" | "discover";
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ feed?: string }>;
+}) {
+  const { feed: rawTab } = await searchParams;
   const session = await requireSession();
   const { profile, group } = session;
   const address = await currentAddress(session);
@@ -56,6 +68,21 @@ export default async function HomePage() {
   const scope = address?.kind === "place" ? address.scope : null;
   const groupId = address?.kind === "group" ? address.group.id : null;
   const args = { p_group_id: groupId, p_scope: scope };
+
+  // Three feeds (0047). Following is the people you follow, as it always was.
+  // For you and Discover are about the address chosen at the top.
+  const { data: ratingRows } = await supabase
+    .from("sphere_priorities")
+    .select("sphere_id, rating")
+    .eq("profile_id", profile.id);
+  const ratings = (ratingRows ?? []) as Rating[];
+  const top = topSpheres(ratings);
+  const tab: FeedTab =
+    rawTab === "following" || rawTab === "discover" || rawTab === "foryou"
+      ? rawTab
+      : top.length
+        ? "foryou"
+        : "following";
 
   const [
     { data: ready },
@@ -75,7 +102,11 @@ export default async function HomePage() {
       .limit(10),
     // One feed: what people wrote and what they did, in time order. There is
     // no second sort key and no field to make one out of — see Feed.tsx.
-    supabase.rpc("witness_feed", { p_limit: 40 }),
+    tab === "discover"
+      ? address
+        ? supabase.rpc("discover_feed", { ...args, p_limit: 40 })
+        : Promise.resolve({ data: [] })
+      : supabase.rpc("witness_feed", { p_limit: tab === "foryou" ? 80 : 40 }),
     address ? supabase.rpc("attention_queue", args) : Promise.resolve({ data: [] }),
     address
       ? supabase.rpc("dormant_proposals", { ...args, p_limit: 6 })
@@ -91,7 +122,52 @@ export default async function HomePage() {
   const queue = (attention ?? []) as AttentionItem[];
   const sleeping = (dormant ?? []) as DormantProposal[];
   const events = (signal ?? []) as SignalEvent[];
-  const items = (feed ?? []) as WitnessFeedItem[];
+  let items = (feed ?? []) as WitnessFeedItem[];
+  let reasons: Record<string, string> = {};
+  let tally: TallyRow[] = [];
+
+  if (tab === "foryou" && address) {
+    // Everything readable here — the people you follow and everyone else at
+    // this address — then only what touches the Spheres you rated 4 or 5.
+    const [{ data: wider }, { data: tallyRows }] = await Promise.all([
+      supabase.rpc("discover_feed", { ...args, p_limit: 80 }),
+      supabase.rpc("sphere_priority_tally", args),
+    ]);
+    tally = (tallyRows ?? []) as TallyRow[];
+    const all = [...items, ...((wider ?? []) as WitnessFeedItem[])];
+
+    const proposalIds = new Set<string>();
+    const projectIds = new Set<string>();
+    for (const i of all) {
+      if (i.source !== "act" || !i.subject_id) continue;
+      if (i.subject_type === "proposal") proposalIds.add(i.subject_id);
+      if (i.subject_type === "project") projectIds.add(i.subject_id);
+    }
+    const { data: projectRows } = projectIds.size
+      ? await supabase.from("projects").select("id, proposal_id").in("id", [...projectIds])
+      : { data: [] };
+    const projectToProposal = new Map(
+      ((projectRows ?? []) as { id: string; proposal_id: string }[]).map((p) => [p.id, p.proposal_id]),
+    );
+    for (const pid of projectToProposal.values()) proposalIds.add(pid);
+    const { data: tagRows } = proposalIds.size
+      ? await supabase.from("proposals").select("id, sphere, spheres_also").in("id", [...proposalIds])
+      : { data: [] };
+    const tags = new Map(
+      ((tagRows ?? []) as { id: string; sphere: string | null; spheres_also: string[] | null }[]).map((p) => [
+        p.id,
+        [p.sphere, ...(p.spheres_also ?? [])].filter(Boolean) as string[],
+      ]),
+    );
+    const tagged = new Map<string, string[]>();
+    for (const i of all) {
+      if (i.source !== "act" || !i.subject_id) continue;
+      const pid = i.subject_type === "project" ? projectToProposal.get(i.subject_id) : i.subject_id;
+      if (pid) tagged.set(i.item_id, tags.get(pid) ?? []);
+    }
+    ({ items, reasons } = forYouFeed(all, tagged, top));
+    items = items.slice(0, 40);
+  }
   const kept = new Set(((keeps ?? []) as { post_id: string }[]).map((k) => k.post_id));
 
   // Likes and comments for what is on screen (public counts; the order above
@@ -127,7 +203,7 @@ export default async function HomePage() {
         action={
           <div className="flex items-center">
             <ChatsLink />
-            <TabActions plus="/home#compose" plusLabel="New post" />
+            <TabActions plus="/home?feed=following#compose" plusLabel="New post" />
           </div>
         }
       >
@@ -182,10 +258,79 @@ export default async function HomePage() {
           </Gutter>
 
           <Gutter className="space-y-3">
-            <div id="compose" className="scroll-mt-16">
-              <Compose hasGroup={Boolean(group)} />
-            </div>
-            <Feed items={items} kept={kept} counts={counts} ad={ad} />
+            <nav className="flex gap-1.5" aria-label="Feeds">
+              {(
+                [
+                  ["foryou", "For you"],
+                  ["following", "Following"],
+                  ["discover", "Discover"],
+                ] as const
+              ).map(([id, label]) => (
+                <Link
+                  key={id}
+                  href={`/home?feed=${id}`}
+                  aria-current={tab === id ? "page" : undefined}
+                  className={`press rounded-pill px-3.5 py-1.5 text-sm font-semibold ${
+                    tab === id ? "bg-gold text-ink" : "bg-surface text-paper-dim"
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+
+            {tab === "foryou" ? (
+              <div className="rounded-card border border-line bg-surface-soft p-4">
+                {top.length ? (
+                  <>
+                    <div className="mb-3 flex items-baseline justify-between gap-3">
+                      <p className="smallcaps text-[11px] text-paper-faint">What matters in {here}</p>
+                      <Link href="/individual/self#matters" className="text-xs text-gold">
+                        your ratings
+                      </Link>
+                    </div>
+                    <PriorityTally rows={tally} here={here} />
+                    <p className="mt-3 text-[0.8125rem] text-paper-faint">
+                      Showing what touches {top.map((t) => sphereName(t)).join(", ")}, newest first.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-serif text-lg text-paper">What matters most to you?</p>
+                    <p className="mt-1 mb-2 text-[0.9rem] text-paper-dim">
+                      Rate the Spheres and For you shows what&apos;s happening in them. Your ratings are yours; {here} sees
+                      only the total.
+                    </p>
+                    <SphereRatings initial={Object.fromEntries(ratings.map((r) => [r.sphere_id, r.rating]))} compact />
+                  </>
+                )}
+              </div>
+            ) : null}
+
+            {tab === "following" ? (
+              <div id="compose" className="scroll-mt-16">
+                <Compose hasGroup={Boolean(group)} />
+              </div>
+            ) : null}
+
+            {tab === "discover" && !address ? (
+              <Empty>Say where you are, or join a group, to discover what&apos;s happening around you.</Empty>
+            ) : tab === "foryou" && !top.length ? null : (
+              <Feed
+                items={items}
+                kept={kept}
+                counts={counts}
+                ad={ad}
+                reasons={reasons}
+                empty={
+                  tab === "foryou"
+                    ? `Nothing in your Spheres in ${here} yet.`
+                    : tab === "discover"
+                      ? `Nothing new from people you don't follow in ${here} yet.`
+                      : undefined
+                }
+              />
+            )}
           </Gutter>
         </section>
 

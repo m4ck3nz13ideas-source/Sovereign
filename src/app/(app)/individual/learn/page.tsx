@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Card, Gutter, Readers, SectionLabel } from "@/components/ui";
 import { COURSES, courseLessons, forYou, sphereLesson, type AssessmentLike } from "@/lib/learn";
+import { topSpheres, type Rating } from "@/lib/foryou";
 import { requireSession } from "@/lib/session";
 import { sphereLine } from "@/lib/spheres";
 import { createClient } from "@/lib/supabase/server";
@@ -19,7 +20,7 @@ export default async function LearnPage() {
   const { userId } = await requireSession();
   const supabase = await createClient();
 
-  const [{ data: progress, error }, { data: assessment }, { data: open }, { data: mine }] = await Promise.all([
+  const [{ data: progress, error }, { data: assessment }, { data: open }, { data: mine }, { data: rated }] = await Promise.all([
     supabase.from("lesson_progress").select("lesson_id, completed_at").eq("profile_id", userId),
     supabase
       .from("self_assessments")
@@ -35,6 +36,7 @@ export default async function LearnPage() {
       .order("submitted_at", { ascending: false })
       .limit(20),
     supabase.from("resonance_votes").select("proposal_id").eq("profile_id", userId),
+    supabase.from("sphere_priorities").select("sphere_id, rating").eq("profile_id", userId),
   ]);
 
   if (error) {
@@ -46,7 +48,8 @@ export default async function LearnPage() {
   }
 
   const done = new Set((progress ?? []).filter((p) => p.completed_at).map((p) => p.lesson_id as string));
-  const picks = forYou((assessment as AssessmentLike | null) ?? null, done);
+  const [topSphere] = topSpheres((rated ?? []) as Rating[]);
+  const picks = forYou((assessment as AssessmentLike | null) ?? null, done, 4, topSphere ?? null);
   const responded = new Set((mine ?? []).map((v) => v.proposal_id as string));
   const deciding = (open ?? []).filter((p) => !responded.has(p.id)).slice(0, 4) as unknown as {
     id: string;

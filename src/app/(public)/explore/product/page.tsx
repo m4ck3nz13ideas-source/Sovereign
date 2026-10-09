@@ -45,6 +45,7 @@ const SECTIONS: { id: string; tab: number; title: string; lead: string; points: 
     title: "Social media that leaves you better off.",
     lead: "Posts from people you follow, in time order. Every post is read once at the door: true to its author, or useful to others.",
     points: [
+      "For you, Following and Discover — at your street, region, nation or the world.",
       "Likes and comments, shown openly and never used to rank.",
       "No follower counts and no people-you-may-know.",
       "Chats with friends, without read receipts or online status.",

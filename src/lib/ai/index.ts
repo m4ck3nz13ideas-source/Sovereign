@@ -822,6 +822,8 @@ export async function chatTurn(
   history: { role: "you" | "ai"; text: string }[],
   values: { name: string; definition: string | null }[],
   self: { description: string; focus: string | null } | null = null,
+  /** How much each Sphere matters to them, in their ratings (0047). */
+  matters: string | null = null,
 ): Promise<string> {
   const vals = values.length
     ? values.map((v) => `- ${v.name}${v.definition ? `: ${v.definition}` : ""}`).join("\n")
@@ -835,7 +837,8 @@ export async function chatTurn(
         self.focus ? `\nTHEIR FOCUS: ${self.focus}` : ""
       }`
     : "";
-  const input = `THEIR VALUES, IN THEIR WORDS\n${vals}${know}\n\nTHE CONVERSATION SO FAR\n${convo}\n\nReply to their last message.`;
+  const priorities = matters ? `\n\nWHAT MATTERS TO THEM (the Spheres they rated, 1–5)\n${matters}` : "";
+  const input = `THEIR VALUES, IN THEIR WORDS\n${vals}${know}${priorities}\n\nTHE CONVERSATION SO FAR\n${convo}\n\nReply to their last message.`;
 
   const { data } = await provider().complete({
     prompt: AI_CHAT,

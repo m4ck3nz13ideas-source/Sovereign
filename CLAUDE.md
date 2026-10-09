@@ -528,6 +528,27 @@ on purpose, in a commit that says so.
     under 16. The tickbox is not age assurance and the site does not claim
     it is. `docs/dpia.md`, `docs/gdpr-checklist.md`.
 
+43. **What matters to you is yours; the tally is the group's; neither
+    decides.** (0047.) `sphere_priorities`: a 1–5 rating per Sphere,
+    owner-only, editable (a view held, not an act recorded). Rated in
+    Individual → Self and from the For you card on Home.
+    `sphere_priority_tally()` gives the address's average per Sphere — a
+    group's members, or people at YOUR place at that scale — with no person
+    in it, and no averages at all below `priority_floor()` (5) raters. Home has
+    three feeds: For you (src/lib/foryou.ts — readable items at this address
+    touching the Spheres you rated 4 or 5: acts by their proposal's tags,
+    posts by Sphere cue words, labelled "Tagged …" / "Mentions …", newest
+    first, never re-ordered), Following (`witness_feed()`, unchanged) and
+    Discover (`discover_feed()` — posts you can already read and public acts
+    at the address, from people you don't follow, newest first). The For you
+    selection happens in the app on purpose: **no database function except
+    the tally reads a rating**, and `41_sphere_priorities.sql` fails if one
+    does; `37_spheres.sql` allows the tally and nothing else. Posts beyond
+    your local place still only reach Discover through the existing post
+    policy — widening who can see a post would need an audience choice at
+    posting, which does not exist yet. Ratings also inform your own AI chat
+    and Learn's For you picks.
+
 ## On the surface, not in the schema
 
 These are interface conventions rather than rules the database enforces, but

@@ -47,22 +47,27 @@ export function Feed({
   kept,
   counts = {},
   ad = null,
+  reasons = {},
+  empty,
 }: {
   items: WitnessFeedItem[];
   kept: Set<string>;
   counts?: Counts;
   ad?: Ad | null;
+  /** Why an item is in For you ("Tagged Ecology"). Shown, never sorted by. */
+  reasons?: Record<string, string>;
+  empty?: string;
 }) {
   if (!items.length) {
     return (
-      <Empty>Nothing yet. Post something, or follow someone.</Empty>
+      <Empty>{empty ?? "Nothing yet. Post something, or follow someone."}</Empty>
     );
   }
 
   return (
     <ul className="space-y-3">
       {items.map((item, i) => (
-        <FeedRow key={item.item_id} item={item} kept={kept} counts={counts} ad={i === 3 ? ad : null} />
+        <FeedRow key={item.item_id} item={item} kept={kept} counts={counts} ad={i === 3 ? ad : null} reason={reasons[item.item_id]} />
       ))}
       {ad && items.length < 4 ? <SponsoredPost ad={ad} /> : null}
     </ul>
@@ -74,14 +79,17 @@ function FeedRow({
   kept,
   counts,
   ad,
+  reason,
 }: {
   item: WitnessFeedItem;
   kept: Set<string>;
   counts: Counts;
   ad: Ad | null;
+  reason?: string;
 }) {
   return (
     <>
+      {reason ? <li className="smallcaps -mb-2 list-none px-1 text-[10px] text-gold">{reason}</li> : null}
       {item.source === "post" ? (
         <PostCard item={item} kept={kept.has(item.item_id)} count={counts[item.item_id]} />
       ) : (

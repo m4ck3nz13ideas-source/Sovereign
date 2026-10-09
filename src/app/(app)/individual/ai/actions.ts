@@ -6,6 +6,7 @@ import { askGuardian, chatTurn, describeSelf, type SelfAssessmentInput } from "@
 import { NEED_LABEL, topNeeds, type NeedScores } from "@/lib/know";
 import { AiError } from "@/lib/ai/provider";
 import { requireSession } from "@/lib/session";
+import { sphereName } from "@/lib/spheres";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -109,7 +110,7 @@ export async function chatWithAi(
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { ok: false, error: "Sign in again." };
 
-  const [{ data: values }, { data: latest }] = await Promise.all([
+  const [{ data: values }, { data: latest }, { data: rated }] = await Promise.all([
     supabase.rpc("guardian_context"),
     supabase
       .from("self_assessments")
@@ -117,7 +118,14 @@ export async function chatWithAi(
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase.from("sphere_priorities").select("sphere_id, rating").order("rating", { ascending: false }),
   ]);
+
+  const matters = (rated ?? []).length
+    ? ((rated ?? []) as { sphere_id: string; rating: number }[])
+        .map((r) => `- ${sphereName(r.sphere_id) ?? r.sphere_id}: ${r.rating}/5`)
+        .join("\n")
+    : null;
 
   // Know yourself (0041) is the centre of what this AI understands.
   const self = latest
@@ -142,6 +150,7 @@ export async function chatWithAi(
         definition: v.definition,
       })),
       self,
+      matters,
     );
     return { ok: true, reply };
   } catch (e) {

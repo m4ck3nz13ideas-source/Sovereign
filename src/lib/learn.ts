@@ -446,6 +446,17 @@ export function sphereLesson(sphere: string | null | undefined): Lesson | null {
 
 /* --------------------------------------------------------------- for you */
 
+const SPHERE_LABEL: Record<SphereId, string> = {
+  health: "Health",
+  education: "Education",
+  ecology: "Ecology",
+  justice: "Justice",
+  economy: "Economy",
+  culture: "Culture",
+  infrastructure: "Infrastructure",
+  tech: "Tech",
+};
+
 /** Which Sphere a value someone moves toward points at. */
 const VALUE_SPHERE: Record<string, SphereId> = {
   Health: "health",
@@ -491,12 +502,21 @@ export interface Pick {
  * Lessons chosen from the person's own Know yourself results, skipping what
  * they have finished. Worked out on request and stored nowhere.
  */
-export function forYou(a: AssessmentLike | null, done: ReadonlySet<string>, max = 4): Pick[] {
+export function forYou(
+  a: AssessmentLike | null,
+  done: ReadonlySet<string>,
+  max = 4,
+  /** The Sphere they rated most important, if any (0047). */
+  topSphere: SphereId | null = null,
+): Pick[] {
   const picks: Pick[] = [];
   const add = (id: string, why: string) => {
     const l = lesson(id);
     if (l && !done.has(id) && !picks.some((p) => p.lesson.id === id)) picks.push({ lesson: l, why });
   };
+  if (topSphere) {
+    add(`sphere-${topSphere}`, `You said ${SPHERE_LABEL[topSphere]} matters most to you. This is how it gets decided.`);
+  }
 
   if (!a) {
     for (const l of courseLessons("start")) add(l.id, "Where everyone starts.");

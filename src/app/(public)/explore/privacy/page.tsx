@@ -102,6 +102,7 @@ export default function PrivacyPage() {
               <li>Your email address, to sign you in with a link. There is no password.</li>
               <li>Your profile: name, handle, bio, and the places you say you belong to (no GPS, no coordinates).</li>
               <li>What you write for yourself: journal, ideas, to-dos, values, beliefs, Know yourself answers, notes.</li>
+              <li>How much each Sphere (Health, Education, Ecology and so on) matters to you, if you rate them.</li>
               <li>What you do in shared spaces: proposals, responses, debate, flags, predictions, projects, posts, comments, likes and messages.</li>
               <li>Your agreement to the ten Universal Laws and your consent record.</li>
               <li>If you prove you&apos;re one person: one opaque code from the verifier. No name, document, photo or biometric reaches us.</li>
@@ -140,7 +141,9 @@ export default function PrivacyPage() {
                 Posts, proposals and what you say in debate can be read by the people they&apos;re for, and every
                 screen says who that is. <strong className="text-paper">How you responded to a proposal is
                 secret</strong>: the group sees the tally — every response&apos;s numbers and notes, without names
-                — but never whose is whose. Whether you responded is on the record; how is not. Nobody can see who you follow or who follows you, whether you&apos;ve
+                — but never whose is whose. Whether you responded is on the record; how is not. The same goes for
+                how you rate the Spheres: your group or place sees the average once five people have rated, never
+                yours. Nobody can see who you follow or who follows you, whether you&apos;ve
                 read their messages, who you&apos;ve muted, or your SOV.
               </p>
               <p>

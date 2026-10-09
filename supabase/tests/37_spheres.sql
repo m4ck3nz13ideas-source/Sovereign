@@ -149,11 +149,14 @@ reset role;
 do $$
 declare n int; names text;
 begin
-  -- A Sphere informs; it never decides. Nothing outside 0043 reads one.
+  -- A Sphere informs; it never decides. Nothing outside 0043 reads one —
+  -- except the tally of what people say matters (0047, rule 43), which is
+  -- information for people and is itself checked by 41_sphere_priorities.sql
+  -- never to be read by anything that decides.
   select count(*)::int, string_agg(p.proname, ', ') into n, names
     from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
    where ns.nspname = 'public' and p.prosrc ~* 'sphere'
-     and p.proname <> 'check_proposal_spheres';
+     and p.proname not in ('check_proposal_spheres', 'sphere_priority_tally');
   if n <> 0 then raise exception 'FAIL: % function(s) read a Sphere: %', n, names; end if;
 
   -- Nobody can count followers: no function, no view.
