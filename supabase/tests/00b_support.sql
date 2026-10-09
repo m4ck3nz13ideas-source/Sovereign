@@ -97,3 +97,13 @@ returns void language sql security definer set search_path = public, extensions 
 $$;
 
 grant execute on function test_set_status(uuid, proposal_status) to public;
+
+-- 0042 refuses responses to a proposal until its conditions are recorded, for
+-- every proposal submitted after the migration ran. The older suites exercise
+-- the pre-0039 rules and never set conditions, so the harness moves the epoch
+-- to the far future; the suites that test conditions (33, 36) move it back.
+do $$ begin
+  if to_regclass('public.conditions_epoch') is not null then
+    update conditions_epoch set since = 'infinity';
+  end if;
+end $$;

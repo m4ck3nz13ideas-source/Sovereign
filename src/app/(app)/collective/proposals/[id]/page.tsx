@@ -145,18 +145,34 @@ export default async function ProposalPage({
     .eq("proposal_id", id)
     .maybeSingle();
   const conditions = conditionsRow as Conditions | null;
-  const { data: answerRows } = conditions
-    ? await supabase.from("proposal_requirement_answers").select("idx").eq("proposal_id", id)
-    : { data: [] };
+  const [{ data: answerRows }, { count: votesNow }] = conditions
+    ? await Promise.all([
+        supabase.from("proposal_requirement_answers").select("kind, idx").eq("proposal_id", id),
+        supabase.from("resonance_votes").select("profile_id", { count: "exact", head: true }).eq("proposal_id", id),
+      ])
+    : [{ data: [] }, { count: 0 }];
+  const answered = (answerRows ?? []) as { kind: string; idx: number }[];
   const openRequirements = conditions
-    ? conditions.requirements.length - ((answerRows ?? []) as { idx: number }[]).length
+    ? conditions.requirements.length - answered.filter((a) => a.kind === "requirement").length
+    : 0;
+  const unreached = conditions
+    ? conditions.affected.length - answered.filter((a) => a.kind === "affected").length
     : 0;
 
-  const closesAt = conditions?.closes_at ?? proposal.closes_at;
+  // 0042: with no window, a proposal is decided once everything is met — and
+  // not before. With one, not before it ends. Challenges never hold it.
+  const closesAt = conditions ? conditions.closes_at : proposal.closes_at;
   const windowOpen = Boolean(closesAt && new Date(closesAt) > new Date());
+  const conditionsReady = conditions
+    ? conditions.closes_at
+      ? !windowOpen
+      : (votesNow ?? 0) >= conditions.min_voices && openRequirements <= 0 && unreached <= 0
+    : true;
   const canClose = proposal.group_id
-    ? Boolean(myRole && isSteward(myRole)) && !(conditions && windowOpen)
-    : !windowOpen;
+    ? Boolean(myRole && isSteward(myRole)) && conditionsReady
+    : conditions
+      ? conditionsReady
+      : !windowOpen;
 
   const [
     { data: reviewRows },
@@ -668,7 +684,7 @@ export default async function ProposalPage({
         proposalId={id}
         conditions={conditions}
         open={open || proposal.status === "in_review"}
-        voters={summary?.voter_count ?? 0}
+        voters={summary?.voter_count ?? votesNow ?? 0}
       />
 
       {/* ----------------------------------------------------- HUMAN LAYER */}
@@ -807,7 +823,7 @@ export default async function ProposalPage({
               proposalId={id}
               lawViolations={standing?.violations ?? 0}
               lawTensions={standing?.unanswered_tensions ?? 0}
-              unanswered={unanswered.length + openRequirements}
+              unanswered={unanswered.length + Math.max(0, openRequirements) + Math.max(0, unreached)}
               voters={summary?.voter_count ?? 0}
               members={conditions ? null : summary?.member_count ?? null}
               minVoices={conditions?.min_voices ?? rule?.min_voices ?? 1}

@@ -12,6 +12,8 @@ grant execute on all functions in schema public to app;
 grant execute on function auth.uid() to app;
 grant select on auth.users to app;
 
+update conditions_epoch set since = '-infinity';
+
 insert into auth.users (id, email) values
   ('a1313131-3131-3131-3131-31313131313a', 'terms-steward@example.com'),
   ('b1313131-3131-3131-3131-31313131313b', 'terms-member@example.com'),
@@ -65,7 +67,7 @@ begin
   -- The AI asks too little; the floors hold.
   perform set_config('test.uid', stew::text, true);
   perform record_proposal_conditions(p1, 1, 1,
-    '["Who buys the paint and how much it costs", "Who has the keys on painting day"]'::jsonb,
+    '["Who buys the paint and how much it costs", "Who has the keys on painting day"]'::jsonb, '[]'::jsonb,
     'A small, reversible job inside one group.', 'proposal.conditions', '1.0.0', 'test');
   select * into t from proposal_conditions where proposal_id = p1;
   if t.min_voices = 2 and t.window_hours = 24 then passes := passes + 1; else fails := fails + 1;
@@ -73,7 +75,7 @@ begin
 
   -- Set once.
   begin
-    perform record_proposal_conditions(p1, 2, 24, '[]'::jsonb, 'Trying to soften the terms.', 'proposal.conditions', '1.0.0', 'test');
+    perform record_proposal_conditions(p1, 2, 24, '[]'::jsonb, '[]'::jsonb, 'Trying to soften the terms.', 'proposal.conditions', '1.0.0', 'test');
     fails := fails + 1; raise warning 'FAIL: terms were set twice';
   exception when others then passes := passes + 1; end;
 
@@ -102,8 +104,11 @@ end $$;
 
 -- Time passes.
 reset role;
+-- Time passes (the guard forbids moving a window earlier, so lift it for the clock).
+alter table proposal_conditions disable trigger proposal_conditions_guard;
 update proposal_conditions set closes_at = now() - interval '1 minute'
  where proposal_id = (select id from proposals where title = 'Paint the hall');
+alter table proposal_conditions enable trigger proposal_conditions_guard;
 set role app;
 
 do $$
@@ -135,7 +140,7 @@ begin
                      'The front gate needs repainting before winter too.');
   perform test_terms_ready(p2, stew);
   perform set_config('test.uid', stew::text, true);
-  perform record_proposal_conditions(p2, 2, 24, '["Who buys the paint"]'::jsonb,
+  perform record_proposal_conditions(p2, 2, 24, '["Who buys the paint"]'::jsonb, '[]'::jsonb,
     'Small and reversible.', 'proposal.conditions', '1.0.0', 'test');
   perform test_terms_vote(p2, stew, 0.9);
   perform test_terms_vote(p2, mem, 0.9);
@@ -155,8 +160,11 @@ begin
 end $$;
 
 reset role;
+-- Time passes (the guard forbids moving a window earlier, so lift it for the clock).
+alter table proposal_conditions disable trigger proposal_conditions_guard;
 update proposal_conditions set closes_at = now() - interval '1 minute'
  where proposal_id = (select id from proposals where title = 'Paint the gate');
+alter table proposal_conditions enable trigger proposal_conditions_guard;
 set role app;
 
 do $$
@@ -183,7 +191,7 @@ begin
                      'Knock the hall down and rebuild it with a second floor for the youth club.');
   perform test_terms_ready(p3, stew);
   perform set_config('test.uid', stew::text, true);
-  perform record_proposal_conditions(p3, 3, 24, '[]'::jsonb,
+  perform record_proposal_conditions(p3, 3, 24, '[]'::jsonb, '[]'::jsonb,
     'A large, irreversible change: everyone in the group should respond.', 'proposal.conditions', '1.0.0', 'test');
   perform test_terms_vote(p3, stew, 0.9);
   perform test_terms_vote(p3, mem, 0.9);
@@ -191,7 +199,7 @@ begin
   -- And terms cannot be set after a vote.
   perform set_config('test.uid', stew::text, true);
   begin
-    perform record_proposal_conditions(p3, 2, 24, '[]'::jsonb, 'Lowering it after votes.', 'proposal.conditions', '1.0.0', 'test');
+    perform record_proposal_conditions(p3, 2, 24, '[]'::jsonb, '[]'::jsonb, 'Lowering it after votes.', 'proposal.conditions', '1.0.0', 'test');
     fails := fails + 1; raise warning 'FAIL: terms changed after voting began';
   exception when others then passes := passes + 1; end;
 
@@ -202,8 +210,11 @@ begin
 end $$;
 
 reset role;
+-- Time passes (the guard forbids moving a window earlier, so lift it for the clock).
+alter table proposal_conditions disable trigger proposal_conditions_guard;
 update proposal_conditions set closes_at = now() - interval '1 minute'
  where proposal_id = (select id from proposals where title = 'Rebuild the hall');
+alter table proposal_conditions enable trigger proposal_conditions_guard;
 set role app;
 
 do $$
@@ -221,3 +232,5 @@ end $$;
 reset role;
 drop function test_terms_ready(uuid, uuid);
 drop function test_terms_vote(uuid, uuid, numeric);
+
+update conditions_epoch set since = 'infinity';

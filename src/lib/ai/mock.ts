@@ -596,9 +596,11 @@ export class MockProvider implements AiProvider {
   private conditions(input: string) {
     const scale = /scale: (\w+)/.exec(input)?.[1] ?? "local";
     const members = Number(/members: (\d+)/.exec(input)?.[1] ?? "0");
-    const byScale: Record<string, [number, number]> = {
-      group: [Math.max(2, Math.ceil(members * 0.5)), 48],
-      local: [3, 72],
+    // Offline: no window where the voters are the affected people (a group, a
+    // street); a window where reaching people takes time.
+    const byScale: Record<string, [number, number | null]> = {
+      group: [Math.max(2, Math.ceil(members * 0.5)), null],
+      local: [3, null],
       regional: [12, 168],
       national: [50, 336],
       continental: [200, 504],
@@ -607,9 +609,11 @@ export class MockProvider implements AiProvider {
     const [v, h] = byScale[scale] ?? [3, 72];
     const requirements = ["Who is most affected by this, and have they been asked?"];
     if (/budget: (?!none)/i.test(input)) requirements.push("Who pays, and is the money actually there?");
+    const challenged = /CHALLENGE:/.test(input);
     return {
       min_voices: scale === "group" && members ? Math.min(v, members) : v,
       window_hours: h,
+      affected: challenged ? ["The people named in the challenge"] : [],
       requirements,
       rationale:
         "Set offline from the proposal's reach rather than read from its content. With an AI key these are tailored to the proposal itself.",

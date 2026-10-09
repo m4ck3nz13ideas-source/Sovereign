@@ -1762,6 +1762,7 @@ export async function runConditions(proposalId: string) {
       min_voices: minVoices,
       window_hours: conditions.window_hours,
       requirements: conditions.requirements,
+      affected: conditions.affected,
       rationale: conditions.rationale,
       prompt_id: prompt.id,
       prompt_version: prompt.version,
@@ -1787,6 +1788,134 @@ export async function answerRequirement(proposalId: string, idx: number, answer:
     p_answer: answer,
   });
   if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/collective/proposals/${proposalId}`);
+  return { ok: true as const };
+}
+
+/** Record how an affected group was given the chance to take part (0042). */
+export async function markAffectedReached(proposalId: string, idx: number, note: string) {
+  if (note.trim().length < 20) return { ok: false as const, error: "Say how they were reached, in at least twenty characters." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("answer_condition", {
+    p_proposal_id: proposalId,
+    p_kind: "affected",
+    p_idx: idx,
+    p_text: note,
+  });
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/collective/proposals/${proposalId}`);
+  return { ok: true as const };
+}
+
+/**
+ * Challenge a proposal's conditions as not enough (0042). The argument goes to
+ * the AI, which may only add; the database enforces that, records the old
+ * conditions as a public revision, and nothing is decided while it is open.
+ */
+export async function challengeConditions(proposalId: string, argument: string) {
+  if (argument.trim().length < 20) return { ok: false as const, error: "Say what is missing, in at least twenty characters." };
+  const supabase = await createClient();
+  const { error: cErr } = await supabase.rpc("raise_condition_challenge", {
+    p_proposal_id: proposalId,
+    p_argument: argument,
+  });
+  if (cErr) return { ok: false as const, error: cErr.message };
+
+  // Before anybody responds, the challenge can update the conditions. After,
+  // it is an argument on the record and nothing more (0042).
+  const { count } = await supabase
+    .from("resonance_votes")
+    .select("profile_id", { count: "exact", head: true })
+    .eq("proposal_id", proposalId);
+  if ((count ?? 0) > 0) {
+    revalidatePath(`/collective/proposals/${proposalId}`);
+    return { ok: true as const };
+  }
+  return answerMyChallenge(proposalId);
+}
+
+export async function replyToChallenge(proposalId: string, challengeId: string, body: string) {
+  if (!body.trim()) return { ok: false as const, error: "Say something first." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reply_to_condition_challenge", {
+    p_challenge_id: challengeId,
+    p_body: body,
+  });
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/collective/proposals/${proposalId}`);
+  return { ok: true as const };
+}
+
+/** Have the AI re-read the conditions for your open challenge. Retryable. */
+export async function answerMyChallenge(proposalId: string) {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return { ok: false as const, error: "Sign in again." };
+  const { data: mine } = await supabase
+    .from("condition_challenges")
+    .select("id, argument")
+    .eq("proposal_id", proposalId)
+    .eq("challenger_id", auth.user.id)
+    .is("answered_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!mine) return { ok: false as const, error: "You have no open challenge on this proposal." };
+  const challengeId = mine.id as string;
+  const argument = mine.argument as string;
+
+  const [{ data: proposal }, { data: current }] = await Promise.all([
+    supabase.from("proposals").select("*, groups(*)").eq("id", proposalId).maybeSingle(),
+    supabase
+      .from("proposal_conditions")
+      .select("min_voices, window_hours, requirements, affected, rationale")
+      .eq("proposal_id", proposalId)
+      .maybeSingle(),
+  ]);
+  if (!proposal || !current) return { ok: false as const, error: "No such proposal." };
+
+  const group = proposal.groups as unknown as { id: string; name: string } | null;
+  let members: number | null = null;
+  if (group) {
+    const { count } = await supabase
+      .from("group_members")
+      .select("profile_id", { count: "exact", head: true })
+      .eq("group_id", group.id);
+    members = count ?? null;
+  }
+
+  try {
+    const { conditions, model, prompt } = await setConditions({
+      title: proposal.title,
+      summary: proposal.summary,
+      body: proposal.body,
+      scale: group ? "group" : proposal.scope,
+      where: group?.name ?? placeName(proposal),
+      members,
+      budget: proposal.budget_amount ? `${proposal.budget_currency} ${proposal.budget_amount}` : null,
+      challenge: { argument, current: current as Record<string, unknown> },
+    });
+    const { error } = await aiWrite(supabase, "proposal.conditions.challenge", {
+      challenge_id: challengeId,
+      min_voices: members ? Math.min(conditions.min_voices, members) : conditions.min_voices,
+      window_hours: conditions.window_hours,
+      requirements: conditions.requirements,
+      affected: conditions.affected,
+      rationale: conditions.rationale,
+      prompt_id: prompt.id,
+      prompt_version: prompt.version,
+      model,
+    });
+    if (error) return { ok: false as const, error: error.message };
+  } catch (e) {
+    revalidatePath(`/collective/proposals/${proposalId}`);
+    return {
+      ok: false as const,
+      error:
+        (e instanceof AiError ? e.message : "The conditions could not be re-read.") +
+        " Your challenge is recorded; you can try the re-read again from the proposal page.",
+    };
+  }
   revalidatePath(`/collective/proposals/${proposalId}`);
   return { ok: true as const };
 }

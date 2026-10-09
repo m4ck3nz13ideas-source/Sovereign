@@ -21,6 +21,7 @@ export type AiWriteKind =
   | "law.challenge"
   | "post.witness"
   | "proposal.conditions"
+  | "proposal.conditions.challenge"
   | "marketplace.vetting";
 
 export function signAiPayload(kind: AiWriteKind, data: Record<string, unknown>) {

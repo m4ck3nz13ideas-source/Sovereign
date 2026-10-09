@@ -63,6 +63,25 @@ on purpose, in a commit that says so.
     and stay fixed. Proposals from before 0039 keep the old per-scale and
     participation rules. (Named "conditions", not "terms", because `terms` is
     the lexicon.) `33_proposal_conditions.sql`.
+    **0042: participation, not the clock.** A time window is now one
+    condition the AI may choose, not a requirement: `window_hours` and
+    `closes_at` are null when there is none, and then `close_proposal()`
+    REFUSES to close (the proposal stays open) until the voices, the
+    requirements and the newly added `affected` groups (each marked reached on
+    the record, how and when) are all met. Challenges are for debate and
+    never stall: anybody reached may challenge the conditions, any number of
+    times, anybody may reply, and no challenge ever blocks a decision. Before
+    anybody responds, the challenger can have the AI re-read with their
+    argument via signed `ai_write('proposal.conditions.challenge')`;
+    `apply_condition_challenge()` and the `proposal_conditions_guard` trigger
+    allow only strengthening and the old conditions are kept in
+    `condition_revisions`. After anybody responds the conditions are fixed;
+    a challenge is then an argument on the record, and an improved proposal
+    that supersedes this one is how it changes anything.
+    Nobody can respond before conditions exist (trigger on resonance_votes,
+    for proposals submitted after `conditions_epoch.since`). The test harness
+    moves that epoch to the future for the pre-0039 suites; 33 and 36 move it
+    back. `36_conditions_participation.sql`, `conditions.test.ts`.
 14. **A split is never reported as a consensus.** Every decision carries
     `dispersion` and `polarized` from `alignment_shape()`. Do not add a screen
     that shows a mean without them.

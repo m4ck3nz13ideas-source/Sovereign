@@ -575,18 +575,20 @@ export const conditionsJsonSchema = {
   type: "object",
   properties: {
     min_voices: { type: "integer" },
-    window_hours: { type: "integer" },
+    window_hours: { type: ["integer", "null"] },
+    affected: { type: "array", items: { type: "string" } },
     requirements: { type: "array", items: { type: "string" } },
     rationale: { type: "string" },
   },
-  required: ["min_voices", "window_hours", "requirements", "rationale"],
+  required: ["min_voices", "window_hours", "affected", "requirements", "rationale"],
   additionalProperties: false,
 } as const;
 
 export const conditionsSchema = z.object({
   min_voices: z.number().int().min(1).max(1000000),
-  window_hours: z.number().int().min(1).max(10000),
-  requirements: z.array(z.string().min(5).max(300)).max(8),
+  window_hours: z.number().int().min(1).max(10000).nullable(),
+  affected: z.array(z.string().min(3).max(200)).max(8).default([]),
+  requirements: z.array(z.string().min(5).max(300)).max(12),
   rationale: z.string().min(10).max(2000),
 });
 export type ConditionsOutput = z.infer<typeof conditionsSchema>;

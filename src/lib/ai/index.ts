@@ -858,6 +858,7 @@ export async function setConditions(ctx: {
   where: string;
   members: number | null;
   budget: string | null;
+  challenge?: { argument: string; current: Record<string, unknown> } | null;
 }): Promise<{ conditions: ConditionsOutput; model: string; prompt: typeof PROPOSAL_CONDITIONS }> {
   const input = `THE PROPOSAL
 title: ${ctx.title}
@@ -867,7 +868,11 @@ addressed to: ${ctx.where}
 members: ${ctx.members ?? "n/a"}
 budget: ${ctx.budget ?? "none"}
 
-${ctx.body}`;
+${ctx.body}${
+    ctx.challenge
+      ? `\n\nCURRENT CONDITIONS\n${JSON.stringify(ctx.challenge.current, null, 2)}\n\nCHALLENGE: ${ctx.challenge.argument}`
+      : ""
+  }`;
 
   const { data, model } = await provider().complete({
     prompt: PROPOSAL_CONDITIONS,
