@@ -512,6 +512,13 @@ line.
   withdrawn (status does not say from which stage), and "passed" leaves the
   project step visibly ahead (rule 9). It never estimates a date — nothing in
   the schema knows one, and a made-up date reads as a promise.
+- **The public site says only what is true today.** Everything under
+  `src/app/(public)/explore/` (Home, Product, Business, Pricing, Roadmap,
+  About, FAQ, Privacy, Terms, Contact) restates rules from this file. A
+  feature goes in the roadmap's "Live now" column only once it is in the app,
+  numbers come from `public_pulse()` and nowhere else, and there are no
+  testimonials or logos until there are real ones. Change a rule, change
+  the page that restates it. Navigation lives once, in `_site/site.ts`.
 - **Ask starts with examples.** `STARTERS` in `AskPanel.tsx`. Every ASK example
   is a question people genuinely disagree on, because a starting point with one
   obvious answer would teach that Ask is where answers come from (rule 29).
