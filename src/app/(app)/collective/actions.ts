@@ -20,6 +20,7 @@ import {
 import { AiError } from "@/lib/ai/provider";
 import { aiWrite } from "@/lib/ai/sign";
 import { shortDate } from "@/lib/format";
+import { sphereLine, validateSpheres } from "@/lib/spheres";
 import { READINESS_THRESHOLD, sha256 } from "@/lib/readiness";
 import { POST_KINDS, type ContributionKind, type MediaKind, type PostKind } from "@/lib/types";
 import { placeAt } from "@/lib/collective";
@@ -262,7 +263,12 @@ export interface ProposalInput {
   risks: string;
   alternatives: string;
   evidence: string;
+  /** Legacy free text, derived from the Spheres since 0043. */
   category: string;
+  /** 0043: the main Sphere, an area within it, and up to two more. */
+  sphere: string;
+  sphereArea: string;
+  spheresAlso: string[];
   budget: string;
   termDays: string;
   /** "group:<id>" or "scope:<scale>" — where this proposal is addressed. */
@@ -405,6 +411,9 @@ export async function submitProposal(input: ProposalInput) {
   if (!input.title.trim()) return { ok: false as const, error: "A proposal needs a title." };
   if (!input.summary.trim()) return { ok: false as const, error: "A proposal needs a one-line summary." };
 
+  const tags = validateSpheres(input.sphere ?? "", input.sphereArea || null, input.spheresAlso ?? []);
+  if (!tags.ok) return { ok: false as const, error: tags.error };
+
   // A second attempt says what it changed. The database refuses without it, so
   // the message here is the useful one rather than a constraint name.
   const changed = (input.supersedesReason ?? "").trim();
@@ -458,7 +467,12 @@ export async function submitProposal(input: ProposalInput) {
       risks: draft.risks.trim(),
       alternatives: draft.alternatives.trim(),
       evidence: draft.evidence.trim() || null,
-      category: input.category.trim() || null,
+      // What the review reads in its category slot: where the author says
+      // this lives. Informs the AI; decides nothing (rule 40).
+      category: sphereLine(tags.value.sphere, tags.value.area, tags.value.also),
+      sphere: tags.value.sphere,
+      sphere_area: tags.value.area,
+      spheres_also: tags.value.also,
       scope,
       place,
       supersedes: input.supersedes ?? null,

@@ -35,6 +35,7 @@ import type {
 } from "@/lib/types";
 
 import { READINESS_THRESHOLD, SECTION_LABELS } from "@/lib/readiness";
+import { areaName, sphereName } from "@/lib/spheres";
 import { UNIVERSAL_LAWS } from "@/lib/universal-law";
 
 import { AiLayer } from "./AiLayer";
@@ -431,7 +432,21 @@ export default async function ProposalPage({
           >
             {STATUS_LABEL[proposal.status]}
           </Tag>
-          {proposal.category ? <Tag>{proposal.category}</Tag> : null}
+          {proposal.sphere ? (
+            <Link href={`/collective/proposals?sphere=${proposal.sphere}`} className="press">
+              <Tag>
+                {sphereName(proposal.sphere)}
+                {proposal.sphere_area ? ` · ${areaName(proposal.sphere_area)}` : ""}
+              </Tag>
+            </Link>
+          ) : proposal.category ? (
+            <Tag>{proposal.category}</Tag>
+          ) : null}
+          {(proposal.spheres_also ?? []).map((s) => (
+            <Link key={s} href={`/collective/proposals?sphere=${s}`} className="press">
+              <Tag>{sphereName(s)}</Tag>
+            </Link>
+          ))}
           <Tag tone="gold">
             {proposal.groups
               ? proposal.groups.name

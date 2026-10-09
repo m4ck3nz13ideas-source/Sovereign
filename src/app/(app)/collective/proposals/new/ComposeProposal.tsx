@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 import { Button, Card, Field, Tag, inputClass } from "@/components/ui";
+import { SpherePicker } from "@/components/spheres/SpherePicker";
 import { READINESS_THRESHOLD } from "@/lib/readiness";
 
 import { assessDraft, submitProposal } from "../../actions";
@@ -21,6 +22,9 @@ const EMPTY = {
   alternatives: "",
   evidence: "",
   category: "",
+  sphere: "",
+  sphereArea: "",
+  spheresAlso: [] as string[],
   budget: "",
   termDays: "",
 };
@@ -415,15 +419,15 @@ export function ComposeProposal({
         );
       })}
 
+      <SpherePicker
+        sphere={form.sphere}
+        area={form.sphereArea}
+        also={form.spheresAlso}
+        text={[form.title, form.summary, form.intent, form.change].join(" ")}
+        onChange={(t) => setForm((f) => ({ ...f, ...t }))}
+      />
+
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Category" hint="Optional.">
-          <input
-            value={form.category}
-            onChange={(e) => set("category", e.target.value)}
-            placeholder="Space, Money, Practice…"
-            className={inputClass}
-          />
-        </Field>
 
         <Field label="Budget" hint="A number, or blank.">
           <input

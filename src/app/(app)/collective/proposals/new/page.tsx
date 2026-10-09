@@ -88,6 +88,9 @@ export default async function NewProposalPage({
                 alternatives: taking.alternatives,
                 evidence: taking.evidence ?? "",
                 category: taking.category ?? "",
+                sphere: taking.sphere ?? "",
+                sphereArea: taking.sphere_area ?? "",
+                spheresAlso: taking.spheres_also ?? [],
                 budget: taking.budget_amount ? String(taking.budget_amount) : "",
                 termDays: taking.term_days ? String(taking.term_days) : "",
               }

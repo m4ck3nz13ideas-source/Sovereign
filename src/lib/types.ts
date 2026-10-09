@@ -140,6 +140,10 @@ export interface Proposal {
   summary: string;
   body: string;
   category: string | null;
+  /** 0043: where it sits. Describes; never decides (rule 40). */
+  sphere: string | null;
+  sphere_area: string | null;
+  spheres_also: string[];
   /**
    * The Universal Law this rewrites, or null. An amendment is global by
    * definition — a street does not amend the constitution for everybody.
