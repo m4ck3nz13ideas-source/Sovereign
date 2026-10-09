@@ -129,7 +129,8 @@ begin
   if n = 10 then passes := passes + 1; else fails := fails + 1;
     raise warning 'FAIL: standing reports % laws agreed, expected 10', n; end if;
 
-  -- Having agreed to all ten, she can arrive.
+  -- Having agreed to all ten (and consented, 0045), she can arrive.
+  perform record_consent(array['special_category', 'adult']);
   update profiles set onboarded_at = now() where id = ann;
   select count(*)::int into n from profiles where id = ann and onboarded_at is not null;
   if n = 1 then passes := passes + 1; else fails := fails + 1;

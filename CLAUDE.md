@@ -490,6 +490,32 @@ on purpose, in a commit that says so.
     — and `38_learning.sql` fails if one does. Understanding before action
     stays per proposal (rule 4), never a course certificate.
 
+42. **Consent is explicit, a copy is complete, and leaving is for good.**
+    (0045.) Sovereign's core data is special category under UK GDPR — a
+    response is a political opinion, a faith statement is a belief — so the
+    condition is explicit consent. `/consent` asks before anything is
+    collected, in words that name the data, plus 18 or over;
+    `record_consent()` stamps `consent_version()` into `data_consents`, which
+    is append-only like `law_acceptances` (rule 28). `requireSession()`
+    redirects there until the current version is on record (only `/consent`
+    and `/settings/data` pass `allowUnconsented`), and a trigger refuses
+    `onboarded_at` without it. Change the wording, bump the version, and
+    everybody is asked again. **Every column that points at a profile is
+    classified in `private.data_map`** — exported or not, deleted or kept on
+    erasure — and `39_data_rights.sql` fails on a column the map does not
+    name, so a new table is never silently missing from a copy or left
+    behind by an erasure. `my_data_export()` returns every mapped row naming
+    the caller, except four that are somebody else's private choice (who
+    muted you, who follows you, their read state, their side of a SOV
+    transfer). `erase_my_account()` deletes what is yours alone, scrubs the
+    profile to "Former member", sets `erased_at` and deletes the auth user;
+    the collective record (proposals, responses, debate, decisions, ledger,
+    SOV, consent and law records) is KEPT, unattributed, because deleting it
+    would make decisions untrue (rules 34, 36). `profiles.id` no longer
+    cascades from `auth.users` for exactly this reason. The map is data, not
+    function source, so the absence checks in rules 39 and 41 still hold.
+    `docs/dpia.md`, `docs/gdpr-checklist.md`.
+
 ## On the surface, not in the schema
 
 These are interface conventions rather than rules the database enforces, but

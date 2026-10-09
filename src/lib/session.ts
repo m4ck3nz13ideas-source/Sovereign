@@ -27,6 +27,15 @@ export interface SessionOptions {
    * gets scored on nothing, and the screens would not say why.
    */
   allowUnonboarded?: boolean;
+  /**
+   * Let somebody through who has not given explicit consent (rule 42).
+   *
+   * Only /consent itself and /settings/data pass this: the screen that asks,
+   * and the screen where somebody who will not agree can take a copy and
+   * leave. Everything else collects or shows special category data, so
+   * nothing else may run first.
+   */
+  allowUnconsented?: boolean;
 }
 
 /**
@@ -79,6 +88,14 @@ export async function requireSession(
       "Signed in, but there is no profile row and one could not be created. " +
         "Check that migration 0001 has been applied to this database.",
     );
+  }
+
+  // Consent comes before anything else is collected (rule 42, 0045). If the
+  // function is missing the migration has not been applied, and locking every
+  // member out of the app would be worse than not asking yet.
+  if (!options.allowUnconsented) {
+    const { data: consented, error: consentError } = await supabase.rpc("has_current_consent");
+    if (!consentError && consented === false) redirect("/consent");
   }
 
   // Onboarding is not decoration and it is not optional. Until it is done

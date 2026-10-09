@@ -85,6 +85,11 @@ begin
       'stewardship_of_earth','harmony_of_diversity','right_use_of_power',
       'continuous_evolution']) as x;
 
+  -- And on having given explicit consent and confirmed age (0045).
+  insert into data_consents (profile_id, purpose, version)
+  select '44444444-4444-4444-4444-444444444444', x, consent_version()
+    from unnest(array['special_category', 'adult']) as x;
+
   update profiles
      set display_name = 'Dervla Ní Fhlannagáin', onboarded_at = now(),
          place_local = 'Somewhere'

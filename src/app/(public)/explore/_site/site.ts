@@ -8,7 +8,17 @@
  */
 
 /** Where every "contact us" goes. Change it here once the inbox exists. */
-export const CONTACT_EMAIL = "hello@mackiavelli.co.uk";
+export const CONTACT_EMAIL = "connect@mackiavelli.co.uk";
+
+/**
+ * Who the data controller is, for the privacy notice. Fill in the legal name
+ * (yours as a sole trader, or the company's) before launch.
+ */
+export const CONTROLLER = {
+  name: "Sovereign, run by Mackenzie",
+  /** ICO data protection fee registration number. Shown only once it exists. */
+  icoRegistration: null as string | null,
+};
 
 /** The founding cohort: the people Sovereign is being made ready for. */
 export const FOUNDING_PLACES = 50;

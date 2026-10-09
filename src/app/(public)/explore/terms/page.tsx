@@ -29,7 +29,8 @@ export default function TermsPage() {
           h: "Your account",
           body: (
             <ul>
-              <li>One account per person. Keep access to your email, since that is how you sign in.</li>
+              <li>You must be 18 or over. One account per person. Keep access to your email, since that is how you sign in.</li>
+              <li>You can take a copy of your data or delete your account at any time from Settings → Your data.</li>
               <li>You own what you write. You let Sovereign show it to the people you shared it with.</li>
               <li>Don&apos;t impersonate anyone, harass anyone, or try to get around the rules in the app.</li>
             </ul>

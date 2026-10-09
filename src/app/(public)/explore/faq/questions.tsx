@@ -37,6 +37,10 @@ export const FAQ_GROUPS: { title: string; items: QA[] }[] = [
         a: "Your journal, ideas, drafts and to-dos are readable by you alone — that is a rule in the database, not a setting. Drafts of proposals never leave your device until you submit. Every screen says who can read it.",
       },
       {
+        q: "Can I take my data with me, or delete it?",
+        a: "Yes, both, instantly, from Settings → Your data. Deleting removes everything that is yours alone. Proposals, responses and debate stay in the record of decisions others relied on, shown as written by a former member and no longer linked to you.",
+      },
+      {
         q: "Do you sell my data?",
         a: "No. Advertisers see clicks and spend. They never see who clicked, what you value, or why an ad was shown to you.",
       },

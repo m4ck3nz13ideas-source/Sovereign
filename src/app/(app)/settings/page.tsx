@@ -96,6 +96,22 @@ export default async function SettingsPage() {
       </section>
 
       <section className="mb-10">
+        <SectionLabel>Your data</SectionLabel>
+        <Card>
+          <p className="text-[0.95rem] leading-relaxed text-paper-dim">
+            What you agreed to, a copy of everything Sovereign holds about you,
+            and deleting your account.
+          </p>
+          <Link
+            href="/settings/data"
+            className="smallcaps mt-3 inline-block text-[11px] text-gold hover:underline"
+          >
+            Your data →
+          </Link>
+        </Card>
+      </section>
+
+      <section className="mb-10">
         <SectionLabel>Where you are</SectionLabel>
         <Card>
           <p className="text-[0.95rem] leading-relaxed text-paper-dim">
