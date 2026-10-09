@@ -91,7 +91,7 @@ const AI_REPLIES: Record<string, string> = {
 };
 
 function IndividualDemo() {
-  const [tab, setTab] = useState<"self" | "ideas" | "todo" | "vault">("self");
+  const [tab, setTab] = useState<"self" | "ideas" | "todo" | "learn" | "vault">("self");
   const [todos, setTodos] = useState([
     { t: "Answer the repair café question", done: false },
     { t: "Read the bus route proposal", done: true },
@@ -112,8 +112,8 @@ function IndividualDemo() {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-4 border-b border-line text-sm">
-        {(["self", "ideas", "todo", "vault"] as const).map((k) => (
+      <div className="mt-4 grid grid-cols-5 border-b border-line text-sm">
+        {(["self", "ideas", "todo", "learn", "vault"] as const).map((k) => (
           <button
             key={k}
             onClick={() => setTab(k)}
@@ -173,6 +173,19 @@ function IndividualDemo() {
               <button className="text-gold">Add</button>
             </form>
           </div>
+        ) : tab === "learn" ? (
+          <ul className="space-y-2">
+            {[
+              ["The need for growth", "Growth drives you most. Feed it well."],
+              ["Ecology", "You value Nature. This is the Sphere where it gets decided."],
+              ["5. Subsidiarity", "Decisions belong at the smallest scale that can make them well."],
+            ].map(([n, d]) => (
+              <li key={n} className="rounded-2xl border border-line px-3 py-2">
+                <p className="text-paper">{n}</p>
+                <p className="text-paper-faint">{d}</p>
+              </li>
+            ))}
+          </ul>
         ) : (
           <div className="space-y-2">
             <div className="rounded-2xl border border-line px-3 py-2">

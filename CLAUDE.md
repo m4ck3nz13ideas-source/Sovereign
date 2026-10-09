@@ -462,6 +462,34 @@ on purpose, in a commit that says so.
     condition, ad, feed or SOV function may read `self_assessments`, and
     `35_self_assessment.sql` fails if one does.
 
+40. **Spheres describe, never decide.** (0043.) Proposals are tagged with
+    the whitepaper's Spheres of Civilization — Health, Education, Ecology,
+    Justice, Economy, Culture, Infrastructure, Tech — each with
+    ministry-style areas (`spheres`, `sphere_areas`; no write policy, the
+    list changes by migration; mirrored in `src/lib/spheres.ts`, which
+    `spheres.test.ts` keeps in step). One main Sphere, an optional area in
+    it, up to two more it also touches. The author tags it and may re-tag
+    until anybody responds, then it is fixed (`check_proposal_spheres()`).
+    The tag is written into `category` as one line, which is what the AI
+    review reads: the Sphere informs the AI and informs people, nothing
+    else. **No function outside 0043 may mention a Sphere** —
+    `37_spheres.sql` reads every function's source and fails if one does,
+    so fixed rules by category cannot come back by the side door. Budget
+    envelopes (shared money split between Spheres) are the planned next
+    step and will have to break that test on purpose. Follows
+    (`sphere_follows`) are the follower's alone and never counted.
+
+41. **Learn is yours alone, gates nothing and earns nothing.** (0044.)
+    Individual → Learn: four courses (how Sovereign works, the Universal
+    Laws, Know yourself deeper, the Spheres) shipped as content in
+    `src/lib/learn.ts`, "For you" picks chosen on request from the person's
+    own Know yourself results and stored nowhere, and background on open
+    proposals they have not responded to. `lesson_progress` (finished, and
+    a private note answering "what is true for you") is owner-only. No
+    function reads it — not a decision, not a reach check, not the SOV mint
+    — and `38_learning.sql` fails if one does. Understanding before action
+    stays per proposal (rule 4), never a course certificate.
+
 ## On the surface, not in the schema
 
 These are interface conventions rather than rules the database enforces, but
@@ -509,6 +537,9 @@ line.
 - `src/lib/collective.ts` — pure helpers for the collective screens. A
   `"use server"` file may only export async functions, so anything synchronous
   belongs here rather than in `actions.ts`.
+- `src/lib/spheres.ts` — the Spheres and their areas, the tag line, and the
+  draft-words suggestion. `src/lib/learn.ts` — every lesson and the For you
+  picks.
 - `src/lib/readiness.ts` — the bar and the hash, mirroring Postgres. The
   database's copies are the ones that decide.
 - `src/lib/address.ts` — the address the collective screens are looking at: a

@@ -9,7 +9,7 @@ import { requireSession } from "@/lib/session";
  * Individual — the private half, shaped like a profile.
  *
  * A header that stays put across every tab (who you are), then Self, Ideas,
- * To do and Vault underneath. Nothing here is visible to anybody else unless
+ * To do, Learn and Vault underneath. Nothing here is visible to anybody else unless
  * it was explicitly sent somewhere: rule one of the schema, not a setting.
  * Your AI is the floating button, reachable from any of them.
  */

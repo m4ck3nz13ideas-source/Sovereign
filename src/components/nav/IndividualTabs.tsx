@@ -7,7 +7,7 @@ import { AiChat } from "@/components/ai/AiChat";
 import { usePathname } from "next/navigation";
 
 /**
- * Self · Ideas · To do · Vault — the strip under the profile header.
+ * Self · Ideas · To do · Learn · Vault — the strip under the profile header.
  *
  * Only what is yours alone, with no crossover to anybody else. Each tab also
  * owns the older screens that belong to it, so arriving at one of those still
@@ -17,6 +17,7 @@ const TABS = [
   { href: "/individual/self", label: "Self", also: ["/individual/values", "/individual/profile", "/individual/journal"] },
   { href: "/individual/ideas", label: "Ideas", also: ["/individual/drafts"] },
   { href: "/individual/todo", label: "To do", also: [] },
+  { href: "/individual/learn", label: "Learn", also: [] },
   { href: "/individual/vault", label: "Vault", also: ["/individual/sov"] },
 ];
 
@@ -25,7 +26,7 @@ export function IndividualTabs() {
   const on = (p: string) => pathname === p || pathname.startsWith(`${p}/`);
 
   return (
-    <nav className="grid grid-cols-4 border-b border-line" aria-label="Individual">
+    <nav className="grid grid-cols-5 border-b border-line" aria-label="Individual">
       {TABS.map((t) => {
         const active = on(t.href) || t.also.some(on);
         return (
