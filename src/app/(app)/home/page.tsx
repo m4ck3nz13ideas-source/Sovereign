@@ -309,7 +309,14 @@ export default async function HomePage({
 
             {tab === "following" ? (
               <div id="compose" className="scroll-mt-16">
-                <Compose hasGroup={Boolean(group)} />
+                <Compose
+                  hasGroup={Boolean(group)}
+                  places={{
+                    regional: profile.place_regional ?? null,
+                    national: profile.place_national ?? null,
+                    continental: profile.place_continental ?? null,
+                  }}
+                />
               </div>
             ) : null}
 

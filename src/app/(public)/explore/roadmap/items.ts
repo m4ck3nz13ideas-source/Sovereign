@@ -20,6 +20,7 @@ export const ROADMAP: { stage: string; live: boolean; lead: string; items: Roadm
       { title: "Home feed, likes and chats", detail: "Time order, posts checked at the door, chats with no read receipts." },
       { title: "SOV simulation", detail: "Balances, transfers and minting for finished acts. A simulation, and labelled as one." },
       { title: "For you, Following, Discover", detail: "Three feeds at every scale. For you shows what touches the Spheres you rated most important, newest first, with the reason it's there." },
+      { title: "You choose who a post is for", detail: "People around you by default, or your region, nation, continent or everyone. Fixed once posted." },
       { title: "Secret ballots, open tallies", detail: "Everyone sees every response's numbers and notes once a proposal closes. Nobody sees whose is whose." },
       { title: "Your data, yours to take or delete", detail: "Explicit consent before anything sensitive is collected. A full copy, or deleting your account, at any time." },
     ],

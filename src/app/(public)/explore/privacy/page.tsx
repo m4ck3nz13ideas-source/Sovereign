@@ -139,7 +139,8 @@ export default function PrivacyPage() {
               </p>
               <p>
                 Posts, proposals and what you say in debate can be read by the people they&apos;re for, and every
-                screen says who that is. <strong className="text-paper">How you responded to a proposal is
+                screen says who that is. You choose who each post is for when you write it — the people around
+                you, or as far as everyone on Sovereign — and that can&apos;t be widened afterwards. <strong className="text-paper">How you responded to a proposal is
                 secret</strong>: the group sees the tally — every response&apos;s numbers and notes, without names
                 — but never whose is whose. Whether you responded is on the record; how is not. The same goes for
                 how you rate the Spheres: your group or place sees the average once five people have rated, never

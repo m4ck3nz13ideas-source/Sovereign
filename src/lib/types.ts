@@ -881,6 +881,10 @@ export interface Post {
 
 /** The five things a post can say it is. The reader's filter works on these. */
 export const POST_KINDS = ["made", "saw", "asked", "thanks", "learned"] as const;
+
+/** Who a post is for (0048, rule 44). Each wider audience includes the default. */
+export const POST_AUDIENCES = ["people", "regional", "national", "continental", "global"] as const;
+export type PostAudience = (typeof POST_AUDIENCES)[number];
 export type PostKind = (typeof POST_KINDS)[number];
 
 export const MEDIA_KINDS = ["image", "video", "audio", "page"] as const;

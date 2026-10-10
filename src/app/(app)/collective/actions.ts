@@ -22,7 +22,7 @@ import { aiWrite } from "@/lib/ai/sign";
 import { shortDate } from "@/lib/format";
 import { sphereLine, validateSpheres } from "@/lib/spheres";
 import { READINESS_THRESHOLD, sha256 } from "@/lib/readiness";
-import { POST_KINDS, type ContributionKind, type MediaKind, type PostKind } from "@/lib/types";
+import { POST_AUDIENCES, POST_KINDS, type ContributionKind, type MediaKind, type PostAudience, type PostKind } from "@/lib/types";
 import { placeAt } from "@/lib/collective";
 import { ledger } from "@/lib/ledger";
 import { requireSession } from "@/lib/session";
@@ -70,6 +70,8 @@ export async function publishPost(input: {
   mediaKind?: MediaKind | null;
   entryId?: string;
   groupOnly?: boolean;
+  /** Who it is for (0048). Ignored for a group post, which is for its group. */
+  audience?: PostAudience;
 }) {
   const { userId, group } = await requireSession();
   const supabase = await createClient();
@@ -128,9 +130,16 @@ export async function publishPost(input: {
     };
   }
 
+  const toGroup = Boolean(input.groupOnly && group);
+  const audience: PostAudience =
+    !toGroup && input.audience && (POST_AUDIENCES as readonly string[]).includes(input.audience)
+      ? input.audience
+      : "people";
+
   const { error } = await supabase.from("posts").insert({
     author_id: userId,
-    group_id: input.groupOnly && group ? group.id : null,
+    group_id: toGroup && group ? group.id : null,
+    audience,
     entry_id: input.entryId || null,
     body: text,
     kind: input.kind,

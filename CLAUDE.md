@@ -543,11 +543,20 @@ on purpose, in a commit that says so.
     at the address, from people you don't follow, newest first). The For you
     selection happens in the app on purpose: **no database function except
     the tally reads a rating**, and `41_sphere_priorities.sql` fails if one
-    does; `37_spheres.sql` allows the tally and nothing else. Posts beyond
-    your local place still only reach Discover through the existing post
-    policy — widening who can see a post would need an audience choice at
-    posting, which does not exist yet. Ratings also inform your own AI chat
-    and Learn's For you picks.
+    does; `37_spheres.sql` allows the tally and nothing else. Posts reach
+    Discover at wider scales only when their author chose that audience
+    (rule 44). Ratings also inform your own AI chat and Learn's For you
+    picks.
+
+44. **The author says who a post is for, once.** (0048.) `posts.audience` is
+    'people' — the default and the old reach: your groups, your local place,
+    followers, friends — or 'regional' / 'national' / 'continental' /
+    'global', each of which includes the default and adds everybody at that
+    scale whose place matches the author's (`post_audience_reaches()`, read
+    by `can_see_post()` and the `posts_read` policy alike). A group post is
+    always 'people' (check). `freeze_post()` fixes the audience with the
+    words: the witness read these words for these people. Nothing ranks by
+    audience and nothing is readable signed out. `42_post_audience.sql`.
 
 ## On the surface, not in the schema
 
