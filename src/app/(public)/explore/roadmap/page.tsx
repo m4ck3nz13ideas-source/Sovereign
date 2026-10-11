@@ -1,7 +1,8 @@
 import { CtaBand, PageHero, Section } from "../_site/blocks";
 import { ROADMAP } from "./items";
+import { pageMeta } from "../_site/site";
 
-export const metadata = { title: "Roadmap" };
+export const metadata = pageMeta("roadmap");
 
 export default function RoadmapPage() {
   return (

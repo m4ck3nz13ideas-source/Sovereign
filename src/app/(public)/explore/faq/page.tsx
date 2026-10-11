@@ -1,12 +1,27 @@
 import { CtaBand, Faq, PageHero, Section } from "../_site/blocks";
-import { CONTACT_EMAIL } from "../_site/site";
+import { CONTACT_EMAIL, pageMeta } from "../_site/site";
 import { FAQ_GROUPS } from "./questions";
 
-export const metadata = { title: "FAQ" };
+export const metadata = pageMeta("faq");
+
+/** FAQPage structured data, from the answers that are plain text. */
+function faqJsonLd() {
+  const items = FAQ_GROUPS.flatMap((g) => g.items).filter((i) => typeof i.a === "string");
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((i) => ({
+      "@type": "Question",
+      name: i.q,
+      acceptedAnswer: { "@type": "Answer", text: i.a as string },
+    })),
+  }).replace(/</g, "\\u003c");
+}
 
 export default function FaqPage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: faqJsonLd() }} />
       <PageHero
         eyebrow="FAQ"
         title="Questions, answered."

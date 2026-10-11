@@ -1,7 +1,7 @@
 import { PageHero, Section } from "../_site/blocks";
-import { CONTACT_EMAIL } from "../_site/site";
+import { CONTACT_EMAIL, pageMeta } from "../_site/site";
 
-export const metadata = { title: "Contact" };
+export const metadata = pageMeta("contact");
 
 const REASONS = [
   ["General", "Questions about Sovereign, the founding 50 or the ideas behind it.", "Hello"],

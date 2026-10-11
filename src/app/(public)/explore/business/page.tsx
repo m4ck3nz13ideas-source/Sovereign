@@ -1,8 +1,8 @@
 import { Container, CtaBand, Faq, PageHero, PrimaryLink, Section, SecondaryLink, SectionHead, TickList } from "../_site/blocks";
 import { MarketScreen, PhoneFrame } from "../_site/mockups";
-import { CONTACT_EMAIL } from "../_site/site";
+import { CONTACT_EMAIL, pageMeta } from "../_site/site";
 
-export const metadata = { title: "For business" };
+export const metadata = pageMeta("business");
 
 export default function BusinessPage() {
   return (

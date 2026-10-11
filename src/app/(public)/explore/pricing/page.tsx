@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 import { CtaBand, Faq, PageHero, Section, Tick } from "../_site/blocks";
-import { CONTACT_EMAIL } from "../_site/site";
+import { CONTACT_EMAIL, pageMeta } from "../_site/site";
 
-export const metadata = { title: "Pricing" };
+export const metadata = pageMeta("pricing");
 
 const PLANS = [
   {

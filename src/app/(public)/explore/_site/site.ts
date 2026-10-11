@@ -68,3 +68,88 @@ export const FOOTER: { title: string; links: { href: string; label: string }[] }
     ],
   },
 ];
+
+/**
+ * Every public page's search and preview copy, written once: the title, one
+ * precise sentence for search results, and the headline on its link-preview
+ * card (drawn by explore/og/[page]). The sitemap reads this list too.
+ */
+export const PAGES = {
+  product: {
+    title: "Product",
+    description: "Think in private. Post honestly. Decide together. Plus a market of vetted businesses, in one calm app.",
+    card: "Five spaces. One set of laws.",
+    priority: 0.9,
+  },
+  business: {
+    title: "For business",
+    description: "Prove you are real, pass ten laws, reach people who share your values. Pay per click, never for approval.",
+    card: "Sell to people who care how you do business.",
+    priority: 0.8,
+  },
+  pricing: {
+    title: "Pricing",
+    description: "Free for people, for good. Aligned businesses pay per click. Money never buys approval or rank.",
+    card: "Free for people. Paid by aligned businesses.",
+    priority: 0.8,
+  },
+  roadmap: {
+    title: "Roadmap",
+    description: "What is live, what is next, what comes later. Nothing is marked live until it is.",
+    card: "Built, next, later.",
+    priority: 0.7,
+  },
+  about: {
+    title: "About",
+    description: "Every leap in technology changed how we govern, except this one. Why Sovereign exists.",
+    card: "Every leap in technology changed how we govern. Except this one.",
+    priority: 0.7,
+  },
+  faq: {
+    title: "FAQ",
+    description: "Cost, privacy, age, decisions and businesses: straight answers about Sovereign.",
+    card: "Straight answers.",
+    priority: 0.7,
+  },
+  contact: {
+    title: "Contact",
+    description: "Write to the founder. A person reads every message.",
+    card: "Talk to a person.",
+    priority: 0.5,
+  },
+  privacy: {
+    title: "Privacy notice",
+    description: "What Sovereign collects, why, who can read it, and how to take or delete it. UK GDPR.",
+    card: "Your data is yours. Here is the proof.",
+    priority: 0.4,
+  },
+  terms: {
+    title: "Terms",
+    description: "The terms for using Sovereign.",
+    card: "Terms of use.",
+    priority: 0.3,
+  },
+} as const;
+
+export type PageSlug = keyof typeof PAGES;
+
+/** One page's metadata: title, description, canonical address, preview card. */
+export function pageMeta(slug: PageSlug) {
+  const p = PAGES[slug];
+  const path = `/explore/${slug}`;
+  const title = `${p.title} · Sovereign`;
+  const image = { url: `/explore/og/${slug}`, width: 1200, height: 630, alt: p.card };
+  return {
+    title: p.title,
+    description: p.description,
+    alternates: { canonical: path },
+    openGraph: { title, description: p.description, url: path, siteName: "Sovereign", type: "website" as const, images: [image] },
+    twitter: { card: "summary_large_image" as const, title, description: p.description, images: [image.url] },
+  };
+}
+
+/** Every public page, for the sitemap. */
+export const PUBLIC_PAGES: { path: string; priority: number }[] = [
+  { path: "/explore", priority: 1 },
+  ...(Object.keys(PAGES) as PageSlug[]).map((slug) => ({ path: `/explore/${slug}`, priority: PAGES[slug].priority })),
+];

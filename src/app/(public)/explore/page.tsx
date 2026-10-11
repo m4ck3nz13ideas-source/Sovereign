@@ -26,6 +26,7 @@ import { ROADMAP } from "./roadmap/items";
 
 export const metadata = {
   title: { absolute: "Sovereign — Better decisions. Together." },
+  alternates: { canonical: "/explore" },
 };
 
 export const dynamic = "force-dynamic";

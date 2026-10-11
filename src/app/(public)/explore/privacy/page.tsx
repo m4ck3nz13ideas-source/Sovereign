@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 import { Legal } from "../_site/Legal";
-import { CONTACT_EMAIL, CONTROLLER } from "../_site/site";
+import { CONTACT_EMAIL, CONTROLLER, pageMeta } from "../_site/site";
 
-export const metadata = { title: "Privacy notice" };
+export const metadata = pageMeta("privacy");
 
 /**
  * The UK GDPR privacy notice. Every line restates something the database or

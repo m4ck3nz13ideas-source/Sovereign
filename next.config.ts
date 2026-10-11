@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Link-preview images read their fonts from disk at request time.
+  outputFileTracingIncludes: {
+    "/**": ["./assets/og/**/*"],
+  },
   // The fourth tab was Marketplace and is now Market. Old links keep working.
   async redirects() {
     return [

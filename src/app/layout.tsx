@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
+import { env } from "@/lib/env";
 import { currentTheme } from "@/lib/theme";
 
 /**
@@ -18,6 +19,7 @@ import "@fontsource-variable/inter";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(env.canonicalUrl),
   title: "Sovereign",
   description:
     "Better decisions. Greater alignment. Collective action.",

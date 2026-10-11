@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 import { Legal } from "../_site/Legal";
-import { CONTACT_EMAIL } from "../_site/site";
+import { CONTACT_EMAIL, pageMeta } from "../_site/site";
 
-export const metadata = { title: "Terms" };
+export const metadata = pageMeta("terms");
 
 export default function TermsPage() {
   return (

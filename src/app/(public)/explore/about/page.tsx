@@ -1,8 +1,9 @@
 import { UNIVERSAL_LAWS } from "@/lib/universal-law";
 
 import { Cross, CtaBand, PageHero, Section, SectionHead } from "../_site/blocks";
+import { pageMeta } from "../_site/site";
 
-export const metadata = { title: "About" };
+export const metadata = pageMeta("about");
 
 export default function AboutPage() {
   return (

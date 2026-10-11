@@ -71,6 +71,18 @@ export const env = {
   get publicSiteUrl(): string | null {
     return process.env.NEXT_PUBLIC_SITE_URL?.trim() || null;
   },
+  /**
+   * Where links, previews and the sitemap point: the explicit site URL, or
+   * the project's production domain on Vercel (never the per-deployment
+   * host, which sits behind deployment protection).
+   */
+  get canonicalUrl(): string {
+    const prod = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+    return (
+      process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+      (prod ? `https://${prod}` : "http://localhost:3000")
+    ).replace(/\/$/, "");
+  },
   get siteUrl(): string {
     return (
       process.env.NEXT_PUBLIC_SITE_URL?.trim() ||

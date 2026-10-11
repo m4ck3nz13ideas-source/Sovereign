@@ -558,6 +558,22 @@ on purpose, in a commit that says so.
     words: the witness read these words for these people. Nothing ranks by
     audience and nothing is readable signed out. `42_post_audience.sql`.
 
+45. **A decision can be shared, by the people entitled to, and names
+    nobody.** (0049.) `decision_shares` holds at most one live link per
+    decided proposal: a random token. `share_decision()` refuses anything
+    undecided (rule 3) and anyone but a steward of the group, or for a
+    proposal addressed to a place, its author (`may_share_decision()`).
+    `unshare_decision()` deletes the row, so the link dies at once and a
+    re-share gets a new token. `shared_decision(token)` is the only thing a
+    signed-out visitor can run here: title, summary, rationale, outcome,
+    status, scale, voices, turnout for a group, and the decision's averages,
+    spread and split — withheld below `share_floor()` (5) voices. It returns
+    no name, handle, group name, response, note, id or actor time, and
+    `43_shared_decisions.sql` fails if its columns grow one. The page is
+    `/explore/decision/[token]`, with its own preview image, marked noindex
+    and kept out of the sitemap: a link someone chose to send is not a page
+    to list.
+
 ## On the surface, not in the schema
 
 These are interface conventions rather than rules the database enforces, but
@@ -586,7 +602,12 @@ line.
   feature goes in the roadmap's "Live now" column only once it is in the app,
   numbers come from `public_pulse()` and nowhere else, and there are no
   testimonials or logos until there are real ones. Change a rule, change
-  the page that restates it. Navigation lives once, in `_site/site.ts`.
+  the page that restates it. Navigation lives once, in `_site/site.ts`, and
+  so does every page's search title, description and preview-card headline
+  (`PAGES`, read by `pageMeta()`, the sitemap and `explore/og/[page]`).
+  Search engines may read `/explore` and nothing else (`app/robots.ts`); the
+  proxy lets `/robots.txt`, `/sitemap.xml` and `/opengraph-image` through
+  signed out. Preview cards say nothing a page would not.
 - **Ask starts with examples.** `STARTERS` in `AskPanel.tsx`. Every ASK example
   is a question people genuinely disagree on, because a starting point with one
   obvious answer would teach that Ask is where answers come from (rule 29).

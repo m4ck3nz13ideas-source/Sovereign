@@ -1,7 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth", "/setup", "/join", "/explore"];
+const PUBLIC_PATHS = [
+  "/login", "/auth", "/setup", "/join", "/explore",
+  // What crawlers and link previews ask for, signed out.
+  "/robots.txt", "/sitemap.xml", "/opengraph-image",
+];
 
 /**
  * Refreshes the Supabase session on every request and keeps unauthenticated

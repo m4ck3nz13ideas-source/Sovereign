@@ -3,8 +3,9 @@ import type { ReactNode } from "react";
 import { Container, CtaBand, PageHero, PrimaryLink, Section, SecondaryLink, TickList } from "../_site/blocks";
 import { FeedScreen, MarketScreen, PhoneFrame, ProposalScreen, SelfScreen } from "../_site/mockups";
 import { PILLARS } from "./pillars";
+import { pageMeta } from "../_site/site";
 
-export const metadata = { title: "Product" };
+export const metadata = pageMeta("product");
 
 function SearchScreen() {
   return (

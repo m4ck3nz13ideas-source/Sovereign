@@ -47,6 +47,7 @@ import { ConditionsSection, type Conditions } from "./Conditions";
 import { LawLayer } from "./LawLayer";
 import { FlagList } from "./FlagList";
 import { Outcome } from "./Outcome";
+import { ShareDecision } from "./ShareDecision";
 import { RunReview } from "./RunReview";
 import { Sharpening } from "./Sharpening";
 import { Amendment } from "./Amendment";
@@ -328,6 +329,16 @@ export default async function ProposalPage({
     | ResonanceSummary
     | undefined;
   const decision = decisionRow as Decision | null;
+
+  // Rule 45: the live public link, and whether this person may make or stop one.
+  const [{ data: shareRow }, { data: mayShare }] = decision
+    ? await Promise.all([
+        supabase.from("decision_shares").select("token").eq("proposal_id", id).maybeSingle(),
+        supabase.rpc("may_share_decision", { p_proposal_id: id }),
+      ])
+    : [{ data: null }, { data: false }];
+  const shareToken = (shareRow as { token: string } | null)?.token ?? null;
+  const canShare = Boolean(mayShare);
 
   // Ordered by the constitution, not by when the model happened to emit them.
   const lawAssessments = ((lawRows ?? []) as unknown as (LawAssessment & {
@@ -810,6 +821,18 @@ export default async function ProposalPage({
           }
           notes={decision ? voteRows.notes : []}
         />
+
+        {decision ? (
+          <div className="mt-4">
+            <ShareDecision
+              proposalId={id}
+              title={proposal.title}
+              token={shareToken}
+              canShare={canShare}
+              byGroup={Boolean(proposal.group_id)}
+            />
+          </div>
+        ) : null}
 
         {proposal.status === "passed" ? (
           <div className="mt-6">

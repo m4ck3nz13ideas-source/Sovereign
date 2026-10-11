@@ -1427,6 +1427,30 @@ export async function activateProposal(proposalId: string) {
 }
 
 /* ---------------------------------------------------------------------------
+   SHARING A DECISION (rule 45)
+
+   One public link per decided proposal. A steward shares a group's decision;
+   the author shares a decision made by a place. The page it opens names
+   nobody — see shared_decision() in 0049.
+--------------------------------------------------------------------------- */
+
+export async function shareDecision(proposalId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("share_decision", { p_proposal_id: proposalId });
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/collective/proposals/${proposalId}`);
+  return { ok: true as const, token: data as string };
+}
+
+export async function unshareDecision(proposalId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("unshare_decision", { p_proposal_id: proposalId });
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath(`/collective/proposals/${proposalId}`);
+  return { ok: true as const };
+}
+
+/* ---------------------------------------------------------------------------
    IMPACT SIMULATION
 
    Three actions and a hard line between them. `runSimulation` returns
