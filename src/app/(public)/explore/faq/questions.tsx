@@ -13,23 +13,23 @@ export const FAQ_GROUPS: { title: string; items: QA[] }[] = [
     items: [
       {
         q: "What is Sovereign?",
-        a: "One app for your private thinking, an honest social feed, a market of verified businesses and a fair way for groups to decide and act. Instead of voting for people every few years, you respond to ideas as they come up — at the scale they belong to, from your street to the planet.",
+        a: "One app to think in private, post honestly and decide together, with a market of verified businesses. You respond to ideas as they come up, at the scale they belong to — not to candidates every few years.",
       },
       {
         q: "Who is it for?",
-        a: "Anyone who wants a say in what happens around them, and any group that has to decide something together — a street, a club, a co-op, a team. Before it opens to everyone in 2027, it is being made ready for a founding group of fifty.",
+        a: "Anyone who wants a say, and any group that decides together: a street, a club, a co-op. Fifty founding members first; everyone in 2027.",
       },
       {
         q: "How much does it cost?",
-        a: "Nothing, for people. Sovereign is paid for by aligned businesses, who pay per click to advertise. Paying never buys approval or the top slot.",
+        a: "Nothing, for people. Aligned businesses pay per click to advertise. Money never buys approval or the top slot.",
       },
       {
         q: "Can under-18s join?",
-        a: "Not yet. Sovereign is 18+ while it's being made ready. We plan to open it to 16 and 17 year olds in 2027 with stronger privacy settings by default.",
+        a: "Not yet. Sovereign is 18+ for now. We plan to open to 16 and 17 year olds in 2027, with stronger privacy defaults.",
       },
       {
         q: "Is it a political party?",
-        a: "No. There are no candidates and nobody to elect. Sovereign is a way of deciding, bound by ten Universal Laws that apply to everyone equally.",
+        a: "No. No candidates, nobody to elect. A way of deciding, bound by ten laws that apply to everyone.",
       },
     ],
   },
@@ -38,19 +38,19 @@ export const FAQ_GROUPS: { title: string; items: QA[] }[] = [
     items: [
       {
         q: "Who can read what I write?",
-        a: "Your journal, ideas, drafts and to-dos are readable by you alone — that is a rule in the database, not a setting. Drafts of proposals never leave your device until you submit. Every screen says who can read it.",
+        a: "Your journal, ideas and to-dos: you alone, by database rule, not setting. Proposal drafts stay on your device until you submit. Every screen says who can read it.",
       },
       {
         q: "Can I take my data with me, or delete it?",
-        a: "Yes, both, instantly, from Settings → Your data. Deleting removes everything that is yours alone. Proposals, responses and debate stay in the record of decisions others relied on, shown as written by a former member and no longer linked to you.",
+        a: "Yes, both, from Settings → Your data. Deleting removes everything that is yours alone. Proposals, responses and debate stay in the record others relied on, credited to a former member, no longer linked to you.",
       },
       {
         q: "Can anyone see how I voted?",
-        a: "No. Once a proposal closes, the group sees every response's numbers and notes, without names. Whether you responded is on the record; how you responded is not.",
+        a: "No. After close, the group sees every response's numbers and notes, without names. That you responded is on the record; how is not.",
       },
       {
         q: "Can Sovereign read my private notes?",
-        a: "Other people can't — that's enforced by the database. Whoever runs the database technically could, and we don't look. An encrypted private space, where only your device holds the key, is on the roadmap to make that impossible rather than a promise.",
+        a: "Other people can't: the database enforces it. Whoever runs the database technically could, and we don't look. An encrypted space, keyed to your device, is on the roadmap to make that impossible, not a promise.",
       },
       {
         q: "Do you sell my data?",
@@ -58,11 +58,11 @@ export const FAQ_GROUPS: { title: string; items: QA[] }[] = [
       },
       {
         q: "Why would I trust the AI?",
-        a: "You don't have to. Every AI reading that decides something is signed by the server, published with its reasons, and can be challenged by anyone. A challenge re-runs the reading; nobody can quietly edit one.",
+        a: "You don't have to. Every AI reading that decides anything is signed, published with reasons, and open to challenge. A challenge re-runs it; nobody can quietly edit one.",
       },
       {
         q: "How do you know I'm a real person?",
-        a: "At the widest scales — national and up — each voice must belong to a distinct living person. The check proves that and stores one opaque code. No name, document, photo or biometric is kept. It is never needed to read, write or take part in a group.",
+        a: "At national scale and up, each voice must be a distinct living person. The check stores one opaque code: no name, document, photo or biometric. Never needed to read, write or join a group.",
       },
     ],
   },
@@ -71,19 +71,23 @@ export const FAQ_GROUPS: { title: string; items: QA[] }[] = [
     items: [
       {
         q: "How does a proposal pass?",
-        a: "It is read against the ten laws first; a violation ends it. The AI then sets what this proposal needs — how many voices, which groups must be reached, what must be answered on the record. People respond with how aligned, confident and urgent they are. It passes when those conditions are met and alignment clears the threshold.",
+        a: "Three stages. Checked: read against ten laws; a violation ends it. Conditioned: the AI sets the voices needed, groups to reach and questions to answer. Decided: people respond with alignment, confidence and urgency, and it passes when the conditions are met and alignment clears the threshold.",
       },
       {
         q: "Why can't I see how others voted?",
-        a: "Because a live tally makes people follow the crowd. You see how many have responded; the lean is shown when it closes, along with how split it was.",
+        a: "A live tally makes people follow the crowd. You see how many responded; the lean appears at close, with how split it was.",
       },
       {
         q: "Can one person block a proposal?",
-        a: "No. Concerns are answered in writing and challenges are for debate. Neither can stall a decision. Only a broken law can stop one.",
+        a: "No. Concerns get written answers; challenges are debate. Neither stalls a decision. Only a broken law stops one.",
       },
       {
         q: "What happens after something passes?",
-        a: "It becomes a project with the people who said they'd help. When it's done, what actually happened is recorded against what was predicted, so the next decision is better.",
+        a: "It becomes a project, staffed by the people who offered. When it is done, the outcome is marked against the prediction, so the next decision improves.",
+      },
+      {
+        q: "Can I share a decision?",
+        a: "Yes. A steward, or the author of a proposal to a place, can make one public link: outcome, numbers and rationale. Never names, responses or notes. Under five voices, the averages stay private too.",
       },
     ],
   },
@@ -92,15 +96,15 @@ export const FAQ_GROUPS: { title: string; items: QA[] }[] = [
     items: [
       {
         q: "Which businesses are in the Market?",
-        a: "Only ones that proved they own their website, were read against all ten laws with no violation, and were signed off by a person. Change your listing and approval lapses until it's read again.",
+        a: "Only those that proved their website, passed all ten laws, and were signed off by a person. Edit a listing and approval lapses until it is read again.",
       },
       {
         q: "How does advertising work?",
-        a: "Pay per click. The one sponsored slot goes to the business that best fits the person looking, using the values they wrote for themselves. Your bid only breaks ties.",
+        a: "Pay per click. The one sponsored slot goes to the best fit for the person looking, by the values they wrote. Bids only break ties.",
       },
       {
         q: "What is SOV?",
-        a: "Sovereign's contribution record. It is minted for finished acts — a project completed, a question answered, a prediction marked — not for posting or scrolling. Today it is a simulation, and every screen that shows it says so.",
+        a: "Sovereign's contribution record, minted for finished acts — a project completed, a question answered, a prediction marked. Never for posting. A simulation for now, and labelled as one.",
       },
     ],
   },

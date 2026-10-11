@@ -9,16 +9,16 @@ const PLANS = [
   {
     name: "People",
     price: "Free",
-    note: "Always",
-    lead: "Everything in Sovereign, for everyone.",
-    cta: { label: "Get started", href: "/login" },
+    note: "For good",
+    lead: "Everything. For everyone.",
+    cta: { label: "Start free", href: "/login" },
     featured: true,
     points: [
-      "Your private space, journal and AI",
-      "Know yourself",
-      "Home feed, likes, comments and chats",
+      "Private space, journal and AI",
+      "Know yourself and Learn",
+      "Feed, likes, comments and chats",
       "Search, with every side of a question",
-      "Propose, respond and join projects at every scale",
+      "Propose, respond and act at every scale",
       "Buy from verified businesses",
       "SOV for what you finish",
     ],
@@ -46,12 +46,10 @@ const PLANS = [
     cta: { label: "Contact sales", href: `mailto:${CONTACT_EMAIL}?subject=Advertising` },
     featured: false,
     points: [
-      "Only charged when someone clicks",
-      "Once per person per day, never your own clicks",
-      "Never past your budget",
+      "Charged per click, once per person per day",
+      "Never your own clicks, never past budget",
+      "Best fit wins; your bid breaks ties",
       "Shown in Search and the Market",
-      "Slot goes to the best fit — your bid breaks ties",
-      "Clicks and spend reported to you",
     ],
   },
 ];
@@ -62,7 +60,7 @@ export default function PricingPage() {
       <PageHero
         eyebrow="Pricing"
         title="Free for people. Paid by aligned businesses."
-        lead="No subscriptions, no premium tier, no paying for reach on your posts. Businesses that pass the ten laws pay to be seen — never to be approved."
+        lead="No subscriptions. No premium tier. No paying for reach. Businesses pay to be seen — never to be approved."
       />
       <Section>
         <div className="grid gap-4 lg:grid-cols-3">
@@ -106,19 +104,19 @@ export default function PricingPage() {
             items={[
               {
                 q: "Will people ever have to pay?",
-                a: "No. Sovereign is free for people. It's paid for by aligned businesses advertising to people they fit.",
+                a: "No. Aligned businesses pay, by advertising to people they fit.",
               },
               {
                 q: "Can a business pay to get approved?",
-                a: "No. Nothing that approves or ranks a business can read what it spends — automated checks fail the build if one ever does. If approval lapses, its ads stop at once.",
+                a: "No. Nothing that approves or ranks a business can read what it spends, and automated checks fail the build if one does. Lose approval and ads stop at once.",
               },
               {
                 q: "Can a business pay for the top slot?",
-                a: "No. The sponsored slot goes to the best fit for the person looking: 70% how well the business matches the values they wrote, 30% how cleanly it passed the laws. Bids only break ties.",
+                a: "No. The slot goes to the best fit for the person looking: 70% values match, 30% vetting. Bids only break ties.",
               },
               {
                 q: "Do you take a cut of sales?",
-                a: "Not today — buying happens on the business's own site. When payments move into the app, any fee will be published here first.",
+                a: "Not today: buying happens on the business's site. Any future fee is published here first.",
               },
             ]}
           />

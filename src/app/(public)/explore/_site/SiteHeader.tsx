@@ -51,7 +51,7 @@ export function SiteHeader() {
             Sign in
           </Link>
           <Link href="/login" className="press rounded-pill bg-gold px-4 py-2 text-sm font-semibold text-ink">
-            Get started
+            Start free
           </Link>
           <button
             type="button"

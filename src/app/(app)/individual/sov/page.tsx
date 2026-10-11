@@ -131,7 +131,7 @@ export default async function SovPage() {
             <p className="border-t border-line-soft pt-3 text-xs leading-relaxed text-paper-faint">
               Participation is capped per day: full rate for the first five,
               half up to fifteen, then nothing until tomorrow. Nothing mints for
-              following, being kept or just turning up. Every issuance points at
+              following, being kept or turning up. Every issuance points at
               an act on the ledger and happens once.
             </p>
           </Card>
@@ -173,7 +173,7 @@ export default async function SovPage() {
             <p className="text-[0.9375rem] leading-relaxed text-paper-dim">
               Nothing yet. The first issuance comes from finishing something —
               a project delivered and reflected on, a critical flag answered, a
-              prediction marked against what actually happened.
+              prediction marked against what happened.
             </p>
           )}
         </section>

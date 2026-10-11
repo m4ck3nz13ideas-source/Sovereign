@@ -42,7 +42,7 @@ export default function PrivacyPage() {
   return (
     <Legal
       title="Privacy notice"
-      updated="9 October 2026"
+      updated="11 October 2026"
       intro={
         <>
           <p>
@@ -146,6 +146,12 @@ export default function PrivacyPage() {
                 how you rate the Spheres: your group or place sees the average once five people have rated, never
                 yours. Nobody can see who you follow or who follows you, whether you&apos;ve
                 read their messages, who you&apos;ve muted, or your SOV.
+              </p>
+              <p>
+                A steward of a group, or the author of a proposal to a place, can share a decision with a public
+                link. The page shows the proposal&apos;s title and summary, the outcome, the rationale and the
+                decision&apos;s numbers — never a name, a response or a note, and no averages under five voices.
+                Stopping the share kills the link.
               </p>
               <p>
                 Advertisers see clicks and spend. Never who clicked, never your values, never why an ad was shown to

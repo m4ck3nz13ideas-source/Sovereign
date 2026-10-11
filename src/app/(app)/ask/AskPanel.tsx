@@ -63,7 +63,7 @@ type Mode = "find" | "ask";
 const STARTERS: Record<Mode, string[]> = {
   find: ["ladder", "workshop", "rota", "money", "the alley gate"],
   ask: [
-    "Does sharing a tool between households actually work?",
+    "Does sharing a tool between households work?",
     "What makes a rota fair?",
     "Is it better to own something together or take turns with it?",
     "When should a group decide by consensus rather than a majority?",
@@ -127,7 +127,7 @@ export function AskPanel({ mine }: { mine: MyInquiry[] }) {
           placeholder={
             mode === "find"
               ? "ladder, the alley gate, anything you half remember"
-              : "Does sharing a tool between households actually work?"
+              : "Does sharing a tool between households work?"
           }
           className={inputClass}
           aria-label={mode === "find" ? "Search" : "Your question"}

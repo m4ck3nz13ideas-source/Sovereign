@@ -60,7 +60,7 @@ export function Feed({
 }) {
   if (!items.length) {
     return (
-      <Empty>{empty ?? "Nothing yet. Post something, or follow someone."}</Empty>
+      <Empty>{empty ?? "Nothing yet. Post something. Follow someone."}</Empty>
     );
   }
 

@@ -59,7 +59,7 @@ export function ReflectionPanel({
         ) : null}
 
         <Field
-          label="What actually happened"
+          label="What happened"
           hint="Enough that someone reading this in a year learns something. At least eighty characters."
         >
           <textarea

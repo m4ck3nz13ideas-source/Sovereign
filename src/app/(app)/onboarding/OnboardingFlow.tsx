@@ -242,9 +242,9 @@ export function OnboardingFlow({
           ))}
           <p className="border-t border-line-soft pt-4 text-sm leading-relaxed text-paper-faint">
             These can be amended, one law&rsquo;s wording at a time, and only
-            when every single voice is at 0.900 or above — not a majority, the
+            when every voice is at 0.900 or above — not a majority, the
             lowest one. If that ever happens you will be told what changed, and
-            what you agreed to today stays on the record as what you actually
+            what you agreed to today stays on the record as what you
             read.
           </p>
         </div>
@@ -306,7 +306,7 @@ export function OnboardingFlow({
               In your own words, with your own definitions. Every proposal your
               group considers is scored against these names using these
               definitions — a word that sounds right is worth less than a
-              sentence that is actually yours.
+              sentence that is yours.
             </p>
           </div>
           {values.map((v, i) => (
@@ -452,7 +452,7 @@ export function OnboardingFlow({
         <>
           <p>
             <strong className="text-paper">Propose.</strong> Six sections,
-            addressed to the smallest scale that can actually decide it. It does
+            addressed to the smallest scale that can decide it. It does
             not go anywhere until it has been read back to you and sharpened.
           </p>
           <p>
@@ -473,7 +473,7 @@ export function OnboardingFlow({
             against it.
           </p>
           <p>
-            <strong className="text-paper">Reflect.</strong> What actually
+            <strong className="text-paper">Reflect.</strong> What
             happened, in writing, before a project can close — and the next
             proposal&rsquo;s review reads it.
           </p>

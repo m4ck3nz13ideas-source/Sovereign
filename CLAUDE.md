@@ -586,7 +586,7 @@ line.
   policy actually in force — a line that promises more privacy than the RLS
   gives is worse than no line. Greyscale, because amber means "yours to act
   on" and this is the room, not an action.
-- **The sign-in page lists what this place will not do.** `REFUSALS` in
+- **The sign-in page says three things, each one true.** `LINES` in
   `(auth)/login/page.tsx` carries the rule number beside each line, so a
   promise cannot drift from the code that keeps it. No line may promise
   something no policy or function enforces.

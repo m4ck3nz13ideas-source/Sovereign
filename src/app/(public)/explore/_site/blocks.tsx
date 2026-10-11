@@ -140,7 +140,7 @@ export function PulseStrip({ pulse }: { pulse: Pulse | null }) {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-calm opacity-60" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-calm" />
         </span>
-        <p className="smallcaps text-[11px] text-paper-faint">Live from the database · totals only, never names</p>
+        <p className="smallcaps text-[11px] text-paper-faint">Live totals · never names</p>
       </div>
       <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-4">
         {items.map(([n, label]) => (
@@ -163,14 +163,14 @@ export function FoundingFifty({ pulse }: { pulse: Pulse | null }) {
         <div>
           <Eyebrow>The founding {FOUNDING_PLACES}</Eyebrow>
           <h2 className="mt-3 font-serif text-3xl leading-tight text-paper sm:text-4xl">
-            Be one of the first fifty people to really use it.
+            Be one of the first fifty.
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-paper-dim">
-            Before Sovereign opens to everyone in 2027, it is being made ready for fifty people who will use it
-            for real: write in it, propose, decide, trade. What you find shapes what gets built next.
+            Fifty people, using it for real before it opens in 2027. Write, propose, decide. What you find
+            decides what gets built.
           </p>
-          <ul className="mt-6 grid gap-2.5 sm:grid-cols-2">
-            {["Free, as it always will be for people", "Direct line to the founder", "Your proposals among the first decided", "Early say on the roadmap"].map((t) => (
+          <ul className="mt-6 grid gap-2.5">
+            {["A direct line to the founder", "Among the first to propose", "A say on the roadmap"].map((t) => (
               <li key={t} className="flex gap-2.5 text-paper-dim">
                 <Tick />
                 <span>{t}</span>
@@ -199,7 +199,7 @@ export function FoundingFifty({ pulse }: { pulse: Pulse | null }) {
           <Link href="/login" className="press mt-6 flex w-full items-center justify-center rounded-pill bg-gold px-6 py-3 font-semibold text-ink">
             {left === 0 ? "Join the next wave" : "Claim a place"}
           </Link>
-          <p className="mt-3 text-center text-sm text-paper-faint">Just an email. No password, no card.</p>
+          <p className="mt-3 text-center text-sm text-paper-faint">An email. No password. No card.</p>
         </div>
       </div>
     </div>
@@ -216,10 +216,10 @@ export function CtaBand({ title = "Heaven on Earth is a decision.", lead = "Make
         <p className="mt-3 text-lg opacity-80">{lead}</p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link href="/login" className="press rounded-pill bg-ink px-6 py-3 font-semibold text-paper">
-            Get started free
+            Start free
           </Link>
           <Link href="/explore#try" className="press rounded-pill border border-ink/30 px-6 py-3 font-semibold text-ink">
-            Try the demo
+            Try it first
           </Link>
         </div>
       </div>

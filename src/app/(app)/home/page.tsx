@@ -298,8 +298,7 @@ export default async function HomePage({
                   <>
                     <p className="font-serif text-lg text-paper">What matters most to you?</p>
                     <p className="mt-1 mb-2 text-[0.9rem] text-paper-dim">
-                      Rate the Spheres and For you shows what&apos;s happening in them. Your ratings are yours; {here} sees
-                      only the total.
+                      Rate the Spheres. For you fills with what touches them. {here} sees only the total.
                     </p>
                     <SphereRatings initial={Object.fromEntries(ratings.map((r) => [r.sphere_id, r.rating]))} compact />
                   </>
@@ -321,7 +320,7 @@ export default async function HomePage({
             ) : null}
 
             {tab === "discover" && !address ? (
-              <Empty>Say where you are, or join a group, to discover what&apos;s happening around you.</Empty>
+              <Empty>Say where you are, or join a group. Discover fills from there.</Empty>
             ) : tab === "foryou" && !top.length ? null : (
               <Feed
                 items={items}
@@ -331,9 +330,9 @@ export default async function HomePage({
                 reasons={reasons}
                 empty={
                   tab === "foryou"
-                    ? `Nothing in your Spheres in ${here} yet.`
+                    ? `Nothing in your Spheres in ${here} yet. Be the first to propose.`
                     : tab === "discover"
-                      ? `Nothing new from people you don't follow in ${here} yet.`
+                      ? `Nothing new in ${here} yet.`
                       : undefined
                 }
               />

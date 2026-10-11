@@ -45,7 +45,7 @@ export default async function PlacePage() {
 
 Write these the way you would say them. Matching ignores capitals and spacing, so "Stoke Newington" and "stoke newington" are the same street — but "N16" and "Stoke Newington" are not, so it is worth agreeing with your neighbours on one.
 
-Leave a line blank and that scale simply is not yours. Global is everyone, always.`}
+Leave a line blank and that scale is not yours. Global is everyone, always.`}
       </Prose>
 
       <div className="mt-8">
@@ -61,7 +61,7 @@ Leave a line blank and that scale simply is not yours. Global is everyone, alway
           them responded. A place cannot: there is no list of everyone in a
           city, and building one would be a surveillance project rather than a
           governance one. So the share is replaced by a floor on how many people
-          actually responded. The alignment threshold does not move — 0.618 at
+          responded. The alignment threshold does not move — 0.618 at
           every scale.
         </p>
 

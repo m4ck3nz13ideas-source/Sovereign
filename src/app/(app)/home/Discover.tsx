@@ -24,8 +24,7 @@ export function Attention({ items }: { items: AttentionItem[] }) {
   if (!items.length) {
     return (
       <Empty>
-        Nothing is waiting on you here. That is a real state, not an empty one —
-        it means everything open has had your answer.
+        Nothing waiting on you. Everything open has your answer.
       </Empty>
     );
   }
@@ -174,7 +173,7 @@ export function Signal({ events }: { events: SignalEvent[] }) {
 
   return (
     <section className="mb-10">
-      <SectionLabel>What has actually happened</SectionLabel>
+      <SectionLabel>What has happened</SectionLabel>
 
       <ul className="space-y-1.5">
         {events.map((e) => {

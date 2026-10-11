@@ -104,7 +104,7 @@ export default async function ValuesPage() {
           ) : (
             <Card>
               <p className="text-[0.9375rem] leading-relaxed text-paper-dim">
-                You have not named any. Three you actually hold, defined in your
+                You have not named any. Three you hold, defined in your
                 own words, is the whole exercise — and when you write a proposal
                 for a place, they are the rubric it gets read against.
               </p>

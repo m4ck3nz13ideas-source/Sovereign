@@ -72,7 +72,7 @@ export function Inquiries({
           <input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Does sharing a tool between households actually work?"
+            placeholder="Does sharing a tool between households work?"
             className={inputClass}
             aria-label="Your question"
           />

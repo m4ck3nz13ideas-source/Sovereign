@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { LoginForm } from "./LoginForm";
 
-export const metadata = { title: "Sign in · Sovereign" };
+export const metadata = {
+  title: "Sign in · Sovereign",
+  description: "Vote on ideas, not politicians. An email is all it takes.",
+  alternates: { canonical: "/login" },
+};
 
 /**
  * The door. Short, direct, and every line true.
@@ -13,12 +17,9 @@ export const metadata = { title: "Sign in · Sovereign" };
  * commit. No line may promise what no policy or function enforces.
  */
 const LINES: { line: string; rule: string }[] = [
-  { line: "Vote on policies, not politicians.", rule: "3, 13" },
-  { line: "Your data belongs to you.", rule: "1" },
-  { line: "Turn ideas into action.", rule: "5, 6" },
-  { line: "Positive, productive social media.", rule: "19, 20, 32" },
-  { line: "Built on trust, transparency and sovereignty.", rule: "2, 36" },
-  { line: "Propose. Participate. Play.", rule: "33" },
+  { line: "Vote on ideas, not politicians.", rule: "3, 13" },
+  { line: "Your data belongs to you.", rule: "1, 42" },
+  { line: "Propose. Weigh. Act.", rule: "4, 9" },
 ];
 
 export default async function LoginPage({
@@ -50,7 +51,7 @@ export default async function LoginPage({
 
         <ul className="mt-12 space-y-3 border-t border-line-soft pt-6">
           {LINES.map((l) => (
-            <li key={l.line} className="text-[0.95rem] leading-snug text-paper-dim">
+            <li key={l.line} className="font-serif text-lg leading-snug text-paper">
               {l.line}
             </li>
           ))}

@@ -176,7 +176,7 @@ export default async function ProjectPage({
 
       {/* --------------------------------------------------------- OUTCOME */}
       <section>
-        <SectionLabel>What actually happened</SectionLabel>
+        <SectionLabel>What happened</SectionLabel>
 
         {reflection ? (
           <Card className="border-calm/30">

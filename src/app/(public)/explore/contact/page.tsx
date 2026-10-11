@@ -4,16 +4,16 @@ import { CONTACT_EMAIL, pageMeta } from "../_site/site";
 export const metadata = pageMeta("contact");
 
 const REASONS = [
-  ["General", "Questions about Sovereign, the founding 50 or the ideas behind it.", "Hello"],
-  ["Business", "Getting listed in the Market, verification or advertising.", "Business enquiry"],
-  ["Press and partners", "Interviews, collaborations and groups who want to pilot it.", "Press and partners"],
-  ["Privacy", "Your data, a request to see or delete it, or a concern.", "Privacy request"],
+  ["General", "Sovereign, the founding 50, the ideas behind it.", "Hello"],
+  ["Business", "Listing, verification, advertising.", "Business enquiry"],
+  ["Press and partners", "Interviews, collaborations, pilots.", "Press and partners"],
+  ["Privacy", "Your data: see it, delete it, raise a concern.", "Privacy request"],
 ];
 
 export default function ContactPage() {
   return (
     <>
-      <PageHero eyebrow="Contact" title="Talk to a person." lead="Every message is read by the founder. Expect a reply within a few working days." />
+      <PageHero eyebrow="Contact" title="Talk to a person." lead="The founder reads every message. Replies within a few working days." />
       <Section>
         <div className="grid gap-4 sm:grid-cols-2">
           {REASONS.map(([t, d, subject]) => (

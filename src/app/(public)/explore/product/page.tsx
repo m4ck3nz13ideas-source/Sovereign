@@ -21,7 +21,7 @@ function SearchScreen() {
           <p className="mt-1 text-[11px] leading-snug text-paper-dim">{t}</p>
         </div>
       ))}
-      <p className="text-[10px] text-paper-faint">Positions, side by side. No single answer, no ranking.</p>
+      <p className="text-[10px] text-paper-faint">Every side. No verdict. No ranking.</p>
     </div>
   );
 }
@@ -30,13 +30,12 @@ const SECTIONS: { id: string; tab: number; title: string; lead: string; points: 
   {
     id: "individual",
     tab: 0,
-    title: "A private space that's actually private.",
-    lead: "Journal, ideas, to-dos and a vault — plus an AI that knows what you value because you told it, and nobody else can read.",
+    title: "Private. By rule, not by setting.",
+    lead: "Journal, ideas, to-dos and a vault. An AI that knows your values because you told it. Nobody else can read any of it.",
     points: [
-      "Owner-only by database policy. Not a toggle.",
+      "Owner-only in the database. Not a toggle.",
       "Know yourself: needs, values, beliefs and goals, at the centre of your AI.",
-      "Call your AI from anywhere in your space.",
-      "Your SOV balance and record, kept in the vault.",
+      "Your SOV record, kept in the vault.",
     ],
     screen: <SelfScreen />,
   },
@@ -44,14 +43,12 @@ const SECTIONS: { id: string; tab: number; title: string; lead: string; points: 
     id: "home",
     tab: 1,
     title: "Social media that leaves you better off.",
-    lead: "Posts from people you follow, in time order. Every post is read once at the door: true to its author, or useful to others.",
+    lead: "Time order, not engagement. Every post read once at the door: true to its author, or useful to others.",
     points: [
-      "For you, Following and Discover — at your street, region, nation or the world.",
-      "You choose who each post is for: the people around you, or further.",
-      "Likes and comments, shown openly and never used to rank.",
-      "No follower counts and no people-you-may-know.",
-      "Chats with friends, without read receipts or online status.",
-      "Narrow your feed or mute someone. Only you know.",
+      "For you, Following, Discover — at every scale.",
+      "You choose who each post is for.",
+      "Likes shown, never ranked by. No follower counts.",
+      "Chats without read receipts or online status.",
     ],
     screen: <FeedScreen />,
   },
@@ -59,37 +56,35 @@ const SECTIONS: { id: string; tab: number; title: string; lead: string; points: 
     id: "search",
     tab: 2,
     title: "Search anything. Hear every side.",
-    lead: "Find what's been proposed, decided and built. Ask a contested question and get positions from different ways of knowing, side by side.",
+    lead: "Find what was proposed, decided and built. Ask a contested question and get every side, from science, tradition and practice.",
     points: [
-      "Your own notes and the shared record, searched together, listed apart.",
-      "At least two perspectives on every contested question. Never one verdict.",
-      "One relevant, labelled ad — chosen by fit, not by bid.",
+      "Your notes and the shared record, searched together, listed apart.",
+      "Two perspectives minimum. Never one verdict.",
+      "One labelled ad, chosen by fit, not by bid.",
     ],
     screen: <SearchScreen />,
   },
   {
     id: "market",
     tab: 3,
-    title: "Like a high street of businesses you'd vouch for.",
-    lead: "Products and services from businesses that proved they're real and passed the ten laws. For people, not profit.",
+    title: "A high street you could vouch for.",
+    lead: "Businesses that proved they are real and passed ten laws. Nothing else gets in.",
     points: [
-      "Website ownership proven. UK companies checked against Companies House.",
-      "Read against all ten laws by AI, then signed off by a person.",
-      "Change your listing and approval lapses until it's read again.",
-      "Choose buy or sell up front. Buying links to the business for now.",
+      "Website proven. UK companies checked at Companies House.",
+      "Read against ten laws by AI. Signed off by a person.",
+      "Edit a listing and approval lapses until it is read again.",
     ],
     screen: <MarketScreen />,
   },
   {
     id: "collective",
     tab: 4,
-    title: "Decide together, without the shouting.",
-    lead: "Proposals from your street to the planet. Checked against the law first, decided on their own conditions, then turned into projects.",
+    title: "Decide together. Without the shouting.",
+    lead: "Checked against the laws. Decided on its own conditions. Turned into a project.",
     points: [
       "Respond with alignment, confidence and urgency — not yes or no.",
-      "The lean stays hidden until it closes. A split is reported as a split.",
-      "Concerns get written answers. Challenges never stall a decision.",
-      "What passes becomes a project, and its outcome is marked against the prediction.",
+      "The lean stays hidden until close. A split is reported as a split.",
+      "Share the decision with one link. Names never leave.",
     ],
     screen: <ProposalScreen />,
   },
@@ -101,10 +96,10 @@ export default function ProductPage() {
       <PageHero
         eyebrow="Product"
         title="Five spaces. One set of laws."
-        lead="Sovereign brings your private life, your social life, your shopping and your say into one calm app."
+        lead="Your thinking, your feed, your shopping, your say. One calm app."
       >
-        <PrimaryLink href="/login">Get started free</PrimaryLink>
-        <SecondaryLink href="/explore#try">Try the demo</SecondaryLink>
+        <PrimaryLink href="/login">Start free</PrimaryLink>
+        <SecondaryLink href="/explore#try">Try it first</SecondaryLink>
       </PageHero>
 
       <nav className="sticky top-[61px] z-30 border-b border-line-soft bg-veil backdrop-blur-xl" aria-label="Sections">
@@ -144,18 +139,17 @@ export default function ProductPage() {
           <p className="smallcaps text-[11px] font-semibold text-gold">Under the hood</p>
           <h2 className="mt-3 font-serif text-3xl leading-tight text-paper sm:text-4xl">Rules in the database, not promises in a policy.</h2>
           <p className="mt-4 text-lg leading-relaxed text-paper-dim">
-            Every promise on this site is a rule the database enforces, with hundreds of automated checks that fail
-            the build if one is ever broken.
+            Every promise here is a database rule. Hundreds of automated checks fail the build if one breaks.
           </p>
         </div>
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            ["Row-level security", "Who can read each row is decided in Postgres, for every request."],
-            ["Signed AI", "Every AI reading that decides something carries a server signature. Forged or stale ones are refused."],
-            ["Written once", "Law readings, flags and debate can't be edited after the fact. Answers are signed by whoever wrote them."],
-            ["Tamper-evident ledger", "Decisions are chained, so any change to the record shows."],
-            ["No third parties", "No trackers, no ad networks, fonts served from Sovereign itself."],
-            ["Open about money", "Nothing that approves or ranks a business can read what it spends."],
+            ["Row-level security", "Postgres decides who reads each row, on every request."],
+            ["Signed AI", "Every AI reading that decides anything is signed. Forged or stale ones are refused."],
+            ["Written once", "Law readings, flags and debate cannot be edited. Answers carry their author."],
+            ["Tamper-evident ledger", "Decisions are chained. Any change shows."],
+            ["No third parties", "No trackers. No ad networks. Fonts served from here."],
+            ["Blind to money", "Nothing that approves or ranks a business can see what it spends."],
           ].map(([t, d]) => (
             <div key={t} className="rounded-sheet border border-line p-6">
               <p className="font-semibold text-paper">{t}</p>

@@ -161,7 +161,7 @@ export function Controls({
         <section className="border-t border-line-soft pt-6">
           <p className="smallcaps text-[10px] text-paper-faint">Quieted</p>
           <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-paper-dim">
-            Still reachable, just not arriving. They are not told, and there is
+            Still reachable, not arriving. They are not told, and there is
             no way for them to find out.
           </p>
           <ul className="mt-3 divide-y divide-line-soft">

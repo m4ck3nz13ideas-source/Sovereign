@@ -9,8 +9,8 @@ export default function RoadmapPage() {
     <>
       <PageHero
         eyebrow="Roadmap"
-        title="What's built, what's next."
-        lead="Ready for fifty people to really use by the end of 2026. Open to everyone in 2027. Nothing is listed as live until it is."
+        title="Built. Next. Later."
+        lead="Fifty people by the end of 2026. Everyone in 2027. Nothing is marked live until it is."
       />
       <Section>
         <div className="grid gap-6 lg:grid-cols-3">

@@ -333,7 +333,7 @@ function SearchDemo() {
       </ul>
       <p className="mt-3 text-xs text-paper-faint">
         One search across proposals, posts, words and businesses — only what you&apos;re allowed to see. An ad shows only
-        when a vetted business is genuinely relevant.
+        when a vetted business is relevant.
       </p>
     </div>
   );

@@ -678,7 +678,7 @@ export default async function ProposalPage({
 
       {/* ------------------------------------------------ IMPACT SIMULATION */}
       {/* After the review and before the sliders, because this is the part
-          you are actually being asked to agree with: not whether it sounds
+          you are being asked to agree with: not whether it sounds
           good, but whether you believe these things will be true. */}
       <section className="mb-10">
         <SectionLabel

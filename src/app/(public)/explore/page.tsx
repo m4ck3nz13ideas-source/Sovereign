@@ -56,8 +56,8 @@ export default async function ExplorePage() {
               href="#founding"
               className="inline-flex items-center gap-2 rounded-pill border border-line bg-ink py-1 pr-3 pl-1 text-sm text-paper-dim hover:text-paper"
             >
-              <span className="rounded-pill bg-gold px-2 py-0.5 text-xs font-semibold text-ink">New</span>
-              Founding 50 places are open <span aria-hidden="true">→</span>
+              <span className="rounded-pill bg-gold px-2 py-0.5 text-xs font-semibold text-ink">Open</span>
+              Founding 50 places <span aria-hidden="true">→</span>
             </Link>
             <h1 className="mt-6 font-serif text-5xl leading-[1.02] tracking-tight text-paper sm:text-7xl">
               Better decisions.
@@ -65,16 +65,15 @@ export default async function ExplorePage() {
               Together.
             </h1>
             <p className="mt-6 max-w-xl text-xl leading-snug text-paper-dim">
-              Vote on ideas, not politicians. Sovereign is one app for your private thinking, an honest feed, a
-              market of businesses that passed ten laws, and a fairer way for any group — from your street to the
-              planet — to decide and act.
+              Vote on ideas, not politicians. <span className="text-paper">Think in private. Post honestly. Decide
+              together</span> — from your street to the planet.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <PrimaryLink href="/login">Get started free</PrimaryLink>
-              <SecondaryLink href="#try">Try it — no account</SecondaryLink>
+              <PrimaryLink href="/login">Start free</PrimaryLink>
+              <SecondaryLink href="#try">Try it first</SecondaryLink>
             </div>
             <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-paper-dim">
-              {["Free for people, always", "Private by database rule", "No follower counts"].map((t) => (
+              {["Free for people", "Private by rule", "No follower counts"].map((t) => (
                 <li key={t} className="flex items-center gap-2">
                   <Tick className="h-4 w-4" />
                   {t}
@@ -102,14 +101,13 @@ export default async function ExplorePage() {
         <div className="grid gap-12 lg:grid-cols-2">
           <SectionHead
             eyebrow="The problem"
-            title="We went to the moon. We still can't decide together."
-            lead="Writing gave us kingdoms. The printing press gave us nations. The factory gave us mass politics. The internet and AI have changed everything — except how we decide."
+            title="We reached the moon. We still can't decide together."
+            lead="Writing built kingdoms. Print built nations. The internet changed everything — except how we decide."
           />
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4">
             {[
-              ["Top-down", "We vote for people every few years and hope."],
-              ["Filtered", "Information is shaped by whoever pays for reach."],
-              ["Divided", "Feeds rank by outrage, because outrage keeps you scrolling."],
+              ["Top-down", "We vote for people every few years, then hope."],
+              ["Ranked", "Feeds sort by outrage and by whoever pays for reach."],
               ["Forgotten", "Nobody checks whether the last decision worked."],
             ].map(([t, d]) => (
               <div key={t} className="rounded-card border border-line p-5">
@@ -127,7 +125,7 @@ export default async function ExplorePage() {
           center
           eyebrow="One app, five spaces"
           title="Everything a person and a people need."
-          lead="Private where it should be. Public where it must be. Bound by the same ten laws throughout."
+          lead="Private where it should be. Public where it must be. One set of laws."
         />
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {PILLARS.map((p) => (
@@ -140,7 +138,7 @@ export default async function ExplorePage() {
               <p className="mt-5 font-serif text-2xl text-paper">{p.name}</p>
               <p className="mt-2 text-paper-dim">{p.short}</p>
               <p className="mt-4 text-sm font-semibold text-gold opacity-0 transition-opacity group-hover:opacity-100">
-                Learn more →
+                See how →
               </p>
             </Link>
           ))}
@@ -160,13 +158,13 @@ export default async function ExplorePage() {
             <SectionHead
               eyebrow="Try it"
               title="Use it before you join."
-              lead="Each demo runs in your browser. No account, nothing sent, nothing saved."
+              lead="Runs in your browser. No account, nothing sent, nothing saved."
             />
             <ul className="mt-8 space-y-3 text-paper-dim">
               {[
-                ["Individual", "a private AI that knows what you value"],
-                ["Home", "the check every post passes at the door"],
-                ["Search", "results with an ad that fits, not one that paid most"],
+                ["Individual", "a private AI that knows your values"],
+                ["Home", "the check every post passes"],
+                ["Search", "one ad, chosen by fit, not by bid"],
                 ["Market", "how a business proves it's real"],
                 ["Collective", "a proposal decided on its own conditions"],
               ].map(([t, d]) => (
@@ -184,14 +182,14 @@ export default async function ExplorePage() {
 
       {/* --------------------------------------------------------------- HOW */}
       <Section className="bg-surface-soft">
-        <SectionHead center eyebrow="How it works" title="From idea to outcome in five steps." />
+        <SectionHead center eyebrow="How it works" title="Idea to outcome, in five steps." />
         <ol className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {[
-            ["Propose", "Anyone puts an idea forward, at any scale from their street to the planet."],
-            ["Check", "AI reads it against the ten Universal Laws and sets what this proposal needs to be decided fairly."],
-            ["Decide", "People say how aligned, confident and urgent they are. Nobody sees the lean until it closes."],
-            ["Act", "What passes becomes a project, with the people who said they'd help."],
-            ["Learn", "Outcomes are marked against what was predicted. The next decision is better."],
+            ["Propose", "Anyone, at any scale, street to planet."],
+            ["Check", "AI reads it against ten laws and sets fair conditions."],
+            ["Decide", "Alignment, confidence, urgency. The lean stays hidden until close."],
+            ["Act", "What passes becomes a project, staffed by who offered."],
+            ["Learn", "Outcomes marked against predictions. The next decision improves."],
           ].map(([t, d], i) => (
             <li key={t} className="rounded-sheet border border-line bg-ink p-6">
               <span className="font-serif text-3xl tabular-nums text-gold">{String(i + 1).padStart(2, "0")}</span>
@@ -206,8 +204,8 @@ export default async function ExplorePage() {
       <Section>
         <SectionHead
           eyebrow="Why it's different"
-          title="Built to make you think, not to keep you scrolling."
-          lead="Each of these is enforced in the database, not promised in a policy."
+          title="Built to make you think, not scroll."
+          lead="Enforced by the database. Not promised in a policy."
         />
         <div className="mt-12 overflow-hidden rounded-sheet border border-line">
           <div className="grid grid-cols-[1.1fr_1fr_1fr] border-b border-line bg-surface-soft text-sm font-semibold">
@@ -221,7 +219,7 @@ export default async function ExplorePage() {
             ["Who voted how", "Visible to the group", "Secret. Only the tally is shown"],
             ["Your feed", "Ranked by engagement", "Time order. Likes never rank it"],
             ["Follower counts", "Front and centre", "None, anywhere"],
-            ["Your private notes", "Mined for targeting", "Owner-only. Never shown to advertisers"],
+            ["Your private notes", "Mined for targeting", "Owner-only. Advertisers never see them"],
             ["Top ad", "Highest bidder", "Best fit for you; bids only break ties"],
             ["A split vote", "Reported as a win", "Reported as a split"],
           ].map(([k, a, b]) => (
@@ -247,7 +245,7 @@ export default async function ExplorePage() {
             <SectionHead
               eyebrow="The constitution"
               title="Ten Universal Laws."
-              lead="Above every decision, every business and every line of code. A proposal that breaks one cannot pass, whatever the vote says."
+              lead="Above every decision, every business, every line of code. Break one and a proposal fails, whatever the vote."
             />
             <div className="mt-6">
               <ArrowLink href="/explore/about#laws">Read them in full</ArrowLink>

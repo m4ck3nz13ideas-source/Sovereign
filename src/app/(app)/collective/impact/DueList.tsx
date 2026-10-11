@@ -84,7 +84,7 @@ function DueRow({ item }: { item: DueProjection }) {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
-            placeholder="What actually happened, in your own words."
+            placeholder="What happened, in your own words."
             className={inputClass}
           />
           {error ? <p className="text-[0.85rem] text-alarm">{error}</p> : null}

@@ -131,7 +131,7 @@ export function Projections({
       ) : (
         <Empty>
           Nothing has been predicted about this yet. A claim written here is
-          frozen when the proposal closes and marked against what actually
+          frozen when the proposal closes and marked against what
           happened when its date arrives — which is the only thing that makes it
           worth reading before you vote.
         </Empty>
@@ -271,7 +271,7 @@ function MarkForm({ id, onDone }: { id: string; onDone: () => void }) {
         value={note}
         onChange={(e) => setNote(e.target.value)}
         rows={3}
-        placeholder="What actually happened, in your own words."
+        placeholder="What happened, in your own words."
         className={inputClass}
       />
 

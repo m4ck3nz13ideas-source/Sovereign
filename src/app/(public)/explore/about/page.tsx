@@ -11,7 +11,7 @@ export default function AboutPage() {
       <PageHero
         eyebrow="About"
         title="Every leap in technology changed how we govern. Except this one."
-        lead="Sovereign exists to bring the way we decide up to date with everything else — so freedom, truth and care for life are how a society is run, not just what it hopes for."
+        lead="Sovereign brings how we decide up to date — so freedom, truth and care for life are how a society runs, not what it hopes for."
       />
 
       {/* ------------------------------------------------------- FOUNDER */}
@@ -33,10 +33,9 @@ export default function AboutPage() {
               from the top.
             </p>
             <p>
-              For most of history, power has flowed downward — kings, empires, states, corporations. Every time
-              technology leapt forward, the way we governed ourselves changed with it. Writing, printing, the factory.
-              But the internet and AI haven&apos;t touched how we decide. We still vote for people every few years and
-              hope.
+              For most of history, power has flowed down — kings, empires, states, corporations. Every leap in
+              technology changed how we governed: writing, printing, the factory. The internet and AI haven&apos;t
+              touched how we decide. We still vote for people every few years, then hope.
             </p>
             <p>
               Too many faceless, nameless people have lived and died dreaming of heaven on earth. They didn&apos;t do it
@@ -49,8 +48,7 @@ export default function AboutPage() {
               Both, held together by ten laws that apply to everyone — people, businesses, governments and code alike.
             </p>
             <p>
-              It starts small: fifty people using it for real. If you&apos;re reading this, I&apos;d like you to be one of
-              them.
+              It starts with fifty people using it for real. If you&apos;re reading this, I&apos;d like you to be one.
             </p>
             <p className="font-serif text-xl text-paper">— Mackenzie</p>
           </div>
@@ -62,13 +60,13 @@ export default function AboutPage() {
         <SectionHead
           eyebrow="The idea"
           title="Individual Collectivism."
-          lead="Freedom without care breeds chaos. Unity without freedom breeds tyranny. Sovereign is built on the balance between them."
+          lead="Freedom without care breeds chaos. Unity without freedom breeds tyranny. Sovereign holds the balance."
         />
         <div className="mt-12 grid gap-4 sm:grid-cols-3">
           {[
-            ["Power flows outward", "From the individual to the collective, never top-down. Decisions are made at the smallest scale that can make them."],
-            ["Alignment, not majority", "People say how aligned they are, not just yes or no. A proposal passes on alignment, and a split is never called a consensus."],
-            ["Evolution by design", "Every decision is measured afterwards. No law is final, and changing one needs every single voice."],
+            ["Power flows outward", "From the person to the collective, never top-down. Each decision at the smallest scale that can make it."],
+            ["Alignment, not majority", "People say how aligned they are, not yes or no. A split is never called a consensus."],
+            ["Evolution by design", "Every decision measured afterwards. Changing a law needs every voice."],
           ].map(([t, d]) => (
             <div key={t} className="rounded-sheet border border-line bg-ink p-6">
               <p className="font-serif text-xl text-paper">{t}</p>
@@ -83,7 +81,7 @@ export default function AboutPage() {
         <SectionHead
           eyebrow="What we won't build"
           title="Some features are missing on purpose."
-          lead="Each of these is ruled out in the database, with a check that fails if anyone adds it back."
+          lead="Ruled out in the database. A check fails if anyone adds one back."
         />
         <ul className="mt-12 grid gap-x-10 gap-y-1 sm:grid-cols-2">
           {[
@@ -109,7 +107,7 @@ export default function AboutPage() {
         <SectionHead
           eyebrow="The constitution"
           title="The ten Universal Laws."
-          lead="Everyone agrees to these on joining. They sit above every proposal, business and line of code. The wording can be amended — only if every voice agrees."
+          lead="Agreed on joining. Above every proposal, business and line of code. The wording changes only if every voice agrees."
         />
         <ol className="mt-12 grid gap-4 sm:grid-cols-2">
           {UNIVERSAL_LAWS.map((l) => (

@@ -332,7 +332,7 @@ export function ComposeProposal({
 
       <Field
         label="Who this is for"
-        hint="The lowest scale that can actually decide it. Something your street can settle does not belong in front of a country."
+        hint="The lowest scale that can decide it. Something your street can settle does not belong in front of a country."
       >
         <select
           value={form.address}

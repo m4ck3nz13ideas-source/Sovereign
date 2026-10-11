@@ -42,7 +42,7 @@ export function AiLayer({
         <div className="grid gap-4 sm:grid-cols-2">
           <ScoreBar label="Clarity" value={review.clarity} hint="Could someone who missed the meeting act on this?" />
           <ScoreBar label="Evidence" value={review.evidence} hint="Are the claims supported?" />
-          <ScoreBar label="Feasibility" value={review.feasibility} hint="Can this group actually do it?" />
+          <ScoreBar label="Feasibility" value={review.feasibility} hint="Can this group do it?" />
           <ScoreBar label="Reversibility" value={review.reversibility} hint="How cheaply could it be undone?" />
         </div>
       </Card>
