@@ -88,7 +88,7 @@ begin
 end;
 $$;
 
-revoke all on function share_decision(uuid) from public;
+revoke all on function share_decision(uuid) from public, anon;
 grant execute on function share_decision(uuid) to authenticated;
 
 create or replace function unshare_decision(p_proposal_id uuid)
@@ -104,7 +104,7 @@ begin
 end;
 $$;
 
-revoke all on function unshare_decision(uuid) from public;
+revoke all on function unshare_decision(uuid) from public, anon;
 grant execute on function unshare_decision(uuid) to authenticated;
 
 create or replace function shared_decision(p_token text)
