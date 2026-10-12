@@ -41,8 +41,8 @@ export default async function PromptsPage() {
       <div className="space-y-4">
         {ALL_PROMPTS.map((prompt) => (
           <Card key={prompt.id}>
-            <div className="flex items-start justify-between gap-3">
-              <h2 className="font-serif text-xl text-paper">{prompt.title}</h2>
+            <div className="flex flex-col items-center text-center items-start justify-center gap-3">
+              <h2 className="text-center font-serif text-xl text-paper">{prompt.title}</h2>
               <Tag>v{prompt.version}</Tag>
             </div>
 

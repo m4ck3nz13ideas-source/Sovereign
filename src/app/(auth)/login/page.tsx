@@ -32,7 +32,7 @@ export default async function LoginPage({
   return (
     <main className="flex min-h-dvh items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm">
-        <h1 className="font-serif text-4xl tracking-tight text-paper">Sovereign</h1>
+        <h1 className="text-center font-serif text-4xl tracking-tight text-paper">Sovereign</h1>
         <p className="mt-3 text-xl leading-snug text-paper">Better decisions. Together.</p>
 
         <div className="mt-10">

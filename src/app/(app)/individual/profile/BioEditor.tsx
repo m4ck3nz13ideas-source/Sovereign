@@ -72,7 +72,7 @@ export function BioEditor({
         {initials || "·"}
       </div>
       <div className="min-w-0 flex-1">
-        <h1 className="font-serif text-2xl leading-tight text-paper">
+        <h1 className="text-center font-serif text-2xl leading-tight text-paper">
           {displayName}
         </h1>
         <p className="mt-1 text-sm leading-relaxed text-paper-dim">

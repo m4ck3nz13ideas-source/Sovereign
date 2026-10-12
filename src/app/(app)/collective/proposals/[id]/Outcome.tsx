@@ -50,8 +50,8 @@ export function Outcome({
   return (
     <div className="space-y-4">
       <Card className={passed ? "border-calm/40" : "border-alarm/40"}>
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-serif text-xl text-paper">
+        <div className="flex flex-col items-center text-center items-start justify-center gap-3">
+          <h3 className="text-center font-serif text-xl text-paper">
             {passed ? "Passed" : "Did not pass"}
           </h3>
           <Tag tone={passed ? "calm" : "alarm"}>
@@ -171,7 +171,7 @@ export function Outcome({
 
       {responses.length ? (
         <Card>
-          <h3 className="smallcaps mb-1 text-[11px] text-paper-faint">
+          <h3 className="text-center smallcaps mb-1 text-[11px] text-paper-faint">
             Every response
           </h3>
           <p className="mb-4 text-[0.8125rem] leading-relaxed text-paper-faint">
@@ -198,7 +198,7 @@ export function Outcome({
           <p className="mt-3 text-[11px] text-paper-faint">alignment · confidence · urgency</p>
           {notes.length ? (
             <>
-              <h3 className="smallcaps mt-6 mb-3 text-[11px] text-paper-faint">
+              <h3 className="text-center smallcaps mt-6 mb-3 text-[11px] text-paper-faint">
                 What people said
               </h3>
               <ul className="space-y-3">

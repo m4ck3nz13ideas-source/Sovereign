@@ -57,7 +57,7 @@ export default async function ValuesPage() {
     <Screen>
       <Gutter className="space-y-8 pt-6">
         <div>
-          <h2 className="display text-[1.75rem] text-paper">Values</h2>
+          <h2 className="text-center display text-[1.75rem] text-paper">Values</h2>
           <p className="mt-2 text-[0.9375rem] leading-relaxed text-paper-dim">
             What you hold, in your own words, and the ten laws that hold
             everyone. Nothing on this screen is a score anybody else can see,

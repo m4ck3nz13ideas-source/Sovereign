@@ -32,8 +32,8 @@ export function Sharpening({
   return (
     <div className="space-y-4">
       <Card>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-serif text-lg text-paper">Before it was sent</h3>
+        <div className="flex flex-col items-center text-center flex-wrap items-center justify-center gap-2">
+          <h3 className="text-center font-serif text-lg text-paper">Before it was sent</h3>
           <Tag tone={score >= threshold ? "calm" : "alarm"}>
             {score.toFixed(2)} · bar {threshold.toFixed(2)}
           </Tag>
@@ -57,7 +57,7 @@ export function Sharpening({
 
       {unanswered.length ? (
         <Card className="border-gold-dim">
-          <h3 className="smallcaps mb-3 text-[11px] text-paper-faint">
+          <h3 className="text-center smallcaps mb-3 text-[11px] text-paper-faint">
             Still open when it was submitted
           </h3>
           <ul className="space-y-3">

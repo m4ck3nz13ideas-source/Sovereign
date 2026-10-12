@@ -53,7 +53,7 @@ Leave a line blank and that scale is not yours. Global is everyone, always.`}
       </div>
 
       <section className="mt-12">
-        <h2 className="smallcaps mb-3 text-[11px] text-paper-faint">
+        <h2 className="text-center smallcaps mb-3 text-[11px] text-paper-faint">
           What it takes to decide, at each scale
         </h2>
         <p className="mb-5 text-sm leading-relaxed text-paper-dim">

@@ -479,7 +479,7 @@ export default async function ProposalPage({
           ) : null}
         </div>
 
-        <h1 className="font-serif text-[1.75rem] leading-tight text-paper">
+        <h1 className="text-center font-serif text-[1.75rem] leading-tight text-paper">
           {proposal.title}
         </h1>
         <p className="mt-2 text-[0.95rem] leading-relaxed text-paper-dim">

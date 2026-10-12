@@ -58,7 +58,7 @@ export function CloseButton({
 
   return (
     <Card className="border-gold-dim">
-      <h3 className="font-serif text-lg text-paper">Close it now?</h3>
+      <h3 className="text-center font-serif text-lg text-paper">Close it now?</h3>
 
       <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-paper-dim">
         <li className={lawViolations > 0 ? "text-alarm" : undefined}>

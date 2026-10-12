@@ -11,7 +11,7 @@ import { Card, Page } from "@/components/ui";
 export default function NotFound() {
   return (
     <Page>
-      <h1 className="font-serif text-[1.75rem] leading-tight text-paper">
+      <h1 className="text-center font-serif text-[1.75rem] leading-tight text-paper">
         Not here.
       </h1>
 

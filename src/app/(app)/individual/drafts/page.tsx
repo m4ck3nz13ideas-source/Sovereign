@@ -19,7 +19,7 @@ export default async function DraftsPage() {
   return (
     <Screen>
       <Gutter className="pt-6">
-        <h2 className="display text-[1.75rem] text-paper">Drafts</h2>
+        <h2 className="text-center display text-[1.75rem] text-paper">Drafts</h2>
         <p className="mt-2 text-[0.9375rem] leading-relaxed text-paper-dim">
           A draft lives in this browser and nowhere else. Not in the database,
           not on a server, not recoverable by anyone including you on another

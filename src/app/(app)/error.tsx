@@ -30,7 +30,7 @@ export default function AppError({
 
   return (
     <Page>
-      <h1 className="font-serif text-[1.75rem] leading-tight text-paper">
+      <h1 className="text-center font-serif text-[1.75rem] leading-tight text-paper">
         That did not load.
       </h1>
 

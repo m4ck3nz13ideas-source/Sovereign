@@ -17,7 +17,7 @@ export default async function NewCirclePage() {
   return (
     <Screen>
       <Gutter className="space-y-5 pt-6">
-        <h2 className="display text-[1.5rem] text-paper">New group chat</h2>
+        <h2 className="text-center display text-[1.5rem] text-paper">New group chat</h2>
         {friends.length ? (
           <NewCircle friends={friends} />
         ) : (

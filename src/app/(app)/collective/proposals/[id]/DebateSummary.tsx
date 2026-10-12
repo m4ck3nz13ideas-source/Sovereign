@@ -105,8 +105,8 @@ export function DebateSummary({
   return (
     <div className="space-y-4">
       <Card className={summary.polarization === "splitting" ? "border-alarm/40" : undefined}>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-serif text-lg text-paper">What is being argued</h3>
+        <div className="flex flex-col items-center text-center flex-wrap items-center justify-center gap-2">
+          <h3 className="text-center font-serif text-lg text-paper">What is being argued</h3>
           <Tag tone={pol.tone}>{pol.label}</Tag>
         </div>
 
@@ -152,7 +152,7 @@ export function DebateSummary({
 
       {summary.shifted ? (
         <Card>
-          <h3 className="smallcaps mb-2 text-[11px] text-paper-faint">
+          <h3 className="text-center smallcaps mb-2 text-[11px] text-paper-faint">
             What moved
           </h3>
           <p className="text-[0.95rem] leading-relaxed text-paper-dim">
@@ -163,7 +163,7 @@ export function DebateSummary({
 
       {summary.unresolved.length ? (
         <Card className="border-gold-dim">
-          <h3 className="smallcaps mb-2 text-[11px] text-paper-faint">
+          <h3 className="text-center smallcaps mb-2 text-[11px] text-paper-faint">
             Nobody has taken these up
           </h3>
           <ul className="space-y-1.5">
@@ -190,7 +190,7 @@ function Side({
 }) {
   return (
     <Card>
-      <h3 className="smallcaps mb-3 text-[11px] text-paper-faint">{title}</h3>
+      <h3 className="text-center smallcaps mb-3 text-[11px] text-paper-faint">{title}</h3>
       {points.length ? (
         <ul className="space-y-3">
           {points.map((p, i) => (

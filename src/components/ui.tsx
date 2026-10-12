@@ -84,7 +84,7 @@ export function TopBar({
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-veil backdrop-blur-xl">
-      <div className="flex h-12 items-center gap-1 px-2">
+      <div className="relative flex h-12 items-center gap-1 px-2">
         {back ? (
           <Link
             href={back}
@@ -104,7 +104,10 @@ export function TopBar({
         ) : (
           <span className="w-2" aria-hidden />
         )}
-        <h1 className="display min-w-0 flex-1 truncate px-1 text-[1.0625rem] text-paper">
+        {/* Centred on the bar itself, not on the space left between the back
+            chevron and the actions, so every title sits in the same place. */}
+        <span className="flex-1" aria-hidden />
+        <h1 className="display pointer-events-none absolute inset-x-24 truncate text-center text-[1.0625rem] text-paper">
           {title}
         </h1>
         {action ? <div className="shrink-0 pr-1">{action}</div> : null}
@@ -217,7 +220,7 @@ export function PageTitle({
   sub?: ReactNode;
 }) {
   return (
-    <header className="mb-7">
+    <header className="mb-7 text-center">
       <h1 className="font-serif text-[1.75rem] leading-tight text-paper">{children}</h1>
       {sub ? <p className="mt-1.5 text-sm text-paper-dim">{sub}</p> : null}
     </header>
@@ -232,9 +235,10 @@ export function SectionLabel({
   right?: ReactNode;
 }) {
   return (
-    <div className="mb-3 flex items-baseline justify-between">
-      <h2 className="smallcaps text-xs text-paper-faint">{children}</h2>
-      {right ? <div className="text-xs text-paper-faint">{right}</div> : null}
+    <div className="mb-3 grid grid-cols-[1fr_auto_1fr] items-baseline gap-2">
+      <span aria-hidden />
+      <h2 className="smallcaps text-center text-xs text-paper-faint">{children}</h2>
+      {right ? <div className="text-right text-xs text-paper-faint">{right}</div> : <span aria-hidden />}
     </div>
   );
 }
@@ -538,7 +542,7 @@ export function ScreenHead({
   sub?: ReactNode;
 }) {
   return (
-    <header className="mb-5">
+    <header className="mb-5 text-center">
       <h2 className="display text-[1.5rem] text-paper">{children}</h2>
       {sub ? (
         <p className="mt-1 text-[0.9375rem] text-paper-dim">{sub}</p>

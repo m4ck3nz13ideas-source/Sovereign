@@ -38,7 +38,7 @@ export default async function PersonPage({
     return (
       <Screen>
         <Gutter className="space-y-4 pt-6">
-          <h2 className="display text-[1.75rem] text-paper">You</h2>
+          <h2 className="text-center display text-[1.75rem] text-paper">You</h2>
           <p className="text-[0.9375rem] leading-relaxed text-paper-dim">
             This is what other people see of you.
           </p>
@@ -86,7 +86,7 @@ export default async function PersonPage({
     <Screen>
       <Gutter className="space-y-8 pt-6">
         <div>
-          <h2 className="display text-[1.75rem] text-paper">{name}</h2>
+          <h2 className="text-center display text-[1.75rem] text-paper">{name}</h2>
           {profile?.handle ? (
             <p className="smallcaps mt-1 text-[10px] text-paper-faint">
               @{profile.handle}

@@ -65,7 +65,7 @@ export default async function ProjectsPage() {
 
       {done.length ? (
         <>
-          <h2 className="smallcaps mb-3 text-xs text-paper-faint">Finished</h2>
+          <h2 className="text-center smallcaps mb-3 text-xs text-paper-faint">Finished</h2>
           <ul className="space-y-3">
             {done.map((p) => (
               <li key={p.id}>

@@ -46,7 +46,7 @@ export default async function FeedSettingsPage() {
     <Screen>
       <Gutter className="space-y-8 pt-6">
         <div>
-          <h2 className="display text-[1.75rem] text-paper">Your feed</h2>
+          <h2 className="text-center display text-[1.75rem] text-paper">Your feed</h2>
           <p className="mt-2 text-[0.9375rem] leading-relaxed text-paper-dim">
             The feed is what people around you wrote and did, in the order it
             happened. Nothing is ranked and there is no score to rank by. What

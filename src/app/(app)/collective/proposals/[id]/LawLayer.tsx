@@ -82,8 +82,8 @@ export function LawLayer({
 
       {violations.length ? (
         <Card className="border-alarm">
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="font-serif text-xl text-alarm">
+          <div className="flex flex-col items-center text-center items-start justify-center gap-3">
+            <h3 className="text-center font-serif text-xl text-alarm">
               {violations.length === 1
                 ? "This violates a Universal Law"
                 : `This violates ${violations.length} Universal Laws`}

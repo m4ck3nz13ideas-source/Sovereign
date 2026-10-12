@@ -63,8 +63,8 @@ export default async function LearnPage() {
 
   return (
     <Gutter className="space-y-10 pb-28 pt-6">
-      <div className="flex items-baseline justify-between">
-        <h2 className="display text-[1.75rem] text-paper">Learn</h2>
+      <div className="flex flex-col items-center text-center items-baseline justify-center">
+        <h2 className="text-center display text-[1.75rem] text-paper">Learn</h2>
         <Readers>Only you. What you finish and write here is yours; nothing collective reads it.</Readers>
       </div>
 

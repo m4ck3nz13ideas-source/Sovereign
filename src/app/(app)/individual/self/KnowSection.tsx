@@ -46,8 +46,8 @@ export async function KnowSection() {
 
   return (
     <Gutter className="space-y-8 pt-6">
-      <div className="flex items-baseline justify-between">
-        <h2 className="display text-[1.75rem] text-paper">Know yourself</h2>
+      <div className="flex flex-col items-center text-center items-baseline justify-center">
+        <h2 className="text-center display text-[1.75rem] text-paper">Know yourself</h2>
         <Link href="/individual/self/know" className="text-sm text-gold">
           Retake
         </Link>

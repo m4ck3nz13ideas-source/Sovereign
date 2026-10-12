@@ -71,7 +71,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
           <Link href="/connection" className="smallcaps text-[11px] text-paper-faint hover:text-gold">
             ← Connection
           </Link>
-          <h2 className="display mt-2 text-[1.5rem] text-paper">{info.title}</h2>
+          <h2 className="text-center display mt-2 text-[1.5rem] text-paper">{info.title}</h2>
           <p className="smallcaps mt-1 text-[10px] text-paper-faint">
             {info.members} {info.members === 1 ? "person" : "people"}
             {elsewhere ? (

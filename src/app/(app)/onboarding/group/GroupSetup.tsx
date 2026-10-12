@@ -24,7 +24,7 @@ export function GroupSetup({ hasGroups }: { hasGroups: boolean }) {
     return (
       <div className="space-y-3">
         <Card>
-          <h2 className="font-serif text-lg text-paper">Start one</h2>
+          <h2 className="text-center font-serif text-lg text-paper">Start one</h2>
           <p className="mt-1.5 text-sm leading-relaxed text-paper-dim">
             You become its first steward. You set the decision rule and invite
             the others.
@@ -35,7 +35,7 @@ export function GroupSetup({ hasGroups }: { hasGroups: boolean }) {
         </Card>
 
         <Card>
-          <h2 className="font-serif text-lg text-paper">Join one</h2>
+          <h2 className="text-center font-serif text-lg text-paper">Join one</h2>
           <p className="mt-1.5 text-sm leading-relaxed text-paper-dim">
             With a code from someone already in it.
           </p>

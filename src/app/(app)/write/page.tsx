@@ -27,7 +27,7 @@ export default async function LaunchPage() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-5 pt-16 pb-32">
-      <h1 className="font-serif text-[1.9rem] leading-snug text-paper">
+      <h1 className="text-center font-serif text-[1.9rem] leading-snug text-paper">
         {greeting(profile.display_name)}
       </h1>
 

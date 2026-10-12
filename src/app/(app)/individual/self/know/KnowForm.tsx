@@ -48,7 +48,7 @@ export function KnowForm() {
 
       {step === 0 ? (
         <section>
-          <h2 className="font-serif text-2xl text-paper">What drives you</h2>
+          <h2 className="text-center font-serif text-2xl text-paper">What drives you</h2>
           <p className="mt-1 text-sm text-paper-dim">How true is each one? 1 not at all, 5 completely.</p>
           <ol className="mt-5 space-y-5">
             {STATEMENTS.map((s, i) => (
@@ -78,7 +78,7 @@ export function KnowForm() {
 
       {step === 1 ? (
         <section>
-          <h2 className="font-serif text-2xl text-paper">What you move toward</h2>
+          <h2 className="text-center font-serif text-2xl text-paper">What you move toward</h2>
           <p className="mt-1 text-sm text-paper-dim">Choose up to seven, then put them in order — most important first.</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {[...TOWARD, ...toward.filter((t) => !TOWARD.includes(t))].map((v) => {
@@ -132,7 +132,7 @@ export function KnowForm() {
 
       {step === 2 ? (
         <section>
-          <h2 className="font-serif text-2xl text-paper">What you move away from</h2>
+          <h2 className="text-center font-serif text-2xl text-paper">What you move away from</h2>
           <p className="mt-1 text-sm text-paper-dim">The feelings you&apos;d do most to avoid. Choose up to five, worst first.</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {AWAY.map((v) => {
@@ -157,7 +157,7 @@ export function KnowForm() {
 
       {step === 3 ? (
         <section>
-          <h2 className="font-serif text-2xl text-paper">What holds you back</h2>
+          <h2 className="text-center font-serif text-2xl text-paper">What holds you back</h2>
           <p className="mt-1 text-sm text-paper-dim">A belief that stops you, and what you&apos;d rather believe instead.</p>
           <div className="mt-4 space-y-5">
             {beliefs.map((b, i) => (
@@ -202,7 +202,7 @@ export function KnowForm() {
 
       {step === 4 ? (
         <section>
-          <h2 className="font-serif text-2xl text-paper">What you&apos;re going for</h2>
+          <h2 className="text-center font-serif text-2xl text-paper">What you&apos;re going for</h2>
           <p className="mt-1 text-sm text-paper-dim">The result, why it matters to you, and the first things you&apos;ll do.</p>
           <div className="mt-4 space-y-5">
             {goals.map((g, i) => (

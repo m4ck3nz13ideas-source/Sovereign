@@ -68,7 +68,7 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
             {siteVerified ? <Tag>website verified</Tag> : null}
             {company?.verified ? <Tag>registered company · active</Tag> : null}
           </div>
-          <h2 className="display mt-3 text-[1.5rem] text-paper">{vendor.name}</h2>
+          <h2 className="text-center display mt-3 text-[1.5rem] text-paper">{vendor.name}</h2>
           <p className="mt-1 text-sm text-paper-faint">
             {vendor.location ? `${vendor.location} · ` : ""}
             {website ? (

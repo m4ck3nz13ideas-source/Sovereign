@@ -460,8 +460,8 @@ export function ComposeProposal({
       <div className="border-t border-line pt-5">
         {sharp && !stale ? (
           <Card className={ready ? "border-calm/40" : "border-gold-dim"}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-serif text-lg text-paper">
+            <div className="flex flex-col items-center text-center flex-wrap items-center justify-center gap-2">
+              <h3 className="text-center font-serif text-lg text-paper">
                 {ready
                   ? "Ready to put to people"
                   : sharpEnough

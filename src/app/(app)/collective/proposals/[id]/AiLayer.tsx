@@ -38,7 +38,7 @@ export function AiLayer({
       ) : null}
 
       <Card>
-        <h3 className="smallcaps mb-4 text-[11px] text-paper-faint">Qualities</h3>
+        <h3 className="text-center smallcaps mb-4 text-[11px] text-paper-faint">Qualities</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <ScoreBar label="Clarity" value={review.clarity} hint="Could someone who missed the meeting act on this?" />
           <ScoreBar label="Evidence" value={review.evidence} hint="Are the claims supported?" />
@@ -49,7 +49,7 @@ export function AiLayer({
 
       {values.length ? (
         <Card>
-          <h3 className="smallcaps mb-4 text-[11px] text-paper-faint">
+          <h3 className="text-center smallcaps mb-4 text-[11px] text-paper-faint">
             Against the group&rsquo;s values
           </h3>
           <div className="space-y-3.5">
@@ -68,7 +68,7 @@ export function AiLayer({
 
       {review.risks.length ? (
         <Card>
-          <h3 className="smallcaps mb-4 text-[11px] text-paper-faint">Risks</h3>
+          <h3 className="text-center smallcaps mb-4 text-[11px] text-paper-faint">Risks</h3>
           <ul className="space-y-3.5">
             {review.risks.map((risk, i) => (
               <li key={i}>
@@ -87,7 +87,7 @@ export function AiLayer({
 
       {review.questions.length ? (
         <Card>
-          <h3 className="smallcaps mb-4 text-[11px] text-paper-faint">
+          <h3 className="text-center smallcaps mb-4 text-[11px] text-paper-faint">
             Questions to answer first
           </h3>
           <ol className="space-y-2.5">
@@ -105,7 +105,7 @@ export function AiLayer({
 
       {review.memory_used.length ? (
         <Card>
-          <h3 className="smallcaps mb-3 text-[11px] text-paper-faint">
+          <h3 className="text-center smallcaps mb-3 text-[11px] text-paper-faint">
             Past decisions this drew on
           </h3>
           <ul className="space-y-2">

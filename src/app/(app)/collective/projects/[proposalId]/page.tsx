@@ -120,7 +120,7 @@ export default async function ProjectPage({
           ) : null}
         </div>
 
-        <h1 className="font-serif text-[1.75rem] leading-tight text-paper">
+        <h1 className="text-center font-serif text-[1.75rem] leading-tight text-paper">
           {project.title}
         </h1>
 
@@ -184,7 +184,7 @@ export default async function ProjectPage({
 
             {reflection.assumption_wrong ? (
               <div className="mt-4 border-t border-line pt-4">
-                <h3 className="smallcaps mb-1.5 text-[11px] text-alarm">
+                <h3 className="text-center smallcaps mb-1.5 text-[11px] text-alarm">
                   What we had wrong
                 </h3>
                 <p className="text-sm leading-relaxed text-paper-dim">
@@ -195,7 +195,7 @@ export default async function ProjectPage({
 
             {reflection.lesson ? (
               <div className="mt-4 border-t border-line pt-4">
-                <h3 className="smallcaps mb-1.5 text-[11px] text-paper-faint">
+                <h3 className="text-center smallcaps mb-1.5 text-[11px] text-paper-faint">
                   The lesson, for next time
                 </h3>
                 <p className="text-sm leading-relaxed text-paper">{reflection.lesson}</p>

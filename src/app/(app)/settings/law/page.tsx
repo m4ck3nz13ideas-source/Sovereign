@@ -118,7 +118,7 @@ export default async function LawPage() {
       </ol>
 
       <Card className="mt-8">
-        <h2 className="smallcaps mb-2 text-[11px] text-paper-faint">
+        <h2 className="text-center smallcaps mb-2 text-[11px] text-paper-faint">
           Amending a law
         </h2>
         <p className="text-[0.95rem] leading-relaxed text-paper-dim">

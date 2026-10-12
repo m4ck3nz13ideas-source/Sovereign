@@ -13,7 +13,7 @@ export default function SetupPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
-      <h1 className="font-serif text-3xl text-paper">Sovereign</h1>
+      <h1 className="text-center font-serif text-3xl text-paper">Sovereign</h1>
 
       {configured ? (
         <p className="mt-6 text-[0.95rem] leading-relaxed text-paper-dim">
@@ -77,7 +77,7 @@ function Step({
         {n}
       </span>
       <div>
-        <h2 className="text-[0.95rem] text-paper">{title}</h2>
+        <h2 className="text-center text-[0.95rem] text-paper">{title}</h2>
         <p className="mt-1 text-sm leading-relaxed text-paper-dim">{children}</p>
       </div>
     </li>

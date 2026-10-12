@@ -66,7 +66,7 @@ export default async function SovPage() {
     <Screen>
       <Gutter className="space-y-8 pt-6">
         <div>
-          <h2 className="display text-[1.75rem] text-paper">SOV</h2>
+          <h2 className="text-center display text-[1.75rem] text-paper">SOV</h2>
           <p className="mt-2 text-[0.9375rem] leading-relaxed text-paper-dim">
             {sov.describe()}
           </p>

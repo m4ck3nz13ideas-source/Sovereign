@@ -45,7 +45,7 @@ export default async function PeoplePage() {
     <Screen>
       <Gutter className="space-y-8 pt-6">
         <div>
-          <h2 className="display text-[1.75rem] text-paper">People</h2>
+          <h2 className="text-center display text-[1.75rem] text-paper">People</h2>
           <p className="mt-2 text-[0.9375rem] leading-relaxed text-paper-dim">
             Following puts what somebody does in your feed. Friendship is
             mutual and carries conversation. Neither has any bearing on what

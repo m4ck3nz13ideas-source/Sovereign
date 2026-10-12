@@ -39,7 +39,7 @@ export default async function ChatPage({
           >
             ← Connection
           </Link>
-          <h2 className="display mt-2 text-[1.5rem] text-paper">{name}</h2>
+          <h2 className="text-center display mt-2 text-[1.5rem] text-paper">{name}</h2>
           <Readers className="mt-1">
             The two of you. Nothing said here reaches a proposal, a decision or
             the ledger, and neither of you can see whether the other has read it.

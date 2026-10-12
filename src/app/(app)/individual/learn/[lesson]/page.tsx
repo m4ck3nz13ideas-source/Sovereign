@@ -35,7 +35,7 @@ export default async function LessonPage({ params }: { params: Promise<{ lesson:
       <p className="smallcaps mt-4 text-[10px] text-paper-faint">
         {course.title} · {l.minutes} min
       </p>
-      <h2 className="display mt-1 text-[1.75rem] leading-tight text-paper">{l.title}</h2>
+      <h2 className="text-center display mt-1 text-[1.75rem] leading-tight text-paper">{l.title}</h2>
 
       {law ? (
         <blockquote className="mt-5 border-l-2 border-gold pl-4 font-serif text-lg leading-relaxed text-paper">

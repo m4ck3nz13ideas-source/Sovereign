@@ -72,7 +72,7 @@ export function ShareDecision({
 
   return (
     <Card>
-      <h3 className="font-serif text-lg text-paper">
+      <h3 className="text-center font-serif text-lg text-paper">
         {token ? "Shared publicly" : "Share this decision"}
       </h3>
       <p className="mt-1.5 text-sm leading-relaxed text-paper-dim">
