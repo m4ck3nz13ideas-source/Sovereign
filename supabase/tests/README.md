@@ -522,6 +522,21 @@ invisible rather than because it is absent. The one exception is
 `verify_ledger()`, which is security definer and asks whether the caller is in
 the group.
 
+### `44_side_doors.sql` — seven checks
+
+- `conditions_epoch` has row-level security, and neither a signed-out nor a
+  signed-in caller can update or delete it — moving it would switch off the
+  rule that conditions come before responses.
+- Signed-out visitors can run `public_pulse()` and `shared_decision()` and no
+  other security definer function. (`test_` scaffolding from `00b` is ignored.)
+- Signed-in members still reach the functions they need: responding, sharing,
+  consent, export, erasure, SOV, closing.
+- Every public function outside an extension pins its `search_path`.
+
+Since 0050 new functions no longer reach PUBLIC by default, so `00b_support.sql`
+grants the suites' own helpers to `app` by default. That line is test
+scaffolding and must never appear in a migration.
+
 ## Running them
 
 Against any Postgres 14+ with `pgcrypto` available:

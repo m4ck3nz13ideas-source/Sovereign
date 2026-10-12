@@ -574,6 +574,17 @@ on purpose, in a commit that says so.
     and kept out of the sitemap: a link someone chose to send is not a page
     to list.
 
+46. **Signed-out visitors can run two functions, and nothing else.**
+    (0050.) `public_pulse()` and `shared_decision()` are the whole signed-out
+    surface; every other security definer function is revoked from `public`
+    and `anon`, and new functions no longer reach either by default
+    (`alter default privileges`). A function meant for signed-out visitors
+    says so with its own `grant execute ... to anon`, in the migration that
+    adds it. `conditions_epoch` has row-level security and no policy: only
+    definer code reads it. Every public function pins its `search_path`.
+    `44_side_doors.sql` fails on a third anon function, a writable epoch or
+    an unpinned path.
+
 ## On the surface, not in the schema
 
 These are interface conventions rather than rules the database enforces, but

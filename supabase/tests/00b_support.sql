@@ -17,6 +17,14 @@
 -- Test-only. Not applied to a real project, and dropped at the end of a run by
 -- `drop function test_propose;` if you care.
 
+-- 0050 stopped new functions reaching PUBLIC. The suites define helpers as
+-- they go and call them as `app`, so `app` gets them by default here — test
+-- scaffolding only, never in a migration.
+do $$ begin
+  if not exists (select 1 from pg_roles where rolname = 'app') then create role app login; end if;
+end $$;
+alter default privileges in schema public grant execute on functions to app, authenticated;
+
 create or replace function test_propose(
   p_author   uuid,
   p_group    uuid,
