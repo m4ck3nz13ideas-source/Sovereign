@@ -18,15 +18,15 @@ export const PILLARS: { id: string; name: string; short: string; icon: ReactNode
     icon: <Icon d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 20a8 8 0 0116 0" />,
   },
   {
-    id: "home",
-    name: "Home",
-    short: "True or useful posts, in time order. Likes that never rank. Chats without read receipts.",
-    icon: <Icon d="M3 11l9-7 9 7v9H3z" />,
+    id: "connection",
+    name: "Connection",
+    short: "Friends, group chats, your groups, the proposals you back. No read receipts, no follower counts.",
+    icon: <Icon d="M12 8.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM6 20a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 20a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM10.8 8.2l-3.6 7M13.2 8.2l3.6 7M8.5 17.5h7" />,
   },
   {
     id: "search",
     name: "Search",
-    short: "Ask anything. Contested questions return every side, never one verdict.",
+    short: "Search anything, post, and see the feed. Every side of a question, never one verdict.",
     icon: <Icon d="M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5" />,
   },
   {

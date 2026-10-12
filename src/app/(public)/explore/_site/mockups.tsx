@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
  * way a picture would. Every name and number on them is an example.
  */
 
-/** `active` is the lit tab: 0 Individual, 1 Home, 2 Search, 3 Market, 4 Collective. */
+/** `active` is the lit tab: 0 Individual, 1 Connection, 2 Search, 3 Market, 4 Collective. */
 export function PhoneFrame({ children, active = 4, className = "" }: { children: ReactNode; active?: number; className?: string }) {
   return (
     <div
@@ -29,7 +29,7 @@ export function PhoneFrame({ children, active = 4, className = "" }: { children:
 function TabBar({ active }: { active: number }) {
   return (
     <div className="flex justify-around border-t border-line-soft py-3">
-      {["M12 12a4 4 0 100-8 4 4 0 000 8zM4 20a8 8 0 0116 0", "M3 11l9-7 9 7v9H3z", "M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5", "M4 7h16l-1.5 12h-13zM9 7V5a3 3 0 016 0v2", "M8 12a3 3 0 100-6 3 3 0 000 6zM16 12a3 3 0 100-6 3 3 0 000 6zM2 20a6 6 0 0112 0M10 20a6 6 0 0112 0"].map(
+      {["M12 12a4 4 0 100-8 4 4 0 000 8zM4 20a8 8 0 0116 0", "M12 8.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM6 20a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 20a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM10.8 8.2l-3.6 7M13.2 8.2l3.6 7M8.5 17.5h7", "M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5", "M4 7h16l-1.5 12h-13zM9 7V5a3 3 0 016 0v2", "M8 12a3 3 0 100-6 3 3 0 000 6zM16 12a3 3 0 100-6 3 3 0 000 6zM2 20a6 6 0 0112 0M10 20a6 6 0 0112 0"].map(
         (d, i) => (
           <svg key={i} viewBox="0 0 24 24" className={`h-5 w-5 ${i === active ? "text-gold" : "text-paper-faint"}`} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
             <path d={d} />
@@ -96,7 +96,7 @@ export function ProposalScreen() {
   );
 }
 
-/** Home: posts in time order, likes shown but never ranked by. */
+/** Search: the feed under the search field. Posts in time order, likes shown but never ranked by. */
 export function FeedScreen() {
   const posts = [
     ["Amara", "Repair café: 14 things fixed, 0 to landfill.", "2h", 23],
@@ -200,6 +200,38 @@ export function SelfScreen() {
       <div className="rounded-xl border border-line p-3">
         <p className="text-[11px] text-paper-faint">Ask your AI anything…</p>
       </div>
+    </div>
+  );
+}
+
+/** Connection: every chat and every group you are in. */
+export function ConnectionScreen() {
+  const rows: [string, string, string | null][] = [
+    ["Maya", "See you at the garden at 10?", "2 new"],
+    ["Allotment · group", "Tom: Water rota for August?", null],
+    ["Elm Street", "Skip day moved to Saturday.", "1 new"],
+    ["Plant 200 fruit trees", "Who has a spade to lend?", null],
+    ["Riverside Bakery", "Your business", null],
+  ];
+  return (
+    <div className="space-y-2 pt-2">
+      <p className="font-serif text-[1.2rem] text-paper">Connection</p>
+      <div className="flex gap-1.5">
+        <Chip tone="gold">Chats</Chip>
+        <Chip>Groups</Chip>
+        <Chip>Proposals</Chip>
+        <Chip>Businesses</Chip>
+      </div>
+      {rows.map(([t, d, n]) => (
+        <div key={t} className="border-b border-line-soft py-2.5">
+          <div className="flex items-baseline justify-between">
+            <p className="text-[12px] text-paper">{t}</p>
+            {n ? <Chip tone="gold">{n}</Chip> : null}
+          </div>
+          <p className="mt-0.5 truncate text-[11px] text-paper-dim">{d}</p>
+        </div>
+      ))}
+      <p className="pt-1 text-[10px] text-paper-faint">No read receipts. No online dot.</p>
     </div>
   );
 }

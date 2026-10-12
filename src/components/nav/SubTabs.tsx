@@ -13,7 +13,7 @@ import { PillLink, Rail } from "@/components/ui";
  * collective one, and SOV, which is here rather than under Collective because
  * what you hold is yours alone and nobody else can read it.
  *
- * COLLECTIVE — the overview's five, with Feed promoted out to Home, and Words:
+ * COLLECTIVE — the overview's five, with Feed promoted out to the Search tab, and Words:
  * what the group means by its language, which is the one thing here that is not
  * a record of something it decided.
  *

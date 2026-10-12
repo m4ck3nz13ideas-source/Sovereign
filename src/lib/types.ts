@@ -1189,3 +1189,40 @@ export interface MyInquiry {
   proposal_title: string | null;
   created_at: string;
 }
+
+/* ---------------------------------------------------------------------------
+   Threads (0052): chats with more than two people.
+--------------------------------------------------------------------------- */
+
+export type ThreadKind = "circle" | "group" | "proposal";
+
+/** One row of `my_threads()`. `thread_id` is null until somebody opens it. */
+export interface ThreadItem {
+  kind: ThreadKind;
+  /** The circle, group or proposal this chat belongs to. */
+  ref_id: string;
+  thread_id: string | null;
+  title: string;
+  last_body: string | null;
+  last_author: string | null;
+  last_at: string | null;
+  /** New since you last looked. Your own count. */
+  unread: number;
+}
+
+export interface ThreadMessage {
+  id: string;
+  author_id: string;
+  display_name: string;
+  mine: boolean;
+  body: string;
+  created_at: string;
+}
+
+export interface ThreadInfo {
+  id: string;
+  kind: ThreadKind;
+  title: string;
+  ref_id: string | null;
+  members: number;
+}

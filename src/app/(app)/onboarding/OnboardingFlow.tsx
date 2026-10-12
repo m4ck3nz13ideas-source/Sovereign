@@ -424,7 +424,7 @@ export function OnboardingFlow({
 
   const panels = [
     {
-      title: "Three tabs, and one of them is yours alone",
+      title: "Five tabs, and one of them is yours alone",
       body: (
         <>
           <p>
@@ -434,8 +434,10 @@ export function OnboardingFlow({
             lets another person read it.
           </p>
           <p>
-            <strong className="text-paper">Home</strong> is where everything you
-            write goes in, and where what is waiting on you appears.
+            <strong className="text-paper">Search</strong>, in the middle, is
+            where you land: look anything up, post a note or media, and see
+            the feed. <strong className="text-paper">Connection</strong> holds
+            your friends, chats and groups.
           </p>
           <p>
             <strong className="text-paper">Collective</strong> is the shared
@@ -503,7 +505,7 @@ export function OnboardingFlow({
       body: (
         <>
           <p>
-            Write something. Home takes anything — a thought, a question, an
+            Write something. Search takes anything — a thought, a question, an
             idea — and files it without asking you to sort it.
           </p>
           <p>

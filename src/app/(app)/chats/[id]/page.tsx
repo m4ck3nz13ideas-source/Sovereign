@@ -34,10 +34,10 @@ export default async function ChatPage({
       <Gutter className="space-y-5 pt-6">
         <div>
           <Link
-            href="/chats"
+            href="/connection"
             className="smallcaps text-[11px] text-paper-faint hover:text-gold"
           >
-            ← Chats
+            ← Connection
           </Link>
           <h2 className="display mt-2 text-[1.5rem] text-paper">{name}</h2>
           <Readers className="mt-1">

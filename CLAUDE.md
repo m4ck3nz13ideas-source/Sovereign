@@ -615,6 +615,18 @@ on purpose, in a commit that says so.
     a lawful audit). The older suites write fixture readings as `app` through
     a test-only policy in `00b_support.sql`.
 
+48. **A chat with several people asks one question: `in_thread()`.** (0052)
+    Three kinds share one table: a `circle` (friends you chose, with a
+    roster in `thread_members`), a `group` (every member of that group — no
+    roster, so it cannot fall out of step with membership) and a `proposal`
+    (the author and everybody with a live commitment). Who RESPONDED to a
+    proposal is never used to decide who is in its chat: a chat made of the
+    voters would be a list of the voters (rule 3). Everyone added to a
+    circle must be a friend of whoever adds them. There are no insert
+    policies; the functions are the way in. Nothing in a thread reaches a
+    proposal, a decision, the ledger or SOV, and read state is the reader's
+    own, as in 0014. `46_threads.sql`.
+
 ## On the surface, not in the schema
 
 These are interface conventions rather than rules the database enforces, but

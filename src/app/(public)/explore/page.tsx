@@ -163,7 +163,7 @@ export default async function ExplorePage() {
             <ul className="mt-8 space-y-3 text-paper-dim">
               {[
                 ["Individual", "a private AI that knows your values"],
-                ["Home", "the check every post passes"],
+                ["Feed", "the check every post passes"],
                 ["Search", "one ad, chosen by fit, not by bid"],
                 ["Market", "how a business proves it's real"],
                 ["Collective", "a proposal decided on its own conditions"],

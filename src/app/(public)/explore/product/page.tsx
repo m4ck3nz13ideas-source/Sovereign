@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Container, CtaBand, PageHero, PrimaryLink, Section, SecondaryLink, TickList } from "../_site/blocks";
-import { FeedScreen, MarketScreen, PhoneFrame, ProposalScreen, SelfScreen } from "../_site/mockups";
+import { ConnectionScreen, FeedScreen, MarketScreen, PhoneFrame, ProposalScreen, SelfScreen } from "../_site/mockups";
 import { PILLARS } from "./pillars";
 import { pageMeta } from "../_site/site";
 
@@ -40,15 +40,27 @@ const SECTIONS: { id: string; tab: number; title: string; lead: string; points: 
     screen: <SelfScreen />,
   },
   {
-    id: "home",
+    id: "connection",
     tab: 1,
+    title: "Everyone you're with, in one place.",
+    lead: "Friends, group chats, the groups you belong to, the proposals you back and the businesses you run.",
+    points: [
+      "Chat one to one, or with a circle of friends.",
+      "Every group and every proposal you back gets its own chat.",
+      "No read receipts, no typing dots, no online status.",
+      "No follower counts. Nothing ranks people.",
+    ],
+    screen: <ConnectionScreen />,
+  },
+  {
+    id: "feed",
+    tab: 2,
     title: "Social media that leaves you better off.",
-    lead: "Time order, not engagement. Every post read once at the door: true to its author, or useful to others.",
+    lead: "Under the search field: post a note or media, then the feed. Time order, not engagement. Every post read once at the door.",
     points: [
       "For you, Following, Discover — at every scale.",
       "You choose who each post is for.",
-      "Likes shown, never ranked by. No follower counts.",
-      "Chats without read receipts or online status.",
+      "Likes shown, never ranked by.",
     ],
     screen: <FeedScreen />,
   },
@@ -113,7 +125,7 @@ export default function ProductPage() {
       </nav>
 
       {SECTIONS.map((s, i) => {
-        const pillar = PILLARS.find((p) => p.id === s.id)!;
+        const pillar = PILLARS.find((p) => p.id === (s.id === "feed" ? "search" : s.id))!;
         return (
           <Section key={s.id} id={s.id} className={i % 2 ? "bg-surface-soft" : ""}>
             <div className="grid items-center gap-14 lg:grid-cols-2">

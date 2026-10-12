@@ -37,6 +37,16 @@ nothing about what a member can see.
 - The ledger chain verifies, and **an edited decision is detected** — run as
   superuser, because that is exactly the threat model.
 
+### `46_threads.sql` — twenty-six checks (0052)
+
+- A circle cannot be made with a stranger, and a member can only add their own friends.
+- Members read it; an outsider reads nothing, cannot see it exists, and cannot write in it, by function or table.
+- Unread is yours: your own message does not count, theirs does.
+- Leaving a circle, a group, or withdrawing a commitment closes the chat.
+- A group's chat follows group membership with no roster; opening it twice makes one.
+- A proposal's chat is its author and live backers, never the people who responded.
+- Nothing reaches the ledger; signed-out visitors reach none of it.
+
 ### `45_law_audit_integrity.sql` — forty-eight checks (0051)
 
 Runs as `authenticated` with the grants Supabase gives that role

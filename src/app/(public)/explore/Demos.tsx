@@ -13,7 +13,7 @@ import { useMemo, useState } from "react";
 
 const TABS = [
   { id: "individual", label: "Individual" },
-  { id: "home", label: "Home" },
+  { id: "home", label: "Feed" },
   { id: "search", label: "Search" },
   { id: "market", label: "Market" },
   { id: "collective", label: "Collective" },

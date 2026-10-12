@@ -19,7 +19,7 @@ export const ROADMAP: { stage: string; live: boolean; lead: string; items: Roadm
       { title: "Shareable decisions", detail: "One public link per decision. Outcome and numbers, never names." },
       { title: "For you, Following, Discover", detail: "Three feeds at every scale. Time order, with the reason each item is there." },
       { title: "You choose who a post is for", detail: "People near you, or as far as everyone. Fixed once posted." },
-      { title: "Feed, likes and chats", detail: "Posts checked at the door. Chats with no read receipts." },
+      { title: "Feed, likes and chats", detail: "Posts checked at the door. Chats one to one, with friends, groups and proposal backers. No read receipts." },
       { title: "SOV simulation", detail: "Earned by finished acts, never by posting. Labelled a simulation." },
       { title: "Spheres", detail: "Health, education, ecology and five more. Tag proposals, rate what matters to you." },
       { title: "Know yourself and Learn", detail: "Needs, values, beliefs, goals. Courses shaped by your answers." },
