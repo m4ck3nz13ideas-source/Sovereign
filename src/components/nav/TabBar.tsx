@@ -4,38 +4,35 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * Five tabs, left to right: Individual, Home, Search, Market, Collective.
- * Icons only, by Mackenzie's direction: the names stay as aria-label and
- * title, so screen readers and a desktop hover still say where you are.
+ * Five tabs, left to right: Individual, Connection, Search, Market,
+ * Collective. Icons only, by Mackenzie's direction: the names stay as
+ * aria-label and title, so screen readers and a desktop hover still say where
+ * you are.
  *
- * The first three come straight from the overview's architecture diagram —
- * SOVEREIGN APP branching into HOME, INDIVIDUAL and COLLECTIVE — with Home
- * left of centre because it is the one you sit in. Each tab has its own strip
- * of sub-tabs underneath it, so the depth is in the tab rather than in here.
+ * Read against the four quadrants (12 October): Individual is the I, the
+ * inner life. Connection is the We — friends, chats, groups, the proposals
+ * and businesses you are part of. Market is the It, concrete exchange.
+ * Collective is the Its, the systems you decide together. Search sits in the
+ * centre as the lens across all four, and is where you land: look something
+ * up, say something, see the feed.
  *
- * Search (the /ask route) sits next to Home rather than raised in the middle.
- * Rule 2 is understanding before opinion, and a surface for going and finding
- * something out earns a place at this level; a raised centre button does not,
- * because that is the shape of an app whose whole purpose is posting. Writing
- * stays a plus in the Home bar for the same reason.
- *
- * Marketplace is the fifth, and Mackenzie's call: the app is meant to be
- * inclusive of trade, and trade that has to be dug out from under Collective
- * reads as tolerated rather than included. It is trade, not governance: a
- * business is in when it has been read against the Universal Laws and signed
- * off (rule 37), and it sits beside Collective because those laws are shared.
+ * Search keeps the /home route so existing links and revalidations still
+ * land; /ask redirects there.
  *
  * Five is the ceiling. A sixth would start the argument about which of these
  * matters least, and the answer would be whichever one somebody added last.
  */
 
 const TABS = [
-  { href: "/individual", label: "Individual", Icon: IndividualIcon },
-  { href: "/home", label: "Home", Icon: HomeIcon },
-  { href: "/ask", label: "Search", Icon: AskIcon },
-  { href: "/market", label: "Market", Icon: MarketplaceIcon },
-  { href: "/collective", label: "Collective", Icon: CollectiveIcon },
+  { href: "/individual", label: "Individual", Icon: IndividualIcon, also: [] },
+  { href: "/connection", label: "Connection", Icon: ConnectionIcon, also: ["/chats"] },
+  { href: "/home", label: "Search", Icon: AskIcon, also: ["/ask"] },
+  { href: "/market", label: "Market", Icon: MarketplaceIcon, also: [] },
+  { href: "/collective", label: "Collective", Icon: CollectiveIcon, also: [] },
 ] as const;
+
+const under = (pathname: string, href: string) =>
+  pathname === href || pathname.startsWith(`${href}/`);
 
 export function TabBar() {
   const pathname = usePathname();
@@ -49,7 +46,8 @@ export function TabBar() {
       <ul className="mx-auto flex max-w-2xl items-center px-2 py-1.5">
         {TABS.map((tab) => {
           const active =
-            pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+            under(pathname, tab.href) ||
+            tab.also.some((h: string) => under(pathname, h));
 
           return (
             <li key={tab.href} className="flex-1">
@@ -105,16 +103,32 @@ function IndividualIcon({ filled }: IconProps) {
   );
 }
 
-function HomeIcon({ filled }: IconProps) {
+function ConnectionIcon({ filled }: IconProps) {
+  // Three people joined: one node above, two below, each tied to the others.
   return (
     <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden>
       <path
-        d="M3.5 10.5 12 4l8.5 6.5V19a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19z"
-        fill={filled ? "currentColor" : "none"}
+        d="M12 7.5 6.5 16.5M12 7.5l5.5 9M6.5 16.5h11"
+        fill="none"
         stroke="currentColor"
         strokeWidth="1.75"
-        strokeLinejoin="round"
+        strokeLinecap="round"
       />
+      {[
+        [12, 6],
+        [6, 17.5],
+        [18, 17.5],
+      ].map(([cx, cy]) => (
+        <circle
+          key={`${cx}-${cy}`}
+          cx={cx}
+          cy={cy}
+          r="2.75"
+          fill={filled ? "currentColor" : "var(--color-ink)"}
+          stroke="currentColor"
+          strokeWidth="1.75"
+        />
+      ))}
     </svg>
   );
 }

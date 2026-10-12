@@ -1,10 +1,10 @@
 import { TopBar } from "@/components/ui";
 
-/** Chats live on Home's side: talking to people you know is social, not private. */
+/** Chats live in Connection: talking to people you know is the We, not the feed. */
 export default function ChatsLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <TopBar title="Chats" back="/home" />
+      <TopBar title="Chats" back="/connection" />
       {children}
     </>
   );

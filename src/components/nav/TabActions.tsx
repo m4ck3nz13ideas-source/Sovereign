@@ -37,24 +37,3 @@ export function TabActions({ plus, plusLabel }: { plus: string; plusLabel: strin
     </div>
   );
 }
-
-/** A chat-bubble link, for Home's way into chats. */
-export function ChatsLink() {
-  return (
-    <Link
-      href="/chats"
-      aria-label="Chats"
-      title="Chats"
-      className="press flex h-10 w-10 items-center justify-center rounded-full text-paper-dim active:bg-surface"
-    >
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
-        <path
-          d="M4 5.5h16v10H9l-5 4v-14z"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </Link>
-  );
-}

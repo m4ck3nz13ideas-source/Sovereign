@@ -49,6 +49,7 @@ async function call(fn: string, profileId: string, paths: string[]) {
   if (error) return { ok: false as const, error: error.message };
 
   for (const path of paths) revalidatePath(path);
+  revalidatePath("/connection");
   return { ok: true as const };
 }
 

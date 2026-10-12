@@ -23,6 +23,7 @@ export async function sendMessage(to: string, body: string) {
 
   revalidatePath(`/chats/${to}`);
   revalidatePath("/chats");
+  revalidatePath("/connection");
   return { ok: true as const };
 }
 
@@ -35,6 +36,7 @@ export async function markRead(other: string) {
   if (error) return { ok: false as const, error: error.message };
 
   revalidatePath("/chats");
+  revalidatePath("/connection");
   return { ok: true as const };
 }
 

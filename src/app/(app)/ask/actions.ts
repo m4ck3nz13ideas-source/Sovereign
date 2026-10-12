@@ -103,7 +103,7 @@ export async function askStandingQuestion(question: string) {
 
     if (error) return { ok: false as const, error: error.message };
 
-    revalidatePath("/ask");
+    revalidatePath("/home");
     return { ok: true as const };
   } catch (e) {
     return {
@@ -118,6 +118,6 @@ export async function forgetInquiry(inquiryId: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("inquiries").delete().eq("id", inquiryId);
   if (error) return { ok: false as const, error: error.message };
-  revalidatePath("/ask");
+  revalidatePath("/home");
   return { ok: true as const };
 }

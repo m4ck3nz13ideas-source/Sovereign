@@ -1,11 +1,12 @@
 import Link from "next/link";
 
 import { ScaleSelector } from "@/components/nav/ScaleSelector";
-import { ChatsLink, TabActions } from "@/components/nav/TabActions";
+import { TabActions } from "@/components/nav/TabActions";
 import {
   Empty,
   Gutter,
   LinkButton,
+  Readers,
   Screen,
   SectionLabel,
   TopBar,
@@ -17,6 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Ad } from "@/lib/marketplace";
 import type {
   AttentionItem,
+  MyInquiry,
   DormantProposal,
   Entry,
   SignalEvent,
@@ -28,14 +30,23 @@ import { SphereRatings } from "@/components/spheres/SphereRatings";
 import { forYouFeed, topSpheres, type Rating } from "@/lib/foryou";
 import { sphereName } from "@/lib/spheres";
 
+import { AskPanel } from "../ask/AskPanel";
 import { Attention, Dormant, Signal } from "./Discover";
 import { Compose } from "./Compose";
 import { Feed, type Counts } from "./Feed";
 
-export const metadata = { title: "Sovereign" };
+export const metadata = { title: "Search · Sovereign" };
 
 /**
- * Home — the feed, and where you land.
+ * Search — the centre tab, and where you land (Mackenzie, 12 October).
+ *
+ * Three things, top to bottom: look something up, say something, see what
+ * people are saying. Search and the feed share a tab because they are both
+ * the outward-looking part of the app — what is out there — while Connection
+ * holds who you are joined to. The route stays /home so every link and
+ * revalidation that already points here keeps working; /ask sends here too.
+ *
+ * What the feed is for:
  *
  *   "Users see three types of content: active proposals, important updates,
  *    verified knowledge. Purpose: help people discover important issues,
@@ -91,6 +102,7 @@ export default async function HomePage({
     { data: dormant },
     { data: signal },
     { data: keeps },
+    { data: inquiries },
   ] = await Promise.all([
     supabase
       .from("entries")
@@ -117,6 +129,9 @@ export default async function HomePage({
     // Your own keeps, so the card can show which ones are yours. Nobody
     // else's is readable and there is no count anywhere.
     supabase.from("post_reactions").select("post_id").eq("profile_id", profile.id),
+    // Your own past searches. Owner-only for a question not asked on a
+    // proposal (rule 29), so this is nobody's but yours.
+    supabase.rpc("my_inquiries", { p_limit: 30 }),
   ]);
 
   const queue = (attention ?? []) as AttentionItem[];
@@ -199,13 +214,8 @@ export default async function HomePage({
   return (
     <>
       <TopBar
-        title={here}
-        action={
-          <div className="flex items-center">
-            <ChatsLink />
-            <TabActions plus="/home?feed=following#compose" plusLabel="New post" />
-          </div>
-        }
+        title="Search"
+        action={<TabActions plus="/home#compose" plusLabel="New post" />}
       >
         {address ? (
           <ScaleSelector
@@ -220,6 +230,29 @@ export default async function HomePage({
       </TopBar>
 
       <Screen>
+        {/* --------------------------------------------------------- SEARCH */}
+        <section className="pt-2">
+          <Gutter>
+            <AskPanel mine={(inquiries ?? []) as MyInquiry[]} />
+            <Readers className="mt-2">
+              A search here: only you. One asked on a proposal: everyone it is addressed to.
+            </Readers>
+          </Gutter>
+        </section>
+
+        {/* -------------------------------------------------------- COMPOSE */}
+        <section id="compose" className="scroll-mt-16 pt-5">
+          <Gutter>
+            <Compose
+              hasGroup={Boolean(group)}
+              places={{
+                regional: profile.place_regional ?? null,
+                national: profile.place_national ?? null,
+                continental: profile.place_continental ?? null,
+              }}
+            />
+          </Gutter>
+        </section>
 
         {ready?.length ? (
           <section className="pt-4">
@@ -244,7 +277,7 @@ export default async function HomePage({
         {/* What people wrote and what they did, in one stream in time order.
             Likes are counted and shown but never order it, and resonance is absent on
             purpose — see Feed.tsx and rule 20. */}
-        <section className="pt-2">
+        <section className="pt-5">
           <Gutter>
             <SectionLabel
               right={
@@ -303,19 +336,6 @@ export default async function HomePage({
                     <SphereRatings initial={Object.fromEntries(ratings.map((r) => [r.sphere_id, r.rating]))} compact />
                   </>
                 )}
-              </div>
-            ) : null}
-
-            {tab === "following" ? (
-              <div id="compose" className="scroll-mt-16">
-                <Compose
-                  hasGroup={Boolean(group)}
-                  places={{
-                    regional: profile.place_regional ?? null,
-                    national: profile.place_national ?? null,
-                    continental: profile.place_continental ?? null,
-                  }}
-                />
               </div>
             ) : null}
 
