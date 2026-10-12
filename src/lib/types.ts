@@ -116,6 +116,10 @@ export interface Group {
   name: string;
   slug: string;
   purpose: string | null;
+  /** What the group is trying to get done (0053). */
+  goal?: string | null;
+  /** The values the group says it holds, set by its stewards (0053). */
+  group_values?: string[];
   scope: GroupScope;
   created_by: string | null;
   threshold_alignment: number;

@@ -24,6 +24,10 @@ export interface Vendor {
   evidence: string;
   website: string;
   location: string | null;
+  /** What the business is for. Read in its vetting (0053). */
+  mission?: string | null;
+  /** The values it says it holds. Read in its vetting (0053). */
+  vendor_values?: string[];
   company_number: string | null;
   verify_token: string;
   created_at: string;

@@ -37,6 +37,14 @@ nothing about what a member can see.
 - The ledger chain verifies, and **an edited decision is detected** — run as
   superuser, because that is exactly the threat model.
 
+### `47_pages.sql` — sixteen checks (0053)
+
+- Stewards set a group's goal and values; a plain member cannot.
+- Shared values count only members who opted in, only values named by two or more, and only for members.
+- A group's feed is readable by its members and nobody else.
+- The new business hash leaves an existing approval standing; filling in a mission makes it `changed`.
+- Only a business's owner posts as it; its updates are readable while approved, never reach anyone's feed, and stay visible to the owner.
+
 ### `46_threads.sql` — twenty-six checks (0052)
 
 - A circle cannot be made with a stranger, and a member can only add their own friends.

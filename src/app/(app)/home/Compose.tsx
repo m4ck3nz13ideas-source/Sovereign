@@ -38,12 +38,15 @@ export function Compose({
   when,
   hasGroup,
   places = { regional: null, national: null, continental: null },
+  target,
 }: {
   entryId?: string;
   initialBody?: string;
   when?: string;
   hasGroup: boolean;
   places?: Places;
+  /** Fixed: this group's feed, or this business's updates (0053). No audience picker. */
+  target?: { groupId?: string; vendorId?: string; label: string };
 }) {
   const [audience, setAudience] = useState<PostAudience>("people");
   const [text, setText] = useState(initialBody);
@@ -66,7 +69,9 @@ export function Compose({
         mediaKind: showLink ? linkKind : null,
         entryId,
         groupOnly: Boolean(entryId),
-        audience: entryId ? "people" : audience,
+        audience: entryId || target ? "people" : audience,
+        groupId: target?.groupId,
+        vendorId: target?.vendorId,
       });
       if (!r.ok) {
         setError(r.error);
@@ -135,7 +140,11 @@ export function Compose({
         <p className="smallcaps mt-1.5 text-[10px] text-paper-faint">Output · {when}</p>
       ) : null}
 
-      {entryId ? null : <AudiencePicker value={audience} onChange={setAudience} places={places} />}
+      {entryId ? null : target ? (
+        <p className="text-[0.8125rem] text-paper-faint">For {target.label}.</p>
+      ) : (
+        <AudiencePicker value={audience} onChange={setAudience} places={places} />
+      )}
 
       {error ? (
         <div className="mt-3 border-l-2 border-alarm pl-3">

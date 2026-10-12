@@ -627,6 +627,19 @@ on purpose, in a commit that says so.
     proposal, a decision, the ledger or SOV, and read state is the reader's
     own, as in 0014. `46_threads.sql`.
 
+49. **A group or a business has a page, and its claims are read.** (0053)
+    A group's `goal` and `group_values` are set by its stewards; the
+    values its members share come only from `group_shared_values()` —
+    members who opted in to sharing, values named by two or more, a count and
+    never a name. A business's `mission` and `vendor_values` are claims, so
+    they are part of `vendor_content_hash()`: filling them in makes a business
+    `changed` until it is read again. The hash takes them through concat_ws,
+    which skips nulls, so a business that has not filled them in keeps its
+    existing approval. A business's updates are posts with `vendor_id`,
+    written only by its owner (trigger), readable by anyone signed in while it
+    is approved, and kept out of `witness_feed()` and `discover_feed()`:
+    being in people's feeds is what ads are for. `47_pages.sql`.
+
 ## On the surface, not in the schema
 
 These are interface conventions rather than rules the database enforces, but

@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 
+import { Compose } from "@/app/(app)/home/Compose";
+import { Feed } from "@/app/(app)/home/Feed";
 import { Page, Prose, SectionLabel, Tag, TopBar } from "@/components/ui";
 import { shortDate } from "@/lib/format";
 import { safeUrl, type Offering, type Vendor } from "@/lib/marketplace";
+import { pageFeed } from "@/lib/page-feed";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { UNIVERSAL_LAWS } from "@/lib/universal-law";
@@ -34,12 +37,14 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
     { data: approvedRaw },
     { data: siteVerified },
     { data: companyRows },
+    feed,
   ] = await Promise.all([
     supabase.rpc("vendor_status", { p_vendor_id: id }),
     supabase.rpc("market_offerings", { p_kind: null, p_q: null }),
     supabase.rpc("market_vendors", { p_q: null }),
     supabase.rpc("vendor_domain_verified", { p_vendor_id: id }),
     supabase.rpc("vendor_company", { p_vendor_id: id }),
+    pageFeed({ vendorId: id }, userId),
   ]);
   const company = ((companyRows ?? []) as { verified: boolean; detail: string }[])[0] ?? null;
 
@@ -78,6 +83,29 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
             ) : null}
           </p>
         </header>
+
+        {vendor.mission ? (
+          <section className="mb-8">
+            <SectionLabel>What they&rsquo;re for</SectionLabel>
+            <Prose>{vendor.mission}</Prose>
+          </section>
+        ) : null}
+
+        {vendor.vendor_values?.length ? (
+          <section className="mb-8">
+            <SectionLabel>Their values</SectionLabel>
+            <ul className="flex flex-wrap justify-center gap-2">
+              {vendor.vendor_values.map((v) => (
+                <li key={v}>
+                  <Tag tone="gold">{v}</Tag>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-center text-[0.8125rem] text-paper-faint">
+              Read against the ten Universal Laws with everything else on this page.
+            </p>
+          </section>
+        ) : null}
 
         <section className="mb-8">
           <SectionLabel>What they do</SectionLabel>
@@ -119,6 +147,42 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
           ) : (
             <p className="text-sm text-paper-faint">Nothing listed right now.</p>
           )}
+        </section>
+
+        {feed.media.length ? (
+          <section className="mb-8">
+            <SectionLabel>Media</SectionLabel>
+            <ul className="grid grid-cols-3 gap-1.5">
+              {feed.media.slice(0, 9).map((m) => (
+                <li key={m.item_id}>
+                  <a href={m.media_url!} target="_blank" rel="noopener noreferrer nofollow">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={m.media_url!} alt="" loading="lazy" className="aspect-square w-full rounded-lg object-cover" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        <section className="mb-8 space-y-3">
+          <SectionLabel>Updates</SectionLabel>
+          {mine ? (
+            <>
+              <Compose hasGroup={false} target={{ vendorId: id, label: `everyone who opens ${vendor.name}` }} />
+              {status !== "approved" ? (
+                <p className="text-center text-[0.8125rem] text-paper-faint">
+                  Only you can see these until the business is approved.
+                </p>
+              ) : null}
+            </>
+          ) : null}
+          <Feed
+            items={feed.items}
+            kept={feed.kept}
+            counts={feed.counts}
+            empty={mine ? "Post your first update: what you made, what is new, what you learned." : "No updates yet."}
+          />
         </section>
 
         {!mine && status === "approved" ? (

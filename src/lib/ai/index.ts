@@ -426,6 +426,8 @@ export async function vetVendor(vendor: {
   evidence: string;
   website: string;
   location: string | null;
+  mission?: string | null;
+  vendor_values?: string[] | null;
 }): Promise<{ readings: LawAuditOutput["readings"]; model: string; prompt: typeof VENDOR_VETTING }> {
   const laws = UNIVERSAL_LAWS.map(
     (l) =>
@@ -446,7 +448,7 @@ ${vendor.description}
 
 its evidence:
 ${vendor.evidence}
-
+${vendor.mission?.trim() ? `\nwhat it says it is for:\n${vendor.mission.trim()}\n` : ""}${vendor.vendor_values?.length ? `\nthe values it says it holds: ${vendor.vendor_values.join(", ")}\n` : ""}
 Return exactly ten readings, one per law, using the ids given above.`;
 
   const { data, model } = await provider().complete({

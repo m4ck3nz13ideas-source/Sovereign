@@ -72,8 +72,12 @@ export async function publishPost(input: {
   groupOnly?: boolean;
   /** Who it is for (0048). Ignored for a group post, which is for its group. */
   audience?: PostAudience;
+  /** Post into this group's feed (0053). Must be one of yours. */
+  groupId?: string;
+  /** Post as this business (0053). The database checks you own it. */
+  vendorId?: string;
 }) {
-  const { userId, group } = await requireSession();
+  const { userId, group, groups } = await requireSession();
   const supabase = await createClient();
 
   const text = input.body.trim();
@@ -130,15 +134,19 @@ export async function publishPost(input: {
     };
   }
 
-  const toGroup = Boolean(input.groupOnly && group);
+  const named = input.groupId ? groups.find((g) => g.id === input.groupId) ?? null : null;
+  if (input.groupId && !named) return { ok: false as const, error: "You are not in that group." };
+  const target = named ?? (input.groupOnly ? group : null);
+  const toGroup = Boolean(target) && !input.vendorId;
   const audience: PostAudience =
-    !toGroup && input.audience && (POST_AUDIENCES as readonly string[]).includes(input.audience)
+    !toGroup && !input.vendorId && input.audience && (POST_AUDIENCES as readonly string[]).includes(input.audience)
       ? input.audience
       : "people";
 
   const { error } = await supabase.from("posts").insert({
     author_id: userId,
-    group_id: toGroup && group ? group.id : null,
+    group_id: toGroup && target ? target.id : null,
+    vendor_id: input.vendorId ?? null,
     audience,
     entry_id: input.entryId || null,
     body: text,
@@ -158,6 +166,8 @@ export async function publishPost(input: {
 
   revalidatePath("/home");
   revalidatePath("/individual/profile");
+  if (toGroup && target) revalidatePath(`/connection/g/${target.id}`);
+  if (input.vendorId) revalidatePath(`/market/v/${input.vendorId}`);
   return { ok: true as const };
 }
 

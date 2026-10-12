@@ -62,7 +62,9 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
   const elsewhere =
     info.kind === "proposal" && info.ref_id
       ? { href: `/collective/proposals/${info.ref_id}`, label: "the proposal →" }
-      : null;
+      : info.kind === "group" && info.ref_id
+        ? { href: `/connection/g/${info.ref_id}`, label: "the group →" }
+        : null;
 
   return (
     <Screen>

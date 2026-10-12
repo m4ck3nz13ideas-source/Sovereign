@@ -224,7 +224,15 @@ function BusinessForm({
 }: {
   vendor: Vendor | null;
   pending: boolean;
-  onSave: (v: { name: string; description: string; evidence: string; website: string; location: string }) => void;
+  onSave: (v: {
+    name: string;
+    description: string;
+    evidence: string;
+    website: string;
+    location: string;
+    mission: string;
+    values: string[];
+  }) => void;
 }) {
   const [open, setOpen] = useState(!vendor);
   const [name, setName] = useState(vendor?.name ?? "");
@@ -232,6 +240,8 @@ function BusinessForm({
   const [evidence, setEvidence] = useState(vendor?.evidence ?? "");
   const [website, setWebsite] = useState(vendor?.website ?? "https://");
   const [location, setLocation] = useState(vendor?.location ?? "");
+  const [mission, setMission] = useState(vendor?.mission ?? "");
+  const [values, setValues] = useState((vendor?.vendor_values ?? []).join(", "));
 
   if (!open)
     return (
@@ -260,6 +270,12 @@ function BusinessForm({
         <Field label="What you do">
           <textarea className={`${inputClass} min-h-24`} value={description} maxLength={2000} onChange={(e) => setDescription(e.target.value)} />
         </Field>
+        <Field label="What you're for" hint="Your purpose or goal, in a sentence or two. Shown at the top of your page.">
+          <textarea className={`${inputClass} min-h-20`} value={mission} maxLength={600} onChange={(e) => setMission(e.target.value)} />
+        </Field>
+        <Field label="Your values" hint="Up to twelve, separated by commas. Read against the laws like everything else here.">
+          <input className={inputClass} value={values} maxLength={600} onChange={(e) => setValues(e.target.value)} />
+        </Field>
         <Field label="Your evidence" hint="How you treat workers, what you use and where it comes from, your impact on nature, any certifications. Specific beats general.">
           <textarea className={`${inputClass} min-h-40`} value={evidence} maxLength={6000} onChange={(e) => setEvidence(e.target.value)} />
         </Field>
@@ -270,7 +286,9 @@ function BusinessForm({
           <input className={inputClass} value={location} maxLength={120} onChange={(e) => setLocation(e.target.value)} />
         </Field>
         <div className="flex gap-2">
-          <Button type="button" disabled={pending} onClick={() => onSave({ name, description, evidence, website, location })}>
+          <Button type="button" disabled={pending} onClick={() =>
+              onSave({ name, description, evidence, website, location, mission, values: values.split(",") })
+            }>
             {vendor ? "Save" : "Register"}
           </Button>
           {vendor ? (

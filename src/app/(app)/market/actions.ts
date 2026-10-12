@@ -25,6 +25,8 @@ export async function registerVendor(input: {
   evidence: string;
   website: string;
   location: string;
+  mission?: string;
+  values?: string[];
 }): Promise<Result> {
   if (input.name.trim().length < 2) return { ok: false, error: "Give your business its name." };
   if (input.description.trim().length < 40)
@@ -45,12 +47,29 @@ export async function registerVendor(input: {
     p_location: input.location || null,
   });
   if (error) return { ok: false, error: error.message };
+  if (input.mission?.trim() || cleanValues(input.values).length) {
+    await supabase
+      .from("vendors")
+      .update({ mission: input.mission?.trim().slice(0, 600) || null, vendor_values: cleanValues(input.values) })
+      .eq("id", data as string);
+  }
   return done(data as string);
 }
 
+const cleanValues = (vs?: string[]) =>
+  [...new Set((vs ?? []).map((v) => v.trim()).filter(Boolean))].slice(0, 12);
+
 export async function updateVendor(
   vendorId: string,
-  input: { name: string; description: string; evidence: string; website: string; location: string },
+  input: {
+    name: string;
+    description: string;
+    evidence: string;
+    website: string;
+    location: string;
+    mission?: string;
+    values?: string[];
+  },
 ): Promise<Result> {
   if (!https(input.website)) return { ok: false, error: "Your website must start with https://" };
   const supabase = await createClient();
@@ -62,6 +81,8 @@ export async function updateVendor(
       evidence: input.evidence.trim(),
       website: input.website.trim(),
       location: input.location.trim() || null,
+      mission: input.mission?.trim().slice(0, 600) || null,
+      vendor_values: cleanValues(input.values),
     })
     .eq("id", vendorId);
   if (error) return { ok: false, error: error.message };
@@ -73,7 +94,7 @@ export async function requestVetting(vendorId: string): Promise<Result> {
   const supabase = await createClient();
   const { data: v, error: readErr } = await supabase
     .from("vendors")
-    .select("name, description, evidence, website, location")
+    .select("name, description, evidence, website, location, mission, vendor_values")
     .eq("id", vendorId)
     .maybeSingle();
   if (readErr || !v) return { ok: false, error: "Business not found." };
