@@ -37,6 +37,23 @@ nothing about what a member can see.
 - The ledger chain verifies, and **an edited decision is detected** — run as
   superuser, because that is exactly the threat model.
 
+### `45_law_audit_integrity.sql` — forty-eight checks (0051)
+
+Runs as `authenticated` with the grants Supabase gives that role
+(`00_supabase_shim.sql` mirrors its default privileges), not as `app`.
+
+- A member cannot insert, update or delete a law reading, author or not.
+- With no signing key, no audit can be recorded by any path.
+- 0, 9 or 11 readings, a duplicate, an invented law, a non-verdict, empty
+  reasoning, the wrong prompt, no model, a forged signature and another
+  text's hash are all refused, and leave nothing behind.
+- Nine legacy readings are `stale`, not an audit, and cannot be closed on.
+- A changed summary makes an audit stale; the old payload cannot be replayed;
+  a fresh audit supersedes the old readings in one transaction.
+- A complete audit is not re-run; a challenge is, traceably (`challenge_id`,
+  ledger), only by the challenger, and never by writing a verdict.
+- An open tension still fails the proposal.
+
 ### `02_universal_law.sql` — twelve checks
 
 - An unaudited proposal cannot be closed at all.

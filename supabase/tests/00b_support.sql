@@ -115,3 +115,28 @@ do $$ begin
     update conditions_epoch set since = 'infinity';
   end if;
 end $$;
+
+-- 0051 took away every direct write to law_assessments: readings arrive only
+-- through record_law_audit() and record_challenge_audit(), signed. The older
+-- suites set up an audit by inserting ten rows as `app`, standing in for that
+-- server path so they can go on testing the rule they are about. This policy
+-- is that stand-in — test scaffolding, scoped to `app`, never in a migration.
+-- `45_law_audit_integrity.sql` runs as `authenticated`, with Supabase's
+-- grants, and proves the real door is shut.
+drop policy if exists test_fixture_law_write on law_assessments;
+create policy test_fixture_law_write on law_assessments for insert to app with check (true);
+
+-- Signs an AI payload the way src/lib/ai/sign.ts does, with whatever key the
+-- suite has put in private.ai_signing_key. Test-only (the `test_` prefix keeps
+-- it out of 44's anon check); a real server holds the key in Vercel instead.
+create or replace function test_signed(p_kind text, p_data jsonb, out payload text, out sig text)
+language plpgsql security definer set search_path = public, private, extensions as $$
+declare k text;
+begin
+  select secret into k from private.ai_signing_key;
+  payload := (p_data || jsonb_build_object('issued_at', now()))::text;
+  sig := case when k is null then null
+              else encode(hmac(p_kind || E'\n' || payload, k, 'sha256'), 'hex') end;
+end;
+$$;
+grant execute on function test_signed(text, jsonb) to app, authenticated;

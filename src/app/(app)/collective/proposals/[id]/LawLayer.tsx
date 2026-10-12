@@ -24,15 +24,18 @@ export function LawLayer({
   proposalId,
   assessments,
   open,
+  stale = false,
 }: {
   proposalId: string;
   assessments: (LawAssessment & { profiles: { display_name: string } | null })[];
   open: boolean;
+  /** Readings in force are not ten readings of the text as it stands (0051). */
+  stale?: boolean;
 }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  if (!assessments.length) {
+  if (!assessments.length || stale) {
     return (
       <Empty
         action={
@@ -53,7 +56,9 @@ export function LawLayer({
         }
       >
         {error ??
-          "This proposal has not been tested against Universal Law. Until it has, it cannot pass — and nobody is asked to resonate with it."}
+          (stale
+            ? "The readings on file are not a complete audit of this proposal as it now reads, so they do not count. Until it is audited again, it cannot pass."
+            : "This proposal has not been tested against Universal Law. Until it has, it cannot pass — and nobody is asked to resonate with it.")}
       </Empty>
     );
   }

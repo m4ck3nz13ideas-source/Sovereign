@@ -160,3 +160,18 @@ export const RESONANCE_THRESHOLD = 0.618;
 /** Amending a law requires the agreement of every user. Stated, not inferred. */
 export const AMENDMENT_RULE =
   "To change or add a Universal Law, all users must agree with the proposal and vote.";
+
+/**
+ * Why a set of law ids is not one complete audit, or null if it is: exactly
+ * the ten canonical ids, each once. Mirrors law_audit_payload() in 0051.
+ */
+export function lawAuditProblem(ids: string[]): string | null {
+  const known = new Set<string>(UNIVERSAL_LAWS.map((l) => l.id));
+  const unknown = ids.filter((id) => !known.has(id));
+  if (unknown.length) return `The audit named laws that do not exist: ${unknown.join(", ")}.`;
+  const seen = new Set(ids);
+  if (seen.size !== ids.length) return "The audit read a law more than once.";
+  const missing = UNIVERSAL_LAWS.filter((l) => !seen.has(l.id));
+  if (missing.length) return `The audit did not cover: ${missing.map((l) => l.name).join(", ")}.`;
+  return null;
+}

@@ -39,9 +39,10 @@ on purpose, in a commit that says so.
    only recourse is a challenge, which re-runs the audit. The WORDING may be
    amended — see rule 24 — but no amendment can set a verdict aside.
     A challenge clears a reading only through `record_challenge_audit()`
-    (0034), which supersedes the readings in force and records the new ten in
-    one transaction — never one without the other, because a proposal with no
-    readings in force would look as if it had no violations.
+    (0034, signed since 0051 — rule 47), which supersedes the readings in
+    force and records the new ten in one transaction — never one without the
+    other, because a proposal with no readings in force would look as if it
+    had no violations.
 9. **Ratification is not activation.** `close_proposal()` stops at `passed`.
    Only `activate_proposal()` creates a project, and only once every need has
    a name against it.
@@ -459,6 +460,8 @@ on purpose, in a commit that says so.
     of the business it read and is refused if the business has changed.
     Enforcement starts when the database row exists; switch on Vercel first,
     then the database. `34_signed_ai.sql`, `src/lib/ai/sign.test.ts`.
+    **Law readings do not wait for the key (rule 47): with no key they cannot
+    be written at all.**
 
 39. **Know yourself is yours alone and reaches nothing collective.** The
     assessment in Individual → Self (0041) draws on Tony Robbins' frameworks —
@@ -584,6 +587,33 @@ on purpose, in a commit that says so.
     definer code reads it. Every public function pins its `search_path`.
     `44_side_doors.sql` fails on a third anon function, a writable epoch or
     an unpinned path.
+
+47. **A law audit is ten readings, written by the server, of the text as it
+    stands.** (0051.) Nobody writes `law_assessments` directly: no insert,
+    update or delete grant for anon or authenticated, and no insert policy.
+    Readings arrive only through `record_law_audit()` and
+    `record_challenge_audit()` (both reached from `ai_write()`), and each
+    checks the server's signature itself and **fails closed** — with no row
+    in `private.ai_signing_key` no audit is recorded, because without it the
+    server cannot be told from a member. An audit is exactly the ten ids in
+    `universal_law_ids()` (mirrors `src/lib/universal-law.ts`;
+    `universal-law.test.ts` keeps them in step), each once, with a real
+    verdict and reasoning; a check constraint and a one-current-per-law index
+    hold the same line in the table. Every reading carries `audit_hash` —
+    `audit_hash(proposals)` over title, summary, body, scope, place and
+    budget, stamped by the database — and the signed payload must carry the
+    same hash. `law_standing()` counts as `audited` only ten canonical
+    readings of the current text; anything else is `stale`, cannot be closed
+    on, and a fresh audit supersedes it in one transaction. A complete audit
+    of the current text is never re-run to get a better answer: a challenge
+    is the only route, it goes back through the AI, the re-audit is stamped
+    with its `challenge_id`, and the challenger never writes a verdict.
+    Provenance (prompt `law.audit`, version, model, provider, `issued_at`,
+    `audit_id`) comes from the signed payload, never the caller.
+    `45_law_audit_integrity.sql` runs as `authenticated` with Supabase's
+    grants and opens with the exploit this closed (one made-up row counted as
+    a lawful audit). The older suites write fixture readings as `app` through
+    a test-only policy in `00b_support.sql`.
 
 ## On the surface, not in the schema
 

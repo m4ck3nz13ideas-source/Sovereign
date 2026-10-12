@@ -639,7 +639,12 @@ export default async function ProposalPage({
         >
           Universal Law
         </SectionLabel>
-        <LawLayer proposalId={id} assessments={lawAssessments} open={open} />
+        <LawLayer
+          proposalId={id}
+          assessments={lawAssessments}
+          open={open}
+          stale={Boolean(standing?.stale)}
+        />
       </section>
 
       {/* -------------------------------------------------------- AI LAYER */}

@@ -1,4 +1,6 @@
 -- A challenge can clear a violation, all at once or not at all (0034, rule 8).
+-- Since 0051 both the first audit and the re-audit arrive signed, through
+-- record_law_audit() and record_challenge_audit(), so this suite holds a key.
 \set ON_ERROR_STOP on
 \pset pager off
 
@@ -16,6 +18,8 @@ insert into auth.users (id, email) values
   ('a9999999-9999-9999-9999-99999999999a', 'chal-author@example.com'),
   ('b9999999-9999-9999-9999-99999999999b', 'chal-member@example.com');
 
+insert into private.ai_signing_key (secret) values ('challenge-test-secret-0051-xxxxxxxxxxxx');
+
 set role app;
 
 do $$
@@ -26,7 +30,7 @@ declare
     'equity_and_justice','subsidiarity','reciprocity_and_mutual_care','stewardship_of_earth',
     'harmony_of_diversity','right_use_of_power','continuous_evolution'];
   gid uuid; code text; pid uuid; viol_id uuid; chal uuid; chal2 uuid; l text;
-  clean jsonb; n int; v int;
+  clean jsonb; first jsonb; n int; v int; sp record; out jsonb;
   passes int := 0; fails int := 0;
 begin
   perform set_config('test.uid', ann::text, true);
@@ -38,11 +42,14 @@ begin
   perform set_config('test.uid', ann::text, true);
   pid := test_propose(ann, gid, 'local', null, 'Fence the common', 'x',
                       'Put a fence around the common so dogs stay off the pitch.');
-  foreach l in array laws loop
-    insert into law_assessments (proposal_id, law_id, verdict, reasoning, prompt_id, prompt_version, model)
-    values (pid, l, case when l = 'sovereignty_of_the_individual' then 'violation' else 'aligned' end::law_verdict,
-            'first reading', 'law.audit', '1.0.0', 'test');
-  end loop;
+  select jsonb_agg(jsonb_build_object('law_id', x,
+           'verdict', case when x = 'sovereignty_of_the_individual' then 'violation' else 'aligned' end,
+           'reasoning', 'first reading'))
+    into first from unnest(laws) x;
+  select * into sp from test_signed('law.audit', jsonb_build_object(
+    'proposal_id', pid, 'readings', first, 'prompt_id', 'law.audit', 'prompt_version', '1.0.0',
+    'model', 'test', 'audit_hash', proposal_audit_hash(pid)));
+  perform ai_write('law.audit', sp.payload, sp.sig);
   select id into viol_id from law_assessments where proposal_id = pid and verdict = 'violation';
 
   select violations into n from law_standing(pid);
@@ -61,14 +68,16 @@ begin
   -- Somebody else cannot run the re-audit on Ben's challenge.
   perform set_config('test.uid', ann::text, true);
   begin
-    perform record_challenge_audit(chal, clean, 'law.audit', '1.0.0', 'test');
+    select * into sp from test_signed('law.challenge', jsonb_build_object('challenge_id', chal, 'readings', clean, 'prompt_id', 'law.audit', 'prompt_version', '1.0.0', 'model', 'test', 'audit_hash', proposal_audit_hash(pid)));
+    perform record_challenge_audit(sp.payload, sp.sig);
     fails := fails + 1; raise warning 'FAIL: someone re-audited a challenge they did not raise';
   exception when others then passes := passes + 1; end;
 
   -- A broken re-audit changes nothing: the violation must still count.
   perform set_config('test.uid', ben::text, true);
   begin
-    perform record_challenge_audit(chal, clean - 0, 'law.audit', '1.0.0', 'test');
+    select * into sp from test_signed('law.challenge', jsonb_build_object('challenge_id', chal, 'readings', clean - 0, 'prompt_id', 'law.audit', 'prompt_version', '1.0.0', 'model', 'test', 'audit_hash', proposal_audit_hash(pid)));
+    perform record_challenge_audit(sp.payload, sp.sig);
     fails := fails + 1; raise warning 'FAIL: a nine-law re-audit was accepted';
   exception when others then passes := passes + 1; end;
   select violations into n from law_standing(pid);
@@ -76,7 +85,10 @@ begin
     raise warning 'FAIL: a failed re-audit cleared the violation anyway (%)', n; end if;
 
   -- The real re-audit clears it.
-  v := record_challenge_audit(chal, clean, 'law.audit', '1.0.0', 'test');
+  select * into sp from test_signed('law.challenge', jsonb_build_object(
+    'challenge_id', chal, 'readings', clean, 'prompt_id', 'law.audit', 'prompt_version', '1.0.0',
+    'model', 'test', 'audit_hash', proposal_audit_hash(pid)));
+  out := record_challenge_audit(sp.payload, sp.sig);
   select violations, laws_assessed into n, v from law_standing(pid);
   if n = 0 and v = 10 then passes := passes + 1; else fails := fails + 1;
     raise warning 'FAIL: the challenge did not clear the violation (violations %, readings in force %)', n, v; end if;
@@ -88,7 +100,8 @@ begin
 
   -- And the challenge cannot be spent twice.
   begin
-    perform record_challenge_audit(chal, clean, 'law.audit', '1.0.0', 'test');
+    select * into sp from test_signed('law.challenge', jsonb_build_object('challenge_id', chal, 'readings', clean, 'prompt_id', 'law.audit', 'prompt_version', '1.0.0', 'model', 'test', 'audit_hash', proposal_audit_hash(pid)));
+    perform record_challenge_audit(sp.payload, sp.sig);
     fails := fails + 1; raise warning 'FAIL: one challenge produced two re-audits';
   exception when others then passes := passes + 1; end;
 
@@ -99,3 +112,4 @@ begin
 end $$;
 
 reset role;
+delete from private.ai_signing_key;

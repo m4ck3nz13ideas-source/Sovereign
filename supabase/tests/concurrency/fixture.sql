@@ -52,7 +52,7 @@ declare
     'sanctity_of_life','truth_and_transparency','sovereignty_of_the_individual',
     'equity_and_justice','subsidiarity','reciprocity_and_mutual_care',
     'stewardship_of_earth','harmony_of_diversity','right_use_of_power',
-    'evolution_by_design'
+    'continuous_evolution'
   ];
 begin
   perform set_config('test.uid', steward::text, true);

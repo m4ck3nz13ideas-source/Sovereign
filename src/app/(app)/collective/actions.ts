@@ -809,12 +809,16 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
 
   const { data: proposal } = await supabase
     .from("proposals")
-    .select("*, groups(id, name)")
+    // audit_hash is computed by the database over this same row (0051), so the
+    // hash the audit is signed against is of exactly the text sent to the model.
+    .select("*, groups(id, name), audit_hash")
     .eq("id", proposalId)
     .maybeSingle();
 
   if (!proposal) return { ok: false as const, error: "No such proposal." };
   const group = proposal.groups as unknown as { id: string; name: string };
+  const auditHash = (proposal as unknown as { audit_hash: string | null }).audit_hash;
+  if (!auditHash) return { ok: false as const, error: "This proposal cannot be audited yet." };
 
   let challenge: { law: string; previousVerdict: string; argument: string } | null = null;
 
@@ -843,7 +847,7 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
   const revisionOf = new Map(laws.map((l) => [l.id as string, l.revision]));
 
   try {
-    const { readings, model, prompt } = await auditAgainstLaw({
+    const { readings, model, prompt, provider } = await auditAgainstLaw({
       proposal: {
         title: proposal.title,
         summary: proposal.summary,
@@ -873,10 +877,13 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
         prompt_id: prompt.id,
         prompt_version: prompt.version,
         model,
+        provider,
+        audit_hash: auditHash,
       });
       if (error) return { ok: false as const, error: error.message };
     } else {
-      // The first audit of a proposal: nothing to supersede.
+      // The first audit of this text. Readings of an older text, or an
+      // incomplete set, are superseded in the same transaction (0051).
       const { error } = await aiWrite(supabase, "law.audit", {
         proposal_id: proposalId,
         readings: readings.map((r) => ({
@@ -888,6 +895,8 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
         prompt_id: prompt.id,
         prompt_version: prompt.version,
         model,
+        provider,
+        audit_hash: auditHash,
       });
       if (error) return { ok: false as const, error: error.message };
     }

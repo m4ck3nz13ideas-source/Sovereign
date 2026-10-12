@@ -1,7 +1,7 @@
 import "server-only";
 
 import { env } from "@/lib/env";
-import { UNIVERSAL_LAWS } from "@/lib/universal-law";
+import { UNIVERSAL_LAWS, lawAuditProblem } from "@/lib/universal-law";
 
 import { AnthropicProvider } from "./anthropic";
 import { MockProvider } from "./mock";
@@ -367,7 +367,12 @@ export async function auditAgainstLaw(ctx: {
    * amendment protocol decorative.
    */
   laws?: typeof UNIVERSAL_LAWS;
-}): Promise<{ readings: LawAuditOutput["readings"]; model: string; prompt: typeof LAW_AUDIT }> {
+}): Promise<{
+  readings: LawAuditOutput["readings"];
+  model: string;
+  provider: string;
+  prompt: typeof LAW_AUDIT;
+}> {
   const laws = (ctx.laws ?? UNIVERSAL_LAWS).map(
     (l) =>
       `${l.ordinal}. ${l.name}\n   id: ${l.id}\n   "${l.text}"\n   a violation here looks like: ${l.violationLooksLike}`,
@@ -405,18 +410,13 @@ Return exactly ten readings, one per law, using the ids given above.`;
     throw new AiError(`The law audit did not match the expected shape: ${parsed.error.message}`);
   }
 
-  // Every law must be present exactly once. A model that returns ten readings
-  // covering nine laws would otherwise leave one unexamined while law_standing()
-  // reported a complete audit.
-  const seen = new Set(parsed.data.readings.map((r) => r.law_id));
-  const missing = UNIVERSAL_LAWS.filter((l) => !seen.has(l.id));
-  if (missing.length) {
-    throw new AiError(
-      `The audit did not cover: ${missing.map((l) => l.name).join(", ")}.`,
-    );
-  }
+  // Every law must be present exactly once, and nothing else. The database
+  // refuses anything other than the ten (0051); saying so here gives a
+  // readable message rather than a refused write.
+  const problem = lawAuditProblem(parsed.data.readings.map((r) => r.law_id));
+  if (problem) throw new AiError(problem);
 
-  return { readings: parsed.data.readings, model, prompt: LAW_AUDIT };
+  return { readings: parsed.data.readings, model, provider: provider().name, prompt: LAW_AUDIT };
 }
 
 /** Reads a business against the ten Universal Laws, for the marketplace. */

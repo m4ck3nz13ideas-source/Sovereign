@@ -716,6 +716,12 @@ export interface LawAssessment {
   prompt_version: string;
   model: string;
   created_at: string;
+  /** 0051: what the audit read, which audit it belongs to, and why it ran. */
+  audit_id?: string | null;
+  audit_hash?: string | null;
+  challenge_id?: string | null;
+  provider?: string | null;
+  issued_at?: string | null;
 }
 
 export interface LawChallenge {
@@ -735,6 +741,8 @@ export interface LawStanding {
   violations: number;
   unanswered_tensions: number;
   lawful: boolean;
+  /** Readings exist but are not ten canonical readings of the current text (0051). */
+  stale: boolean;
 }
 
 /* ---------------------------------------------------------------------------
