@@ -130,12 +130,12 @@ export default function ProductPage() {
           <Section key={s.id} id={s.id} className={i % 2 ? "bg-surface-soft" : ""}>
             <div className="grid items-center gap-14 lg:grid-cols-2">
               <div className={i % 2 ? "lg:order-2" : ""}>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center gap-3">
                   <span className="grid h-10 w-10 place-items-center rounded-card bg-gold-wash text-gold">{pillar.icon}</span>
                   <p className="smallcaps text-[11px] font-semibold text-gold">{pillar.name}</p>
                 </div>
-                <h2 className="mt-5 font-serif text-3xl leading-tight text-paper sm:text-4xl">{s.title}</h2>
-                <p className="mt-4 text-lg leading-relaxed text-paper-dim">{s.lead}</p>
+                <h2 className="mt-5 text-center font-serif text-3xl leading-tight text-paper sm:text-4xl">{s.title}</h2>
+                <p className="mt-4 text-center text-lg leading-relaxed text-paper-dim">{s.lead}</p>
                 <div className="mt-8">
                   <TickList items={s.points} />
                 </div>
@@ -147,7 +147,7 @@ export default function ProductPage() {
       })}
 
       <Section>
-        <div className="max-w-2xl">
+        <div className="mx-auto max-w-2xl text-center">
           <p className="smallcaps text-[11px] font-semibold text-gold">Under the hood</p>
           <h2 className="mt-3 font-serif text-3xl leading-tight text-paper sm:text-4xl">Rules in the database, not promises in a policy.</h2>
           <p className="mt-4 text-lg leading-relaxed text-paper-dim">

@@ -16,11 +16,11 @@ export default function RoadmapPage() {
         <div className="grid gap-6 lg:grid-cols-3">
           {ROADMAP.map((col) => (
             <div key={col.stage}>
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-center gap-2.5">
                 <span className={`h-2 w-2 rounded-full ${col.live ? "bg-calm" : "bg-paper-faint"}`} />
                 <h2 className="font-serif text-2xl text-paper">{col.stage}</h2>
               </div>
-              <p className="mt-1 text-paper-dim">{col.lead}</p>
+              <p className="mt-1 text-center text-paper-dim">{col.lead}</p>
               <ul className="mt-6 space-y-3">
                 {col.items.map((it) => (
                   <li key={it.title} className="rounded-card border border-line bg-surface-soft p-5">

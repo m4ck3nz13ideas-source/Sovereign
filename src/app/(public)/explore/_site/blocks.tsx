@@ -34,15 +34,15 @@ export function SectionHead({
   eyebrow,
   title,
   lead,
-  center = false,
 }: {
   eyebrow?: string;
   title: ReactNode;
   lead?: ReactNode;
+  /** Kept for old call sites. Every heading on the public site is centred. */
   center?: boolean;
 }) {
   return (
-    <div className={center ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}>
+    <div className="mx-auto max-w-2xl text-center">
       {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
       <h2 className="mt-3 font-serif text-3xl leading-tight tracking-tight text-paper sm:text-4xl">{title}</h2>
       {lead ? <p className="mt-4 text-lg leading-relaxed text-paper-dim">{lead}</p> : null}
@@ -55,11 +55,11 @@ export function PageHero({ eyebrow, title, lead, children }: { eyebrow: string; 
   return (
     <section className="border-b border-line-soft pt-16 pb-14 sm:pt-24 sm:pb-20">
       <Container>
-        <div className="max-w-3xl">
+        <div className="mx-auto max-w-3xl text-center">
           <Eyebrow>{eyebrow}</Eyebrow>
           <h1 className="mt-4 font-serif text-4xl leading-[1.05] tracking-tight text-paper sm:text-6xl">{title}</h1>
           <p className="mt-6 text-xl leading-snug text-paper-dim">{lead}</p>
-          {children ? <div className="mt-8 flex flex-wrap gap-3">{children}</div> : null}
+          {children ? <div className="mt-8 flex flex-wrap justify-center gap-3">{children}</div> : null}
         </div>
       </Container>
     </section>

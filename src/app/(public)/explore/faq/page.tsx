@@ -38,8 +38,8 @@ export default function FaqPage() {
       <Section>
         <div className="space-y-16">
           {FAQ_GROUPS.map((g) => (
-            <div key={g.title} className="grid gap-8 lg:grid-cols-[1fr_2.5fr]">
-              <h2 className="font-serif text-2xl text-paper">{g.title}</h2>
+            <div key={g.title} className="mx-auto grid max-w-3xl gap-8">
+              <h2 className="text-center font-serif text-2xl text-paper">{g.title}</h2>
               <Faq items={g.items} />
             </div>
           ))}

@@ -98,8 +98,8 @@ export default function PricingPage() {
       </Section>
 
       <Section className="bg-surface-soft">
-        <div className="grid gap-12 lg:grid-cols-[1fr_2fr]">
-          <h2 className="font-serif text-3xl text-paper">Pricing questions</h2>
+        <div className="mx-auto grid max-w-3xl gap-10">
+          <h2 className="text-center font-serif text-3xl text-paper">Pricing questions</h2>
           <Faq
             items={[
               {

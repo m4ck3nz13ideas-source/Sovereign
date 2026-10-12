@@ -46,11 +46,11 @@ export default async function SharedDecisionPage({ params }: Props) {
     <section className="py-14 sm:py-20">
       <Container>
         <div className="mx-auto max-w-2xl">
-          <p className="smallcaps text-[11px] font-semibold text-paper-faint">
+          <p className="smallcaps text-center text-[11px] font-semibold text-paper-faint">
             {who} decided · {longDate(d.decided_on)}
           </p>
-          <h1 className="mt-4 font-serif text-4xl leading-[1.08] tracking-tight text-paper sm:text-5xl">{d.title}</h1>
-          <p className="mt-5 text-xl leading-snug text-paper-dim">{d.summary}</p>
+          <h1 className="mt-4 text-center font-serif text-4xl leading-[1.08] tracking-tight text-paper sm:text-5xl">{d.title}</h1>
+          <p className="mt-5 text-center text-xl leading-snug text-paper-dim">{d.summary}</p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <span
@@ -103,10 +103,10 @@ export default async function SharedDecisionPage({ params }: Props) {
             Shared by the people who decided it. No names, no individual responses, no notes.
           </p>
 
-          <div className="mt-12 rounded-sheet border border-line p-7 sm:p-9">
+          <div className="mt-12 rounded-sheet border border-line p-7 text-center sm:p-9">
             <h2 className="font-serif text-2xl leading-tight text-paper sm:text-3xl">Decide like this where you live.</h2>
             <p className="mt-3 text-lg text-paper-dim">Propose. Weigh. Act. Free for people, for good.</p>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
               <PrimaryLink href="/login">Start free</PrimaryLink>
               <SecondaryLink href="/explore/product#collective">How deciding works</SecondaryLink>
             </div>

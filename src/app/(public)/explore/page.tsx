@@ -51,7 +51,7 @@ export default async function ExplorePage() {
           aria-hidden="true"
         />
         <Container className="relative grid items-center gap-14 pt-14 pb-16 sm:pt-20 lg:grid-cols-[1.15fr_1fr] lg:pb-24">
-          <div>
+          <div className="text-center">
             <Link
               href="#founding"
               className="inline-flex items-center gap-2 rounded-pill border border-line bg-ink py-1 pr-3 pl-1 text-sm text-paper-dim hover:text-paper"
@@ -64,15 +64,15 @@ export default async function ExplorePage() {
               <br />
               Together.
             </h1>
-            <p className="mt-6 max-w-xl text-xl leading-snug text-paper-dim">
+            <p className="mx-auto mt-6 max-w-xl text-xl leading-snug text-paper-dim">
               Vote on ideas, not politicians. <span className="text-paper">Think in private. Post honestly. Decide
               together</span> — from your street to the planet.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
               <PrimaryLink href="/login">Start free</PrimaryLink>
               <SecondaryLink href="#try">Try it first</SecondaryLink>
             </div>
-            <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-paper-dim">
+            <ul className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-paper-dim">
               {["Free for people", "Private by rule", "No follower counts"].map((t) => (
                 <li key={t} className="flex items-center gap-2">
                   <Tick className="h-4 w-4" />
