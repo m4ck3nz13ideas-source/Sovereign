@@ -412,6 +412,11 @@ export function OnboardingFlow({
           >
             {pending ? "Saving" : "Save"}
           </Button>
+          {/* Values are private, but they are still not a toll to get in:
+              anybody can explore first and come back from Individual → Self. */}
+          <Button type="button" tone="quiet" disabled={pending} onClick={() => setStep(3)}>
+            Skip for now
+          </Button>
           <Button type="button" tone="ghost" onClick={() => setStep(1)}>
             Back
           </Button>

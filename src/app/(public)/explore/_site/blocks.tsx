@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { STATUS_LABEL, STATUS_MEANING, type Capability, type CapabilityStatus } from "@/lib/capabilities";
+
 import { FOUNDING_PLACES } from "./site";
 import type { Pulse } from "./pulse";
 
@@ -218,8 +220,8 @@ export function CtaBand({ title = "Heaven on Earth is a decision.", lead = "Make
           <Link href="/login" className="press rounded-pill bg-ink px-6 py-3 font-semibold text-paper">
             Start free
           </Link>
-          <Link href="/explore#try" className="press rounded-pill border border-ink/30 px-6 py-3 font-semibold text-ink">
-            Try it first
+          <Link href="/explore/sample-decision" className="press rounded-pill border border-ink/30 px-6 py-3 font-semibold text-ink">
+            Try a sample decision
           </Link>
         </div>
       </div>
@@ -246,5 +248,57 @@ export function Faq({ items }: { items: { q: string; a: ReactNode }[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/* --- capability status ---------------------------------------------------- */
+
+const STATUS_STYLE: Record<CapabilityStatus, { pill: string; dot: string }> = {
+  current: { pill: "border-calm/40 bg-calm-wash text-calm", dot: "bg-calm" },
+  testing: { pill: "border-gold-dim bg-gold-wash text-gold", dot: "border-2 border-gold bg-transparent" },
+  planned: { pill: "border-dashed border-line text-paper-dim", dot: "border border-dashed border-paper-faint bg-transparent" },
+};
+
+/**
+ * A capability's state, always in words. The dot differs in shape as well as
+ * colour (solid, ring, dashed), so the state never rests on colour alone.
+ */
+export function StatusBadge({ status }: { status: CapabilityStatus }) {
+  const s = STATUS_STYLE[status];
+  return (
+    <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-pill border px-2.5 py-0.5 text-xs font-semibold ${s.pill}`}>
+      <span className={`h-2 w-2 rounded-full ${s.dot}`} aria-hidden="true" />
+      {STATUS_LABEL[status]}
+    </span>
+  );
+}
+
+/** The key to the three states, shown wherever capabilities are listed. */
+export function StatusLegend({ className = "" }: { className?: string }) {
+  return (
+    <dl className={`mx-auto grid max-w-4xl gap-3 sm:grid-cols-3 ${className}`}>
+      {(["current", "testing", "planned"] as const).map((s) => (
+        <div key={s} className="rounded-card border border-line-soft p-4 text-left">
+          <dt>
+            <StatusBadge status={s} />
+          </dt>
+          <dd className="mt-2 text-sm leading-relaxed text-paper-dim">{STATUS_MEANING[s]}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/** One capability, with its state and, when in testing, what is missing. */
+export function CapabilityRow({ c }: { c: Capability }) {
+  return (
+    <li className="rounded-card border border-line p-4">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <p className="font-semibold text-paper">{c.title}</p>
+        <StatusBadge status={c.status} />
+      </div>
+      <p className="mt-1.5 text-[0.95rem] leading-relaxed text-paper-dim">{c.detail}</p>
+      {c.note ? <p className="mt-2 text-sm leading-relaxed text-gold">Not yet: {c.note}</p> : null}
+    </li>
   );
 }

@@ -1,6 +1,7 @@
 import { TabActions } from "@/components/nav/TabActions";
 import { TopBar } from "@/components/ui";
 import { COLLECTIVE_TABS, SubTabs } from "@/components/nav/SubTabs";
+import { TabIntro } from "@/components/TabIntro";
 
 /**
  * Collective — the public half, as the governance cycle runs:
@@ -18,6 +19,9 @@ export default function CollectiveLayout({
       <TopBar title="Collective" action={<TabActions plus="/collective/proposals/new" plusLabel="New proposal" />}>
         <SubTabs tabs={COLLECTIVE_TABS} />
       </TopBar>
+      <div className="mx-auto w-full max-w-2xl">
+        <TabIntro space="collective" />
+      </div>
       {children}
     </>
   );

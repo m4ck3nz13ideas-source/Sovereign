@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { TabActions } from "@/components/nav/TabActions";
+import { TabIntro } from "@/components/TabIntro";
 
 import { Empty, Gutter, inputClass, PillLink, Rail, Screen, Tag, TopBar } from "@/components/ui";
 import { firstLine } from "@/lib/format";
@@ -91,6 +92,8 @@ export default async function MarketplacePage({
           </Rail>
         ) : null}
       </TopBar>
+
+      <TabIntro space="market" />
 
       {selling ? (
         <Gutter className="space-y-3 pt-5 pb-6">

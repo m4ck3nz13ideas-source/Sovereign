@@ -1,4 +1,4 @@
-import { CtaBand, PageHero, Section } from "../_site/blocks";
+import { CtaBand, PageHero, Section, StatusLegend } from "../_site/blocks";
 import { ROADMAP } from "./items";
 import { pageMeta } from "../_site/site";
 
@@ -9,16 +9,19 @@ export default function RoadmapPage() {
     <>
       <PageHero
         eyebrow="Roadmap"
-        title="Built. Next. Later."
-        lead="Fifty people by the end of 2026. Everyone in 2027. Nothing is marked live until it is."
+        title="Current. In testing. Planned."
+        lead="Fifty people by the end of 2026. Everyone in 2027. Nothing is marked current until it works in production."
       />
       <Section>
+        <StatusLegend className="mb-12" />
         <div className="grid gap-6 lg:grid-cols-3">
           {ROADMAP.map((col) => (
             <div key={col.stage}>
               <div className="flex items-center justify-center gap-2.5">
-                <span className={`h-2 w-2 rounded-full ${col.live ? "bg-calm" : "bg-paper-faint"}`} />
-                <h2 className="font-serif text-2xl text-paper">{col.stage}</h2>
+                <h2 className="font-serif text-2xl text-paper">
+                  <span className="sr-only">Status: </span>
+                  {col.stage}
+                </h2>
               </div>
               <p className="mt-1 text-center text-paper-dim">{col.lead}</p>
               <ul className="mt-6 space-y-3">

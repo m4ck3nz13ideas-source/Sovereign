@@ -42,7 +42,7 @@ export default function PrivacyPage() {
   return (
     <Legal
       title="Privacy notice"
-      updated="11 October 2026"
+      updated="13 October 2026"
       intro={
         <>
           <p>
@@ -172,9 +172,11 @@ export default function PrivacyPage() {
             <>
               <p>
                 Proposals, posts and businesses are read by AI against the ten Universal Laws. A proposal that breaks a
-                law ends; a post below the bar isn&apos;t published. Every reading that decides something is signed,
-                published with its reasons, and can be challenged — a challenge re-runs it. A business is only approved
-                when a person signs the reading off.
+                law ends; a post below the bar isn&apos;t published. Every reading that decides something is published
+                with its reasons and can be challenged — a challenge re-runs it. A business is only approved when a
+                person signs the reading off. Today no AI model is connected: the readings come from an offline
+                stand-in running on our own servers, which judges structure rather than meaning and says so on every
+                reading.
               </p>
               <p>
                 If you think an automated reading got something wrong about you, tell us at{" "}
@@ -184,8 +186,10 @@ export default function PrivacyPage() {
                 and a person will look at it.
               </p>
               <p>
-                When you use an AI feature, the text involved is sent to our AI provider to produce the answer. It
-                isn&apos;t used to train their models or to build a profile of you.
+                While no AI model is connected, nothing you write is sent to an AI provider. Once one is switched on,
+                the text involved in an AI feature will be sent to our AI provider to produce the answer, and this
+                notice will be updated before that happens. It won&apos;t be used to train their models or to build a
+                profile of you.
               </p>
             </>
           ),

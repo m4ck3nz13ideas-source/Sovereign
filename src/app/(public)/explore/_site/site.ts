@@ -25,6 +25,7 @@ export const FOUNDING_PLACES = 50;
 
 export const NAV: { href: string; label: string }[] = [
   { href: "/explore/product", label: "Product" },
+  { href: "/explore/trust", label: "Trust" },
   { href: "/explore/business", label: "For business" },
   { href: "/explore/pricing", label: "Pricing" },
   { href: "/explore/roadmap", label: "Roadmap" },
@@ -37,7 +38,9 @@ export const FOOTER: { title: string; links: { href: string; label: string }[] }
     title: "Product",
     links: [
       { href: "/explore/product", label: "Overview" },
+      { href: "/explore/sample-decision", label: "Sample decision" },
       { href: "/explore#try", label: "Try it" },
+      { href: "/explore#today", label: "What works today" },
       { href: "/explore/pricing", label: "Pricing" },
       { href: "/explore/roadmap", label: "Roadmap" },
     ],
@@ -63,7 +66,8 @@ export const FOOTER: { title: string; links: { href: string; label: string }[] }
     title: "Help",
     links: [
       { href: "/explore/faq", label: "FAQ" },
-      { href: "/explore/privacy", label: "Privacy" },
+      { href: "/explore/trust", label: "Trust and privacy" },
+      { href: "/explore/privacy", label: "Privacy notice" },
       { href: "/explore/terms", label: "Terms" },
     ],
   },
@@ -93,10 +97,22 @@ export const PAGES = {
     card: "Free for people. Paid by aligned businesses.",
     priority: 0.8,
   },
+  "sample-decision": {
+    title: "Sample decision",
+    description: "Walk through one illustrative decision, from the problem to the review. Example data, no account needed.",
+    card: "One decision, start to finish.",
+    priority: 0.8,
+  },
+  trust: {
+    title: "Trust",
+    description: "What is private, what is shared, how AI is used, and which safeguards are working today. Checked against the running system.",
+    card: "Trust should be inspectable.",
+    priority: 0.8,
+  },
   roadmap: {
     title: "Roadmap",
-    description: "What is live, what is next, what comes later. Nothing is marked live until it is.",
-    card: "Built, next, later.",
+    description: "What is current, what is in testing, what is planned. Nothing is marked current until it works in production.",
+    card: "Current. In testing. Planned.",
     priority: 0.7,
   },
   about: {

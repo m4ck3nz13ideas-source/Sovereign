@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Container, CtaBand, PageHero, PrimaryLink, Section, SecondaryLink, TickList } from "../_site/blocks";
@@ -111,7 +112,14 @@ export default function ProductPage() {
         lead="Your thinking, your feed, your shopping, your say. One calm app."
       >
         <PrimaryLink href="/login">Start free</PrimaryLink>
-        <SecondaryLink href="/explore#try">Try it first</SecondaryLink>
+        <SecondaryLink href="/explore/sample-decision">Try a sample decision</SecondaryLink>
+        <p className="mt-6 w-full text-center text-sm text-paper-dim">
+          Some of what follows is still in testing.{" "}
+          <Link href="/explore#today" className="text-gold hover:underline">
+            See what works today
+          </Link>
+          .
+        </p>
       </PageHero>
 
       <nav className="sticky top-[61px] z-30 border-b border-line-soft bg-veil backdrop-blur-xl" aria-label="Sections">
@@ -151,15 +159,16 @@ export default function ProductPage() {
           <p className="smallcaps text-[11px] font-semibold text-gold">Under the hood</p>
           <h2 className="mt-3 font-serif text-3xl leading-tight text-paper sm:text-4xl">Rules in the database, not promises in a policy.</h2>
           <p className="mt-4 text-lg leading-relaxed text-paper-dim">
-            Every promise here is a database rule. Hundreds of automated checks fail the build if one breaks.
+            Each promise below is a database rule, covered by nearly a thousand automated database checks that are
+            run before each release. What is not yet live says so.
           </p>
         </div>
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
             ["Row-level security", "Postgres decides who reads each row, on every request."],
-            ["Signed AI", "Every AI reading that decides anything is signed. Forged or stale ones are refused."],
+            ["AI with its reasons", "Every AI reading that decides anything is published with reasons and can be challenged. Signed, stale-proof readings are in testing; today an offline stand-in reads, and says so."],
             ["Written once", "Law readings, flags and debate cannot be edited. Answers carry their author."],
-            ["Tamper-evident ledger", "Decisions are chained. Any change shows."],
+            ["Tamper-evident record", "Decisions are hash-chained, so a change shows. Not a blockchain, and not trustless."],
             ["No third parties", "No trackers. No ad networks. Fonts served from here."],
             ["Blind to money", "Nothing that approves or ranks a business can see what it spends."],
           ].map(([t, d]) => (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TabIntro } from "@/components/TabIntro";
 
 import { AiBubble, IndividualTabs } from "@/components/nav/IndividualTabs";
 import { TabActions } from "@/components/nav/TabActions";
@@ -66,6 +67,7 @@ export default async function IndividualLayout({ children }: { children: React.R
         </div>
       </section>
 
+      <TabIntro space="individual" className="pb-4" />
       <IndividualTabs />
       {children}
       <AiBubble />

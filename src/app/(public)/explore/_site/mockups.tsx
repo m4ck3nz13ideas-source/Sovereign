@@ -58,7 +58,7 @@ export function ProposalScreen() {
         <Chip tone="calm">10 / 10 laws aligned</Chip>
       </div>
       <div className="flex items-center gap-1.5 pt-1" >
-        {["Propose", "Check", "Decide", "Act", "Learn"].map((s, i) => (
+        {["Propose", "Align", "Decide", "Act", "Reflect"].map((s, i) => (
           <div key={s} className="flex-1">
             <div className={`h-1 rounded-full ${i < 3 ? "bg-gold" : "bg-surface-lift"}`} />
             <p className={`mt-1 text-[8px] ${i === 2 ? "text-paper" : "text-paper-faint"}`}>{s}</p>

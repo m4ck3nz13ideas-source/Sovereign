@@ -58,7 +58,7 @@ export const FAQ_GROUPS: { title: string; items: QA[] }[] = [
       },
       {
         q: "Why would I trust the AI?",
-        a: "You don't have to. Every AI reading that decides anything is signed, published with reasons, and open to challenge. A challenge re-runs it; nobody can quietly edit one.",
+        a: "You don't have to, and it can't guarantee a decision is right. Every AI reading that decides anything is published with its reasons and open to challenge; a challenge re-runs it, and readings can't be edited. Today no AI model is connected: an offline stand-in reads instead, and every reading says so. Signed readings tied to the exact text are built and in testing.",
       },
       {
         q: "How do you know I'm a real person?",

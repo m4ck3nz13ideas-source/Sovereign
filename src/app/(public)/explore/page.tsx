@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SAFEGUARDS, SPACES } from "@/lib/capabilities";
 import { UNIVERSAL_LAWS } from "@/lib/universal-law";
 
 import { Demos } from "./Demos";
@@ -7,6 +8,7 @@ import {
   ArrowLink,
   Container,
   CtaBand,
+  CapabilityRow,
   Cross,
   Eyebrow,
   Faq,
@@ -16,12 +18,12 @@ import {
   Section,
   SectionHead,
   SecondaryLink,
+  StatusLegend,
   Tick,
 } from "./_site/blocks";
 import { PhoneFrame, ProposalScreen } from "./_site/mockups";
 import { getPulse } from "./_site/pulse";
 import { FAQ_HOME } from "./faq/questions";
-import { PILLARS } from "./product/pillars";
 import { ROADMAP } from "./roadmap/items";
 
 export const metadata = {
@@ -65,13 +67,27 @@ export default async function ExplorePage() {
               Together.
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-xl leading-snug text-paper-dim">
-              Vote on ideas, not politicians. <span className="text-paper">Think in private. Post honestly. Decide
-              together</span> — from your street to the planet.
+              Sovereign helps people turn <span className="text-paper">shared values into transparent, accountable
+              decisions</span> — while keeping individual freedom and privacy.
+            </p>
+            <p className="mx-auto mt-4 max-w-xl text-sm font-semibold tracking-wide text-paper-dim">
+              <span className="sr-only">The journey: </span>
+              Propose <span aria-hidden="true">→</span> Align <span aria-hidden="true">→</span> Decide{" "}
+              <span aria-hidden="true">→</span> Act <span aria-hidden="true">→</span> Reflect
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <PrimaryLink href="/login">Start free</PrimaryLink>
-              <SecondaryLink href="#try">Try it first</SecondaryLink>
+              <PrimaryLink href="/explore/sample-decision">Try a sample decision</PrimaryLink>
+              <SecondaryLink href="/login">Create your account</SecondaryLink>
             </div>
+            <p className="mt-4 text-sm text-paper-dim">
+              <a href="#today" className="text-gold hover:underline">
+                What you can do today
+              </a>{" "}
+              ·{" "}
+              <Link href="/explore/trust" className="text-gold hover:underline">
+                What is private, and what is live
+              </Link>
+            </p>
             <ul className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-paper-dim">
               {["Free for people", "Private by rule", "No follower counts"].map((t) => (
                 <li key={t} className="flex items-center gap-2">
@@ -81,11 +97,14 @@ export default async function ExplorePage() {
               ))}
             </ul>
           </div>
-          <div className="relative">
+          <figure className="relative">
             <PhoneFrame>
               <ProposalScreen />
             </PhoneFrame>
-          </div>
+            <figcaption className="mt-4 text-center text-xs text-paper-faint">
+              The proposal screen, redrawn from the app. Example content, not a real proposal.
+            </figcaption>
+          </figure>
         </Container>
       </section>
 
@@ -101,51 +120,61 @@ export default async function ExplorePage() {
         <div className="grid gap-12 lg:grid-cols-2">
           <SectionHead
             eyebrow="The problem"
-            title="We reached the moon. We still can't decide together."
-            lead="Writing built kingdoms. Print built nations. The internet changed everything — except how we decide."
+            title="Decisions that affect you are hard to see into, and harder to take part in."
+            lead="Most people get a summary after the fact. Sovereign gives a group one place to move from shared values to a proposal, a decision, action and an honest review."
           />
           <div className="grid gap-4">
             {[
-              ["Top-down", "We vote for people every few years, then hope."],
-              ["Ranked", "Feeds sort by outrage and by whoever pays for reach."],
-              ["Forgotten", "Nobody checks whether the last decision worked."],
+              ["Visibility", "See the proposal, its reasoning, its trade-offs and where it stands — not an opaque summary."],
+              ["Participation", "A structured way for the people affected to contribute, with rules set out before anyone responds."],
+              ["Accountability", "A record of what was proposed, assessed, decided and, afterwards, whether it worked."],
             ].map(([t, d]) => (
               <div key={t} className="rounded-card border border-line p-5">
                 <p className="font-semibold text-paper">{t}</p>
                 <p className="mt-1.5 text-paper-dim">{d}</p>
               </div>
             ))}
+            <p className="text-sm leading-relaxed text-paper-faint">
+              Sovereign is a tool for groups and places to decide together. It does not replace elected government,
+              and it does not guarantee agreement: a split is reported as a split.
+            </p>
           </div>
         </div>
       </Section>
 
-      {/* ------------------------------------------------------------ PILLARS */}
-      <Section className="bg-surface-soft">
+      {/* -------------------------------------------------------------- TODAY */}
+      <Section id="today" className="bg-surface-soft">
         <SectionHead
-          center
-          eyebrow="One app, five spaces"
-          title="Everything a person and a people need."
-          lead="Private where it should be. Public where it must be. One set of laws."
+          eyebrow="What you can do today"
+          title="Five spaces. Each says what works now."
+          lead="Every feature is marked current, in testing or planned — the same marks on every page."
         />
-        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {PILLARS.map((p) => (
-            <Link
-              key={p.id}
-              href={`/explore/product#${p.id}`}
-              className="press group rounded-sheet border border-line bg-ink p-6 hover:border-gold-dim"
-            >
-              <span className="grid h-11 w-11 place-items-center rounded-card bg-gold-wash text-gold">{p.icon}</span>
-              <p className="mt-5 font-serif text-2xl text-paper">{p.name}</p>
-              <p className="mt-2 text-paper-dim">{p.short}</p>
-              <p className="mt-4 text-sm font-semibold text-gold opacity-0 transition-opacity group-hover:opacity-100">
-                See how →
-              </p>
-            </Link>
+        <StatusLegend className="mt-10" />
+        <div className="mt-12 grid gap-6 lg:grid-cols-2">
+          {SPACES.map((sp) => (
+            <article key={sp.id} id={`today-${sp.id}`} className="rounded-sheet border border-line bg-ink p-6">
+              <h3 className="font-serif text-2xl text-paper">{sp.name}</h3>
+              <p className="mt-2 text-paper-dim">{sp.purpose}</p>
+              <ul className="mt-5 space-y-3">
+                {sp.can.map((c) => (
+                  <CapabilityRow key={c.title} c={c} />
+                ))}
+              </ul>
+            </article>
           ))}
           <div className="flex flex-col justify-between rounded-sheet border border-dashed border-line p-6">
-            <p className="font-serif text-2xl text-paper">See it all working.</p>
-            <div className="mt-6">
+            <div>
+              <p className="font-serif text-2xl text-paper">After you sign up</p>
+              <ol className="mt-4 list-decimal space-y-2 pl-5 text-paper-dim">
+                <li>We email you a sign-in link. There is no password.</li>
+                <li>You agree to the data terms and read the ten Universal Laws.</li>
+                <li>You give a name to be called by. Values, beliefs and a handle are optional — skip them and explore.</li>
+                <li>Each space shows a short note the first time you open it, with one thing to try.</li>
+              </ol>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-4">
               <ArrowLink href="/explore/product">Product tour</ArrowLink>
+              <ArrowLink href="/explore/roadmap">Roadmap</ArrowLink>
             </div>
           </div>
         </div>
@@ -158,8 +187,11 @@ export default async function ExplorePage() {
             <SectionHead
               eyebrow="Try it"
               title="Use it before you join."
-              lead="Runs in your browser. No account, nothing sent, nothing saved."
+              lead="Runs in your browser. No account, nothing sent, nothing saved. Everything in them is example data."
             />
+            <div className="mt-6">
+              <ArrowLink href="/explore/sample-decision">Walk through a whole sample decision</ArrowLink>
+            </div>
             <ul className="mt-8 space-y-3 text-paper-dim">
               {[
                 ["Individual", "a private AI that knows your values"],
@@ -182,19 +214,25 @@ export default async function ExplorePage() {
 
       {/* --------------------------------------------------------------- HOW */}
       <Section className="bg-surface-soft">
-        <SectionHead center eyebrow="How it works" title="Idea to outcome, in five steps." />
+        <SectionHead
+          center
+          eyebrow="How it works"
+          title="Idea to outcome, in five steps."
+          lead="These are the stages a proposal actually moves through in the app."
+        />
         <ol className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {[
-            ["Propose", "Anyone, at any scale, street to planet."],
-            ["Check", "AI reads it against ten laws and sets fair conditions."],
-            ["Decide", "Alignment, confidence, urgency. The lean stays hidden until close."],
-            ["Act", "What passes becomes a project, staffed by who offered."],
-            ["Learn", "Outcomes marked against predictions. The next decision improves."],
-          ].map(([t, d], i) => (
+            ["Propose", "A member writes the problem, the change and its costs, to a group or a place.", "Submitted"],
+            ["Align", "It is read against the ten Universal Laws and given its own public conditions before anyone responds.", "Review"],
+            ["Decide", "People who have read it respond in secret. The running result stays hidden until it closes.", "Deliberation, Resonance"],
+            ["Act", "What passes becomes a project once every need has someone against it.", "Passed, Under way"],
+            ["Reflect", "A project cannot finish without a written account of what actually happened.", "Done"],
+          ].map(([t, d, app], i) => (
             <li key={t} className="rounded-sheet border border-line bg-ink p-6">
               <span className="font-serif text-3xl tabular-nums text-gold">{String(i + 1).padStart(2, "0")}</span>
               <p className="mt-4 text-lg font-semibold text-paper">{t}</p>
               <p className="mt-1.5 text-paper-dim">{d}</p>
+              <p className="mt-3 text-xs text-paper-faint">In the app: {app}</p>
             </li>
           ))}
         </ol>
@@ -238,6 +276,26 @@ export default async function ExplorePage() {
         </div>
       </Section>
 
+      {/* ------------------------------------------------------------- TRUST */}
+      <Section>
+        <SectionHead
+          eyebrow="Why trust Sovereign?"
+          title="Trust should be inspectable."
+          lead="Here is what is enforced today, what is built but not switched on, and what is still a plan."
+        />
+        <ul className="mx-auto mt-12 grid max-w-5xl gap-4 sm:grid-cols-2">
+          {SAFEGUARDS.slice(0, 7).map((c) => (
+            <CapabilityRow key={c.title} c={c} />
+          ))}
+        </ul>
+        <p className="mx-auto mt-8 max-w-2xl text-center text-paper-dim">
+          AI readings support a decision; they cannot guarantee it is correct or ethical.{" "}
+          <Link href="/explore/trust" className="text-gold hover:underline">
+            What is private, what is shared, and how AI is used
+          </Link>
+        </p>
+      </Section>
+
       {/* -------------------------------------------------------------- LAWS */}
       <Section className="bg-surface-soft">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.6fr]">
@@ -245,7 +303,7 @@ export default async function ExplorePage() {
             <SectionHead
               eyebrow="The constitution"
               title="Ten Universal Laws."
-              lead="Above every decision, every business, every line of code. Break one and a proposal fails, whatever the vote."
+              lead="The framework every proposal and business is read against. Break one and a proposal fails, whatever the vote. Passing them is not proof a decision is right — only that it was checked."
             />
             <div className="mt-6">
               <ArrowLink href="/explore/about#laws">Read them in full</ArrowLink>
@@ -293,11 +351,11 @@ export default async function ExplorePage() {
         <div className="mt-12 grid gap-4 lg:grid-cols-3">
           {ROADMAP.map((col) => (
             <div key={col.stage} className="rounded-sheet border border-line bg-ink p-6">
-              <p className={`smallcaps text-[11px] font-semibold ${col.live ? "text-calm" : "text-paper-faint"}`}>{col.stage}</p>
+              <p className={`smallcaps text-[11px] font-semibold ${col.status === "current" ? "text-calm" : col.status === "testing" ? "text-gold" : "text-paper-faint"}`}>{col.stage}</p>
               <ul className="mt-4 space-y-2.5">
                 {col.items.slice(0, 4).map((it) => (
                   <li key={it.title} className="flex gap-2.5 text-paper">
-                    <span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${col.live ? "bg-calm" : "bg-paper-faint"}`} />
+                    <span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${col.status === "current" ? "bg-calm" : col.status === "testing" ? "bg-gold" : "bg-paper-faint"}`} />
                     {it.title}
                   </li>
                 ))}

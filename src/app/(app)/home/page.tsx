@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TabIntro } from "@/components/TabIntro";
 
 import { ScaleSelector } from "@/components/nav/ScaleSelector";
 import { TabActions } from "@/components/nav/TabActions";
@@ -230,6 +231,7 @@ export default async function HomePage({
       </TopBar>
 
       <Screen>
+        <TabIntro space="search" />
         {/* --------------------------------------------------------- SEARCH */}
         <section className="pt-2">
           <Gutter>
@@ -237,6 +239,32 @@ export default async function HomePage({
             <Readers className="mt-2">
               A search here: only you. One asked on a proposal: everyone it is addressed to.
             </Readers>
+            <nav aria-label="Explore by" className="mt-4">
+              <p className="smallcaps text-[11px] text-paper-faint">Explore by</p>
+              <ul className="mt-2 flex flex-wrap gap-1.5">
+                {(
+                  [
+                    ["Proposals", "/collective/proposals"],
+                    ["Decisions", "/collective/decisions"],
+                    ["Your groups", "/connection#groups"],
+                    ["Businesses", "/market?view=businesses"],
+                    ["A person, by handle", "/collective/people"],
+                  ] as const
+                ).map(([label, href]) => (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className="press inline-block rounded-pill border border-line px-3 py-1.5 text-sm text-paper-dim hover:text-paper"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-[0.8125rem] text-paper-faint">
+                People can only be found by their exact handle. There is no directory, on purpose.
+              </p>
+            </nav>
           </Gutter>
         </section>
 
@@ -312,6 +340,15 @@ export default async function HomePage({
               ))}
             </nav>
 
+            <p className="text-[0.8125rem] leading-relaxed text-paper-faint">
+              <span className="font-semibold text-paper-dim">Why you see these: </span>
+              {tab === "foryou"
+                ? `what touches the Spheres you rated 4 or 5, in ${here}, newest first. Each item says why.`
+                : tab === "following"
+                  ? "posts and finished acts by people you follow, newest first. Nothing is ranked by likes."
+                  : `everything you can read that was posted or decided in ${here}, newest first.`}
+            </p>
+
             {tab === "foryou" ? (
               <div className="rounded-card border border-line bg-surface-soft p-4">
                 {top.length ? (
@@ -340,7 +377,15 @@ export default async function HomePage({
             ) : null}
 
             {tab === "discover" && !address ? (
-              <Empty>Say where you are, or join a group. Discover fills from there.</Empty>
+              <Empty
+                action={
+                  <LinkButton href="/settings/place" tone="gold">
+                    Say where you are
+                  </LinkButton>
+                }
+              >
+                Discover shows what is happening where you are, or in your group. Tell Sovereign where you are to fill it.
+              </Empty>
             ) : tab === "foryou" && !top.length ? null : (
               <Feed
                 items={items}
@@ -352,8 +397,23 @@ export default async function HomePage({
                   tab === "foryou"
                     ? `Nothing in your Spheres in ${here} yet. Be the first to propose.`
                     : tab === "discover"
-                      ? `Nothing new in ${here} yet.`
-                      : undefined
+                      ? `Nothing has been posted or decided in ${here} yet.`
+                      : "You aren't following anyone yet, or they haven't posted. Discover shows everyone near you."
+                }
+                emptyAction={
+                  tab === "foryou" ? (
+                    <LinkButton href="/collective/proposals/new" tone="gold">
+                      Write a proposal
+                    </LinkButton>
+                  ) : tab === "discover" ? (
+                    <LinkButton href="#compose" tone="gold">
+                      Post the first thing
+                    </LinkButton>
+                  ) : (
+                    <LinkButton href="/home?feed=discover" tone="gold">
+                      Open Discover
+                    </LinkButton>
+                  )
                 }
               />
             )}

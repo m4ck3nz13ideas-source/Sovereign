@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TabIntro } from "@/components/TabIntro";
 
 import { TabActions } from "@/components/nav/TabActions";
 import { Empty, Gutter, Rail, Row, Screen, SectionLabel, Tag, TopBar } from "@/components/ui";
@@ -98,6 +99,7 @@ export default async function ConnectionPage() {
       </TopBar>
 
       <Screen>
+        <TabIntro space="connection" />
         <section id="chats" className="scroll-mt-28 pt-5">
           <Gutter>
             <SectionLabel right={<Link href="/chats/new" className="text-gold">new group</Link>}>Chats</SectionLabel>

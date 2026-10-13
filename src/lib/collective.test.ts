@@ -8,6 +8,7 @@ import {
   reviewQuality,
   scoreTone,
   sentenceAround,
+  stageDetail,
   whatHappensNext,
 } from "./collective";
 import { CLOSED_STATUSES, type ProposalStatus } from "./types";
@@ -184,5 +185,26 @@ describe("quoting the sentence a word was noticed in", () => {
     const s = sentenceAround(long, at, at + 6);
     expect(s.length).toBeLessThanOrEqual(400);
     expect(s).toContain("shared");
+  });
+});
+
+describe("stage detail", () => {
+  it("says who, the rule and what could stop it wherever something can still happen", () => {
+    for (const s of ["in_review", "in_deliberation", "voting", "passed", "failed", "executing"] as ProposalStatus[]) {
+      const d = stageDetail(s);
+      expect(d, s).not.toBeNull();
+      expect(d!.who.length, s).toBeGreaterThan(10);
+      expect(d!.rule.length, s).toBeGreaterThan(10);
+      expect(d!.couldStop.length, s).toBeGreaterThan(5);
+    }
+  });
+
+  it("has nothing to add once a proposal is finished or withdrawn", () => {
+    expect(stageDetail("completed")).toBeNull();
+    expect(stageDetail("withdrawn")).toBeNull();
+  });
+
+  it("never tells anyone a concern can block a proposal", () => {
+    expect(stageDetail("in_deliberation")!.rule).toMatch(/never a veto/);
   });
 });

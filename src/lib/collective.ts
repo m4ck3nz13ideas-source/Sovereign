@@ -206,6 +206,57 @@ export function whatHappensNext(
   }
 }
 
+/**
+ * For the stage a proposal is at: who can take part, the rule that applies,
+ * and what could stop it going further. Each line restates a rule in
+ * CLAUDE.md (4, 8, 9, 13, 16, 22); change the rule, change the line. Null for
+ * the stages where nothing more can happen.
+ */
+export function stageDetail(
+  status: ProposalStatus,
+): { who: string; rule: string; couldStop: string } | null {
+  switch (status) {
+    case "in_review":
+      return {
+        who: "Nobody responds yet. Its author can withdraw it, in writing.",
+        rule: "It is read against the ten Universal Laws and given its own conditions before anybody responds.",
+        couldStop: "A violation of any Universal Law ends it, whatever a vote would have said.",
+      };
+    case "in_deliberation":
+      return {
+        who: "Everyone it is addressed to can read it, ask questions and raise concerns.",
+        rule: "You can respond only once you have opened it. A concern is answered in writing; it is never a veto.",
+        couldStop: "Critical review flags left unanswered.",
+      };
+    case "voting":
+      return {
+        who: "People it is addressed to who have read it. Each response is secret.",
+        rule: "It closes when its conditions are met, and passes if the average alignment clears the threshold. The lean stays hidden until then.",
+        couldStop: "Too few voices, a group not yet reached, an unanswered requirement, or alignment below the threshold.",
+      };
+    case "passed":
+      return {
+        who: "Anyone it reached can take on one of its needs.",
+        rule: "Passing is not starting: it becomes a project only when every need has a name against it.",
+        couldStop: "A need nobody takes on. If it is not going ahead, someone has to say why, in writing.",
+      };
+    case "failed":
+      return {
+        who: "Anyone can write a second attempt.",
+        rule: "A second attempt has to say what it changed. A proposal declined on its merits is never offered back.",
+        couldStop: "Nothing further: the record stands.",
+      };
+    case "executing":
+      return {
+        who: "The people who took on its needs.",
+        rule: "It cannot complete without a written reflection on what actually happened.",
+        couldStop: "A prediction that has come due and has not been marked.",
+      };
+    default:
+      return null;
+  }
+}
+
 /* --- quoting a sentence -------------------------------------------------- */
 
 const MAX_EXCERPT = 400;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, type ReactNode } from "react";
 
 import { Empty } from "@/components/ui";
 import { ago } from "@/lib/format";
@@ -49,6 +49,7 @@ export function Feed({
   ad = null,
   reasons = {},
   empty,
+  emptyAction,
 }: {
   items: WitnessFeedItem[];
   kept: Set<string>;
@@ -57,10 +58,12 @@ export function Feed({
   /** Why an item is in For you ("Tagged Ecology"). Shown, never sorted by. */
   reasons?: Record<string, string>;
   empty?: string;
+  /** One next step for an empty feed, so it is never a dead end. */
+  emptyAction?: ReactNode;
 }) {
   if (!items.length) {
     return (
-      <Empty>{empty ?? "Nothing yet. Post something. Follow someone."}</Empty>
+      <Empty action={emptyAction}>{empty ?? "Nothing yet. Post something. Follow someone."}</Empty>
     );
   }
 

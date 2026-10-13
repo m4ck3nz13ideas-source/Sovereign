@@ -1,5 +1,5 @@
 import { cx } from "@/components/ui";
-import { proposalProgress, whatHappensNext } from "@/lib/collective";
+import { proposalProgress, stageDetail, whatHappensNext } from "@/lib/collective";
 import type { ProposalStatus } from "@/lib/types";
 
 /**
@@ -22,6 +22,7 @@ export function Progress({
   closesAt: string | null;
 }) {
   const steps = proposalProgress(status);
+  const detail = stageDetail(status);
 
   return (
     <div className="mb-8">
@@ -52,6 +53,25 @@ export function Progress({
       <p className="mt-2 text-[0.8125rem] leading-relaxed text-paper-faint">
         {whatHappensNext(status, { hasGroup, closesAt })}
       </p>
+      {detail ? (
+        <details className="mt-2 text-[0.8125rem] leading-relaxed">
+          <summary className="cursor-pointer text-paper-dim hover:text-paper">About this stage</summary>
+          <dl className="mt-2 space-y-1.5 text-paper-faint">
+            <div>
+              <dt className="inline font-semibold text-paper-dim">Who can take part: </dt>
+              <dd className="inline">{detail.who}</dd>
+            </div>
+            <div>
+              <dt className="inline font-semibold text-paper-dim">The rule: </dt>
+              <dd className="inline">{detail.rule}</dd>
+            </div>
+            <div>
+              <dt className="inline font-semibold text-paper-dim">What could stop it: </dt>
+              <dd className="inline">{detail.couldStop}</dd>
+            </div>
+          </dl>
+        </details>
+      ) : null}
     </div>
   );
 }
