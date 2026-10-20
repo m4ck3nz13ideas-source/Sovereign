@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
 import { Button, Card, inputClass } from "@/components/ui";
 import type { Person } from "@/lib/types";
@@ -20,17 +20,27 @@ import { findPerson, follow } from "./actions";
  * they give you theirs; otherwise you meet the way you would anywhere, by
  * being in the same place.
  */
-export function Finder() {
-  const [handle, setHandle] = useState("");
+export function Finder({ initial = "" }: { initial?: string }) {
+  const [handle, setHandle] = useState(initial);
   const [pending, start] = useTransition();
   const [result, setResult] = useState<Person | null>(null);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function search() {
+  // Arriving from somebody's shared link or QR code: look them up at once.
+  const asked = useRef(false);
+  useEffect(() => {
+    if (initial && !asked.current) {
+      asked.current = true;
+      search(initial);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial]);
+
+  function search(h: string = handle) {
     setError(null);
     start(async () => {
-      const res = await findPerson(handle);
+      const res = await findPerson(h);
       if (!res.ok) {
         setError(res.error);
         return;
@@ -56,7 +66,7 @@ export function Finder() {
           aria-label="Handle"
           className={inputClass}
         />
-        <Button tone="quiet" disabled={pending} onClick={search}>
+        <Button tone="quiet" disabled={pending} onClick={() => search()}>
           {pending ? "…" : "Find"}
         </Button>
       </div>

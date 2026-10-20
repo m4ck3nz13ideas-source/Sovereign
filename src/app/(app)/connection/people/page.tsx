@@ -26,7 +26,12 @@ export const metadata = { title: "People · Sovereign" };
  * metrics by name, and a number next to somebody's name is the whole of what a
  * vanity metric is.
  */
-export default async function PeoplePage() {
+export default async function PeoplePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ handle?: string }>;
+}) {
+  const { handle } = await searchParams;
   await requireSession();
   const supabase = await createClient();
 
@@ -55,7 +60,7 @@ export default async function PeoplePage() {
 
         <section>
           <SectionLabel>Find someone</SectionLabel>
-          <Finder />
+          <Finder initial={(handle ?? "").replace(/^@/, "").slice(0, 40)} />
           <p className="mt-2 text-[0.8125rem] leading-relaxed text-paper-faint">
             By handle, exactly. There is no directory and no search — if
             somebody wants to be found they give you theirs.

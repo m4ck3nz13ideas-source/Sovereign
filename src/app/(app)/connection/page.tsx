@@ -1,14 +1,19 @@
 import Link from "next/link";
-import { TabIntro } from "@/components/TabIntro";
+import QRCode from "qrcode";
 
+import { TabIntro } from "@/components/TabIntro";
 import { TabActions } from "@/components/nav/TabActions";
-import { Empty, Gutter, Rail, Row, Screen, SectionLabel, Tag, TopBar } from "@/components/ui";
-import { ago } from "@/lib/format";
+import { Gutter, Screen, TopBar } from "@/components/ui";
+import { isOpen } from "@/lib/collective";
+import { env } from "@/lib/env";
+import { shortDate, STATUS_LABEL } from "@/lib/format";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
-import type { Conversation, ThreadItem } from "@/lib/types";
+import type { Conversation, FriendshipRequest, ProposalStatus, ThreadItem } from "@/lib/types";
 
-import { GroupRow } from "./GroupRow";
+import { Inbox, markKey, type InboxItem, type Marks } from "./Inbox";
+import { PlusMenu } from "./PlusMenu";
+import { ShareHandle } from "./ShareHandle";
 
 export const metadata = { title: "Connection · Sovereign" };
 
@@ -17,193 +22,230 @@ export const metadata = { title: "Connection · Sovereign" };
  *
  * The second tab, by Mackenzie's direction (12 October). In the four
  * quadrants it is the We: relationships and shared meaning, where Individual
- * is the I and Collective is the systems those relationships build. Search,
- * in the centre, is where you land; this is where you find your people.
+ * is the I and Collective is the systems those relationships build.
  *
- * Every chat lives here: one friend, a circle of friends (0052), each group
- * you are in, each proposal you wrote or back. A group's decisions stay in
- * Collective and a business's page in Market — this is the way in, not a
- * second copy. People — finding someone by handle, friend requests, who you
- * follow — moved here from Collective on 20 October. Nothing here is ranked, and nothing shows anybody how
- * connected anybody else is.
+ * Since 20 October it is one inbox rather than five sections: friends,
+ * circles, groups, proposals and businesses together, newest first, with
+ * filters, a search over your own list, pin and mute (0055), and a line on
+ * each row saying what is happening there. People — finding someone by
+ * handle, requests, who you follow — is its own page, a tap away. A group's
+ * decisions stay in Collective and a business's page in Market; this is the
+ * way in, not a second copy. Nothing here is ranked, and nothing shows anybody
+ * how connected anybody else is.
  */
-type Chat = {
-  key: string;
-  href: string;
-  title: string;
-  preview: string;
-  at: string | null;
-  unread: number;
-  many: boolean;
+
+const BUSINESS_STATUS: Record<string, string> = {
+  approved: "Approved · listed in Market",
+  awaiting_sign_off: "Reviewed · waiting for sign-off",
+  unvetted: "Not reviewed yet",
+  changed: "Changed since approval · needs review",
+  refused_by_ai: "Refused at review",
+  refused: "Refused",
+  suspended: "Suspended",
 };
 
-const PILL =
-  "press shrink-0 rounded-pill bg-surface px-3.5 py-1.5 text-[0.8125rem] font-medium text-paper-dim";
-
 export default async function ConnectionPage() {
-  const { profile } = await requireSession();
+  const { profile, groups: myGroups } = await requireSession();
   const supabase = await createClient();
 
-  const [{ data: convos }, { data: threadRows }, { data: people }, { data: vendors }, { data: asks }] = await Promise.all([
-    supabase.rpc("my_conversations"),
-    supabase.rpc("my_threads"),
-    supabase.rpc("my_people"),
-    supabase.from("vendors").select("id, name").eq("owner_id", profile.id).order("name"),
-    supabase.rpc("friendship_requests"),
-  ]);
-  const waiting = (asks ?? []).length;
+  const [{ data: convos }, { data: threadRows }, { data: vendors }, { data: asks }, { data: markRows }] =
+    await Promise.all([
+      supabase.rpc("my_conversations"),
+      supabase.rpc("my_threads"),
+      supabase.from("vendors").select("id, name, location").eq("owner_id", profile.id).order("name"),
+      supabase.rpc("friendship_requests"),
+      supabase.from("connection_marks").select("kind, ref_id, pinned, muted"),
+    ]);
 
+  const friends = (convos ?? []) as Conversation[];
   const threads = (threadRows ?? []) as ThreadItem[];
+  const businesses = (vendors ?? []) as { id: string; name: string; location: string | null }[];
+  const waiting = ((asks ?? []) as FriendshipRequest[]).filter((r) => r.direction === "they asked");
+
+  const groupIds = myGroups.map((g) => g.id);
+  const proposalIds = threads.filter((t) => t.kind === "proposal").map((t) => t.ref_id);
+
+  // What is happening in each group, the stage of each proposal chat, a face
+  // for each friend and the standing of each business — read alongside.
+  const [{ data: openRows }, { data: stageRows }, { data: faces }, statuses] = await Promise.all([
+    groupIds.length
+      ? supabase
+          .from("proposals")
+          .select("group_id, status, closes_at")
+          .in("group_id", groupIds)
+          .in("status", ["in_review", "in_deliberation", "voting"])
+      : Promise.resolve({ data: [] }),
+    proposalIds.length
+      ? supabase.from("proposals").select("id, status").in("id", proposalIds)
+      : Promise.resolve({ data: [] }),
+    friends.length
+      ? supabase.from("public_profiles").select("id, avatar_url").in("id", friends.map((c) => c.profile_id))
+      : Promise.resolve({ data: [] }),
+    Promise.all(
+      businesses.map(async (b) => {
+        const { data } = await supabase.rpc("vendor_status", { p_vendor_id: b.id });
+        return [b.id, (data as string | null) ?? null] as const;
+      }),
+    ),
+  ]);
+
+  const open = (openRows ?? []) as { group_id: string; status: ProposalStatus; closes_at: string | null }[];
+  const stages = new Map(((stageRows ?? []) as { id: string; status: ProposalStatus }[]).map((p) => [p.id, p.status]));
+  const avatars = new Map(((faces ?? []) as { id: string; avatar_url: string | null }[]).map((f) => [f.id, f.avatar_url]));
+  const standing = new Map(statuses);
+
   const preview = (t: { last_body: string | null; last_author?: string | null }, mine?: boolean | null) =>
     t.last_body ? `${mine ? "You: " : t.last_author ? `${t.last_author}: ` : ""}${t.last_body}` : "Nothing said yet.";
 
-  // One friend and circles of friends, together, newest first.
-  const chats: Chat[] = [
-    ...((convos ?? []) as Conversation[]).map((c) => ({
-      key: `p:${c.profile_id}`,
+  const items: InboxItem[] = [
+    ...friends.map((c) => ({
+      key: `person:${c.profile_id}`,
+      kind: "person" as const,
+      refId: c.profile_id,
       href: `/chats/${c.profile_id}`,
       title: c.display_name,
       preview: preview(c, c.last_was_mine),
       at: c.last_at,
       unread: c.unread ?? 0,
-      many: false,
+      avatar: avatars.get(c.profile_id) ?? null,
+      detail: null,
+      stage: null,
+      chatHref: null,
     })),
-    ...threads
-      .filter((t) => t.kind === "circle")
-      .map((t) => ({
-        key: `c:${t.ref_id}`,
-        href: `/chats/t/${t.thread_id}`,
+    ...threads.map((t): InboxItem => {
+      const base = {
+        key: `${t.kind}:${t.ref_id}`,
+        refId: t.ref_id,
         title: t.title,
         preview: preview(t),
         at: t.last_at,
         unread: t.unread ?? 0,
-        many: true,
-      })),
-  ].sort((a, b) => (b.at ?? "").localeCompare(a.at ?? "") || a.title.localeCompare(b.title));
+        avatar: null,
+        detail: null,
+        stage: null,
+        chatHref: null,
+      };
+      if (t.kind === "circle") return { ...base, kind: "circle", href: `/chats/t/${t.thread_id}` };
+      if (t.kind === "group") {
+        return {
+          ...base,
+          kind: "group",
+          href: `/connection/g/${t.ref_id}`,
+          chatHref: `/chats/group/${t.ref_id}`,
+          detail: groupActivity(open.filter((p) => p.group_id === t.ref_id)),
+        };
+      }
+      const status = stages.get(t.ref_id) ?? null;
+      return {
+        ...base,
+        kind: "proposal",
+        href: `/chats/proposal/${t.ref_id}`,
+        stage: status
+          ? {
+              label: STATUS_LABEL[status] ?? status,
+              live: status === "in_review" || isOpen(status),
+              href: `/collective/proposals/${t.ref_id}`,
+            }
+          : null,
+      };
+    }),
+    ...businesses.map((b) => {
+      const s = standing.get(b.id) ?? null;
+      return {
+        key: `business:${b.id}`,
+        kind: "business" as const,
+        refId: b.id,
+        href: `/market/v/${b.id}`,
+        title: b.name,
+        preview: s ? (BUSINESS_STATUS[s] ?? s) : "Your business",
+        at: null,
+        unread: 0,
+        avatar: null,
+        detail: b.location,
+        stage: null,
+        chatHref: null,
+      };
+    }),
+  ];
 
-  const groups = threads.filter((t) => t.kind === "group");
-  const proposals = threads.filter((t) => t.kind === "proposal");
-  const following = ((people ?? []) as { profile_id: string; display_name: string; tie: string }[]).filter(
-    (p) => p.tie === "following",
+  const marks: Marks = Object.fromEntries(
+    ((markRows ?? []) as { kind: string; ref_id: string; pinned: boolean; muted: boolean }[]).map((m) => [
+      markKey(m.kind, m.ref_id),
+      { pinned: m.pinned, muted: m.muted },
+    ]),
   );
-  const businesses = (vendors ?? []) as { id: string; name: string }[];
-  const count = (xs: { unread: number }[]) => xs.reduce((n, x) => n + (x.unread ?? 0), 0);
+
+  const handle = profile.handle ?? null;
+  const link = handle ? `${env.canonicalUrl}/connection/people?handle=${encodeURIComponent(handle)}` : null;
+  const qr = link
+    ? await QRCode.toString(link, { type: "svg", margin: 0, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } })
+    : null;
 
   return (
     <>
-      <TopBar title="Connection" action={<TabActions plus="/chats/new" plusLabel="New group chat" />}>
-        <Rail>
-          <a href="#chats" className={PILL}>Chats{count(chats) ? ` · ${count(chats)}` : ""}</a>
-          <a href="#groups" className={PILL}>Groups{count(groups) ? ` · ${count(groups)}` : ""}</a>
-          <a href="#proposals" className={PILL}>Proposals{count(proposals) ? ` · ${count(proposals)}` : ""}</a>
-          <a href="#businesses" className={PILL}>Businesses</a>
-          <a href="#following" className={PILL}>Following</a>
-          <Link href="/connection/people" className={PILL}>People{waiting ? ` · ${waiting}` : ""}</Link>
-        </Rail>
+      <TopBar
+        title="Connection"
+        action={<TabActions plus="/chats/new" plusLabel="New" plusSlot={<PlusMenu />} />}
+      >
+        <div className="flex justify-center px-5 pb-2.5 pt-0.5">
+          <Link
+            href="/connection/people"
+            className="press inline-flex items-center gap-1.5 rounded-pill bg-surface px-3.5 py-1.5 text-[0.8125rem] font-medium text-paper-dim"
+          >
+            People{waiting.length ? <span className="text-gold">· {waiting.length} waiting</span> : null}
+          </Link>
+        </div>
       </TopBar>
 
       <Screen>
         <TabIntro space="connection" />
-        <section id="chats" className="scroll-mt-28 pt-5">
-          <Gutter>
-            <SectionLabel right={<Link href="/chats/new" className="text-gold">new group</Link>}>Chats</SectionLabel>
-          </Gutter>
-          {chats.length ? (
-            chats.map((c) => (
-              <Row key={c.key} href={c.href}>
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="truncate text-[0.95rem] text-paper">
-                    {c.title}
-                    {c.many ? <span className="smallcaps ml-2 text-[10px] text-paper-faint">group</span> : null}
-                  </span>
-                  <span className="smallcaps shrink-0 text-[10px] text-paper-faint">
-                    {c.unread ? <Tag tone="gold">{c.unread} new</Tag> : c.at ? ago(c.at) : null}
-                  </span>
-                </div>
-                <p className="mt-1 truncate text-[0.875rem] text-paper-dim">{c.preview}</p>
-              </Row>
-            ))
-          ) : (
-            <Gutter>
-              <Empty>No friends yet. A chat opens when you both agree.</Empty>
-            </Gutter>
-          )}
-        </section>
 
-        <section id="groups" className="scroll-mt-28 pt-7">
-          <Gutter>
-            <SectionLabel>Groups</SectionLabel>
+        {waiting.length ? (
+          <Gutter className="pt-3">
+            <Link
+              href="/connection/people"
+              className="press flex items-center justify-between gap-3 rounded-card border border-gold-dim bg-gold-wash px-4 py-3"
+            >
+              <span className="text-[0.9375rem] text-paper">
+                {waiting.length === 1
+                  ? `${waiting[0].display_name} wants to connect`
+                  : `${waiting.length} people want to connect`}
+              </span>
+              <span className="smallcaps shrink-0 text-[11px] text-gold">Review →</span>
+            </Link>
           </Gutter>
-          {groups.length ? (
-            groups.map((g) => (
-              <GroupRow key={g.ref_id} id={g.ref_id} name={g.title} preview={preview(g)} unread={g.unread ?? 0} />
-            ))
-          ) : (
-            <Gutter>
-              <Empty>No groups yet. Groups are by invitation.</Empty>
-            </Gutter>
-          )}
-        </section>
+        ) : null}
 
-        <section id="proposals" className="scroll-mt-28 pt-7">
-          <Gutter>
-            <SectionLabel>Proposals</SectionLabel>
-          </Gutter>
-          {proposals.length ? (
-            proposals.map((p) => (
-              <Row key={p.ref_id} href={`/chats/proposal/${p.ref_id}`}>
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="truncate text-[0.95rem] text-paper">{p.title}</span>
-                  {p.unread ? <Tag tone="gold">{p.unread} new</Tag> : null}
-                </div>
-                <p className="mt-1 truncate text-[0.875rem] text-paper-dim">{preview(p)}</p>
-              </Row>
-            ))
-          ) : (
-            <Gutter>
-              <Empty>Proposals you write or back get a chat here.</Empty>
-            </Gutter>
-          )}
-        </section>
+        <Inbox items={items} marks={marks} />
 
-        <section id="businesses" className="scroll-mt-28 pt-7">
-          <Gutter>
-            <SectionLabel right={<Link href="/market/sell" className="text-gold">add</Link>}>Businesses</SectionLabel>
+        {friends.length < 3 ? (
+          <Gutter className="pt-8">
+            <ShareHandle handle={handle} link={link} qr={qr} />
           </Gutter>
-          {businesses.length ? (
-            businesses.map((v) => (
-              <Row key={v.id} href={`/market/v/${v.id}`}>
-                <span className="text-[0.95rem] text-paper">{v.name}</span>
-              </Row>
-            ))
-          ) : (
-            <Gutter>
-              <Empty>Businesses you run show here.</Empty>
-            </Gutter>
-          )}
-        </section>
-
-        <section id="following" className="scroll-mt-28 pt-7 pb-6">
-          <Gutter>
-            <SectionLabel right={<Link href="/connection/people" className="text-gold">find someone</Link>}>
-              Following
-            </SectionLabel>
-          </Gutter>
-          {following.length ? (
-            following.map((p) => (
-              <Row key={p.profile_id} href={`/connection/people/${p.profile_id}`}>
-                <span className="text-[0.95rem] text-paper">{p.display_name}</span>
-              </Row>
-            ))
-          ) : (
-            <Gutter>
-              <Empty>Nobody yet.</Empty>
-            </Gutter>
-          )}
-        </section>
+        ) : null}
       </Screen>
     </>
   );
+}
+
+/** "3 proposals open · one closes Friday" — or nothing, when nothing is. */
+function groupActivity(open: { closes_at: string | null }[]): string | null {
+  if (!open.length) return null;
+  const count = open.length === 1 ? "1 proposal open" : `${open.length} proposals open`;
+  const now = Date.now();
+  const next = open
+    .map((p) => (p.closes_at ? new Date(p.closes_at).getTime() : null))
+    .filter((t): t is number => t !== null && t > now)
+    .sort((a, b) => a - b)[0];
+  if (!next) return count;
+  const days = (next - now) / 86_400_000;
+  const when =
+    days < 1
+      ? "today"
+      : days < 7
+        ? new Date(next).toLocaleDateString("en-GB", { weekday: "long", timeZone: "Europe/London" })
+        : shortDate(new Date(next).toISOString());
+  return `${count} · ${open.length === 1 ? "closes" : "one closes"} ${when}`;
 }
 
 export const dynamic = "force-dynamic";

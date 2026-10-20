@@ -5,10 +5,19 @@ import Link from "next/link";
  * settings. Same two buttons in the same place everywhere, so nobody has to
  * learn a tab before they can begin in it.
  */
-export function TabActions({ plus, plusLabel }: { plus: string; plusLabel: string }) {
+export function TabActions({
+  plus,
+  plusLabel,
+  plusSlot,
+}: {
+  plus: string;
+  plusLabel: string;
+  /** Replaces the plain "+" link, for a tab whose "+" offers a choice. */
+  plusSlot?: React.ReactNode;
+}) {
   return (
     <div className="flex items-center">
-      <Link
+      {plusSlot ?? <Link
         href={plus}
         aria-label={plusLabel}
         title={plusLabel}
@@ -17,7 +26,7 @@ export function TabActions({ plus, plusLabel }: { plus: string; plusLabel: strin
         <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
           <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" />
         </svg>
-      </Link>
+      </Link>}
       <Link
         href="/settings"
         aria-label="Settings"
