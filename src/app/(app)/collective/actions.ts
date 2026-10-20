@@ -1680,7 +1680,7 @@ export async function markProjection(
 
   if (error) return { ok: false as const, error: error.message };
 
-  revalidatePath("/collective/impact");
+  revalidatePath("/collective/projects");
   revalidatePath("/collective/proposals", "page");
   return { ok: true as const };
 }

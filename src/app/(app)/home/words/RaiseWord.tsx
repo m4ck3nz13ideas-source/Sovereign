@@ -31,7 +31,7 @@ export function RaiseWord({ groupId }: { groupId: string }) {
         return;
       }
       setWord("");
-      router.push(`/collective/lexicon/${r.id}`);
+      router.push(`/home/words/${r.id}`);
     });
   }
 

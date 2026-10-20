@@ -35,7 +35,7 @@ const KIND_WORD: Record<SearchHit["kind"], string> = {
  */
 function hitHref(hit: SearchHit): string {
   return hit.kind === "term"
-    ? `/collective/lexicon/${hit.id}`
+    ? `/home/words/${hit.id}`
     : `/collective/proposals/${hit.id}`;
 }
 

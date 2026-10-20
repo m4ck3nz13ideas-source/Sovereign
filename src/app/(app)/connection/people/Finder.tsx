@@ -84,7 +84,7 @@ function Found({ person }: { person: Person }) {
       <div className="flex items-baseline justify-between gap-3">
         <div>
           <Link
-            href={`/collective/people/${person.profile_id}`}
+            href={`/connection/people/${person.profile_id}`}
             className="text-[0.95rem] text-paper hover:text-gold"
           >
             {person.display_name}

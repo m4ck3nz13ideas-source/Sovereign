@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 
-import { setHandle } from "@/app/(app)/collective/people/actions";
+import { setHandle } from "@/app/(app)/connection/people/actions";
 import { Button, Card, inputClass } from "@/components/ui";
 
 /**

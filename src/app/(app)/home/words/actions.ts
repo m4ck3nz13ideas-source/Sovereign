@@ -42,7 +42,7 @@ export async function raiseTerm(groupId: string, term: string) {
 
   if (error) return { ok: false as const, error: error.message };
 
-  revalidatePath("/collective/lexicon");
+  revalidatePath("/home/words");
   // If somebody had already raised it, this is their word's id rather than a
   // new one, and landing on the page where their reading already is is the
   // useful outcome rather than a collision to report.
@@ -73,8 +73,8 @@ export async function writeReading(termId: string, body: string) {
 
   if (error) return { ok: false as const, error: error.message };
 
-  revalidatePath("/collective/lexicon");
-  revalidatePath(`/collective/lexicon/${termId}`);
+  revalidatePath("/home/words");
+  revalidatePath(`/home/words/${termId}`);
   // The revision number, which is 1 the first time. Anything above 1 means the
   // earlier wording is still on the record, and the screen says so.
   return { ok: true as const, revision: data as number };
@@ -112,7 +112,7 @@ export async function raiseTermFrom(proposalId: string, term: string, excerpt: s
 
   if (error) return { ok: false as const, error: error.message };
 
-  revalidatePath("/collective/lexicon");
-  revalidatePath(`/collective/lexicon/${data as string}`);
+  revalidatePath("/home/words");
+  revalidatePath(`/home/words/${data as string}`);
   return { ok: true as const, id: data as string };
 }

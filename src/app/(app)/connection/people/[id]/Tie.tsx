@@ -11,7 +11,7 @@ import {
   endFriendship,
   follow,
   unfollow,
-} from "@/app/(app)/collective/people/actions";
+} from "@/app/(app)/connection/people/actions";
 
 /**
  * The two buttons, kept visibly separate.

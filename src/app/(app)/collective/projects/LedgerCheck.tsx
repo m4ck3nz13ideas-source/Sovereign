@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 
 import { Button, Card } from "@/components/ui";
 
-import { verifyRecord } from "./actions";
+import { verifyRecord } from "./ledger";
 
 /**
  * Replay the group's hash chain and report whether it still adds up.

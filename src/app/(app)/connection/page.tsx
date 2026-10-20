@@ -23,7 +23,8 @@ export const metadata = { title: "Connection · Sovereign" };
  * Every chat lives here: one friend, a circle of friends (0052), each group
  * you are in, each proposal you wrote or back. A group's decisions stay in
  * Collective and a business's page in Market — this is the way in, not a
- * second copy. Nothing here is ranked, and nothing shows anybody how
+ * second copy. People — finding someone by handle, friend requests, who you
+ * follow — moved here from Collective on 20 October. Nothing here is ranked, and nothing shows anybody how
  * connected anybody else is.
  */
 type Chat = {
@@ -43,12 +44,14 @@ export default async function ConnectionPage() {
   const { profile } = await requireSession();
   const supabase = await createClient();
 
-  const [{ data: convos }, { data: threadRows }, { data: people }, { data: vendors }] = await Promise.all([
+  const [{ data: convos }, { data: threadRows }, { data: people }, { data: vendors }, { data: asks }] = await Promise.all([
     supabase.rpc("my_conversations"),
     supabase.rpc("my_threads"),
     supabase.rpc("my_people"),
     supabase.from("vendors").select("id, name").eq("owner_id", profile.id).order("name"),
+    supabase.rpc("friendship_requests"),
   ]);
+  const waiting = (asks ?? []).length;
 
   const threads = (threadRows ?? []) as ThreadItem[];
   const preview = (t: { last_body: string | null; last_author?: string | null }, mine?: boolean | null) =>
@@ -95,6 +98,7 @@ export default async function ConnectionPage() {
           <a href="#proposals" className={PILL}>Proposals{count(proposals) ? ` · ${count(proposals)}` : ""}</a>
           <a href="#businesses" className={PILL}>Businesses</a>
           <a href="#following" className={PILL}>Following</a>
+          <Link href="/connection/people" className={PILL}>People{waiting ? ` · ${waiting}` : ""}</Link>
         </Rail>
       </TopBar>
 
@@ -181,13 +185,13 @@ export default async function ConnectionPage() {
 
         <section id="following" className="scroll-mt-28 pt-7 pb-6">
           <Gutter>
-            <SectionLabel right={<Link href="/collective/people" className="text-gold">find someone</Link>}>
+            <SectionLabel right={<Link href="/connection/people" className="text-gold">find someone</Link>}>
               Following
             </SectionLabel>
           </Gutter>
           {following.length ? (
             following.map((p) => (
-              <Row key={p.profile_id} href={`/collective/people/${p.profile_id}`}>
+              <Row key={p.profile_id} href={`/connection/people/${p.profile_id}`}>
                 <span className="text-[0.95rem] text-paper">{p.display_name}</span>
               </Row>
             ))

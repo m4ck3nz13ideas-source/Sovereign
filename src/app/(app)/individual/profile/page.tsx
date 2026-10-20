@@ -142,7 +142,7 @@ export default async function ProfilePage() {
       <Divider />
 
       <section>
-        <SectionLabel right={group ? <Link href="/collective/impact" className="hover:text-gold">the record</Link> : undefined}>
+        <SectionLabel right={group ? <Link href="/collective/projects#impact" className="hover:text-gold">the record</Link> : undefined}>
           Recent contributions
         </SectionLabel>
 

@@ -53,27 +53,27 @@ async function call(fn: string, profileId: string, paths: string[]) {
   return { ok: true as const };
 }
 
-const PATHS = ["/collective/people", "/home"];
+const PATHS = ["/connection/people", "/home"];
 
 export async function follow(profileId: string) {
-  return call("follow_person", profileId, [...PATHS, `/collective/people/${profileId}`]);
+  return call("follow_person", profileId, [...PATHS, `/connection/people/${profileId}`]);
 }
 
 export async function unfollow(profileId: string) {
-  return call("unfollow_person", profileId, [...PATHS, `/collective/people/${profileId}`]);
+  return call("unfollow_person", profileId, [...PATHS, `/connection/people/${profileId}`]);
 }
 
 export async function askToBeFriends(profileId: string) {
-  return call("request_friendship", profileId, [...PATHS, `/collective/people/${profileId}`]);
+  return call("request_friendship", profileId, [...PATHS, `/connection/people/${profileId}`]);
 }
 
 export async function acceptFriend(profileId: string) {
-  return call("accept_friendship", profileId, [...PATHS, `/collective/people/${profileId}`]);
+  return call("accept_friendship", profileId, [...PATHS, `/connection/people/${profileId}`]);
 }
 
 /** Withdraw, refuse, or end. One verb, because from the other side they are the same event. */
 export async function endFriendship(profileId: string) {
-  return call("end_friendship", profileId, [...PATHS, `/collective/people/${profileId}`]);
+  return call("end_friendship", profileId, [...PATHS, `/connection/people/${profileId}`]);
 }
 
 /** A handle is how somebody finds you. Lowercase, and yours alone. */

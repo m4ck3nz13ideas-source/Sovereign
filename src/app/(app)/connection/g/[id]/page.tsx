@@ -167,7 +167,7 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
             <ul className="flex flex-wrap justify-center gap-2">
               {people.map((p) => (
                 <li key={p.id}>
-                  <Link href={`/collective/people/${p.id}`} className="press rounded-pill bg-surface px-3 py-1.5 text-[0.8125rem] text-paper-dim">
+                  <Link href={`/connection/people/${p.id}`} className="press rounded-pill bg-surface px-3 py-1.5 text-[0.8125rem] text-paper-dim">
                     {p.id === userId ? "You" : p.display_name}
                   </Link>
                 </li>

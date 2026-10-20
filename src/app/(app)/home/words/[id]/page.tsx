@@ -58,7 +58,7 @@ export default async function TermPage({
       <ScreenHead
         sub={
           <>
-            <Link href="/collective/lexicon" className="text-paper-faint underline">
+            <Link href="/home/words" className="text-paper-faint underline">
               Words
             </Link>{" "}
             · raised {shortDate(term.raised_at as string)}
@@ -104,7 +104,7 @@ export default async function TermPage({
                 <p className="text-[0.9375rem] text-paper">
                   {r.handle ? (
                     <Link
-                      href={`/collective/people/${r.profile_id}`}
+                      href={`/connection/people/${r.profile_id}`}
                       className="underline decoration-line"
                     >
                       {r.display_name}

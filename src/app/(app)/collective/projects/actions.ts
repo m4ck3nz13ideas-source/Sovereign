@@ -164,6 +164,5 @@ export async function writeReflection(
 
   revalidatePath(`/collective/projects/${projectId}`);
   revalidatePath("/collective/projects");
-  revalidatePath("/collective/impact");
   return { ok: true as const };
 }

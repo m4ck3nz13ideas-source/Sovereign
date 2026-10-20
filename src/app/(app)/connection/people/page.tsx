@@ -106,7 +106,7 @@ function PersonList({ people }: { people: Person[] }) {
         <li key={p.profile_id}>
           <Card>
             <Link
-              href={`/collective/people/${p.profile_id}`}
+              href={`/connection/people/${p.profile_id}`}
               className="flex items-baseline justify-between gap-3"
             >
               <span className="text-[0.95rem] text-paper">{p.display_name}</span>

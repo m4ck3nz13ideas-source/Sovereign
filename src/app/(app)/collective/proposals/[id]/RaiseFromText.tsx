@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useTransition, type ReactNode } from "reac
 
 import { sentenceAround } from "@/lib/collective";
 
-import { raiseTermFrom } from "../../lexicon/actions";
+import { raiseTermFrom } from "@/app/(app)/home/words/actions";
 
 /**
  * Select a word while reading a proposal, and raise it in the group's Words.
@@ -80,7 +80,7 @@ export function RaiseFromText({
     start(async () => {
       const r = await raiseTermFrom(proposalId, picked.word, picked.excerpt);
       if (!r.ok) setError(r.error);
-      else router.push(`/collective/lexicon/${r.id}`);
+      else router.push(`/home/words/${r.id}`);
     });
   }
 

@@ -89,7 +89,7 @@ export default async function LexiconPage() {
               {terms.map((t) => (
                 <li key={t.id}>
                   <Link
-                    href={`/collective/lexicon/${t.id}`}
+                    href={`/home/words/${t.id}`}
                     className="press flex items-baseline justify-between gap-3 border-b border-line-soft py-3"
                   >
                     <div className="min-w-0">

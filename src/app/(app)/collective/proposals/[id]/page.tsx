@@ -31,7 +31,9 @@ import type {
   ProposalReadiness,
   ResonanceSummary,
   ResonanceVote,
+  Reading,
   ScopeRule,
+  Term,
 } from "@/lib/types";
 
 import { READINESS_THRESHOLD, SECTION_LABELS } from "@/lib/readiness";
@@ -57,6 +59,7 @@ import { Inquiries } from "./Inquiries";
 import { Progress } from "./Progress";
 import { Projections } from "./Projections";
 import { RaiseFromText } from "./RaiseFromText";
+import { WordProse, type InlineWord } from "@/components/WordProse";
 import { ResonancePanel } from "./ResonancePanel";
 import { WithdrawButton } from "./WithdrawButton";
 
@@ -136,6 +139,13 @@ export default async function ProposalPage({
     : 0.3;
 
   const myRole = groups.find((g) => g.id === proposal.group_id)?.role ?? null;
+
+  // The group's Words, marked inline wherever they appear in the proposal.
+  // Members only: a word belongs to the group, and RLS answers the same way.
+  const words = proposal.group_id && myRole ? await inlineWords(supabase, proposal.group_id, [
+    proposal.intent, proposal.change, proposal.constraints, proposal.risks,
+    proposal.alternatives, proposal.evidence, proposal.body,
+  ]) : [];
 
   // Who may close it. A group has stewards. A place does not, so the window
   // holds it open and then anyone it was addressed to can perform the closing
@@ -410,7 +420,7 @@ export default async function ProposalPage({
         text && text.trim() ? (
           <div key={key}>
             <SectionLabel>{SECTION_LABELS[key]}</SectionLabel>
-            <Prose>{text}</Prose>
+            {words.length ? <WordProse words={words}>{text}</WordProse> : <Prose>{text}</Prose>}
           </div>
         ) : null,
       )}
@@ -419,7 +429,7 @@ export default async function ProposalPage({
       {!proposal.intent.trim() ? (
         <div>
           <SectionLabel>Context</SectionLabel>
-          <Prose>{proposal.body}</Prose>
+          {words.length ? <WordProse words={words}>{proposal.body}</WordProse> : <Prose>{proposal.body}</Prose>}
         </div>
       ) : null}
     </section>
@@ -1059,5 +1069,43 @@ async function AmendmentSection({
         canEnact={Boolean(user)}
       />
     </section>
+  );
+}
+
+/**
+ * Which of the group's Words appear in this proposal's text, each with up to
+ * three readings in the order they were first written. Only words that
+ * actually appear are read further, and at most twelve of them.
+ */
+async function inlineWords(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  groupId: string,
+  texts: (string | null | undefined)[],
+): Promise<InlineWord[]> {
+  const { data } = await supabase.rpc("group_lexicon", { p_group_id: groupId });
+  const terms = (data ?? []) as Term[];
+  if (!terms.length) return [];
+
+  const haystack = texts.filter(Boolean).join("\n").toLowerCase();
+  const found = terms
+    .filter((t) => {
+      const w = t.term.trim().toLowerCase();
+      if (w.length < 2) return false;
+      const safe = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const re = new RegExp(`(?<![\\p{L}\\p{N}])${safe}(?![\\p{L}\\p{N}])`, "u");
+      return re.test(haystack);
+    })
+    .slice(0, 12);
+
+  return Promise.all(
+    found.map(async (t) => {
+      const { data: rows } = await supabase.rpc("readings_for", { p_term_id: t.id });
+      const readings = ((rows ?? []) as Reading[])
+        .slice()
+        .sort((a, b) => a.first_at.localeCompare(b.first_at))
+        .slice(0, 3)
+        .map((r) => ({ name: r.mine ? "You" : r.display_name, body: r.body }));
+      return { id: t.id, term: t.term.trim(), voices: t.voices, readings };
+    }),
   );
 }

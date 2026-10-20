@@ -117,7 +117,7 @@ export default async function VaultPage() {
             />
             <Stub
               title="Wallet and SOV"
-              body="A non-speculative token earned through contribution rather than bought. There is no chain here and no token, by decision — what exists is a hash-chained record in Postgres, which is tamper-evident rather than trustless, and the Impact screen says so in those words."
+              body="A non-speculative token earned through contribution rather than bought. There is no chain here and no token, by decision — what exists is a hash-chained record in Postgres, which is tamper-evident rather than trustless, and the record under Collective → Projects says so in those words."
             />
             <Stub
               title="Keys and recovery"
