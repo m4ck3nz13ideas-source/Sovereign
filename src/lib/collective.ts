@@ -189,7 +189,7 @@ export function whatHappensNext(
       return "Questions and concerns are open. Each person's resonance unlocks once they have read it.";
     case "voting":
       return opts.hasGroup
-        ? "Resonance is open, and the averages stay hidden until a steward closes it."
+        ? "Resonance is open. Once its conditions are met a steward closes it, and the averages appear then — it passes only if alignment reaches the bar."
         : opts.closesAt
           ? `Resonance is open until ${new Date(opts.closesAt).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}, and the averages stay hidden until then.`
           : "Resonance is open, and the averages stay hidden until it closes.";
@@ -231,7 +231,7 @@ export function stageDetail(
     case "voting":
       return {
         who: "People it is addressed to who have read it. Each response is secret.",
-        rule: "It closes when its conditions are met, and passes if the average alignment clears the threshold. The lean stays hidden until then.",
+        rule: "Meeting its conditions is what lets it be decided. Then the responses decide: it passes only if the average alignment reaches the bar. Conditions alone never pass it. The lean stays hidden until then.",
         couldStop: "Too few voices, a group not yet reached, an unanswered requirement, or alignment below the threshold.",
       };
     case "passed":

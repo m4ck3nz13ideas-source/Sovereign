@@ -224,7 +224,7 @@ export default async function ExplorePage() {
           {[
             ["Propose", "A member writes the problem, the change and its costs, to a group or a place.", "Submitted"],
             ["Align", "It is read against the ten Universal Laws and given its own public conditions before anyone responds.", "Review"],
-            ["Decide", "People who have read it respond in secret. The running result stays hidden until it closes.", "Deliberation, Resonance"],
+            ["Decide", "It can be decided only once its own conditions are met. Then the responses decide: it passes if average alignment reaches 0.618. Conditions decide when; people decide whether.", "Deliberation, Resonance"],
             ["Act", "What passes becomes a project once every need has someone against it.", "Passed, Under way"],
             ["Reflect", "A project cannot finish without a written account of what actually happened.", "Done"],
           ].map(([t, d, app], i) => (

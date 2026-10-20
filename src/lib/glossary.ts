@@ -6,8 +6,8 @@
 export const GLOSSARY: Record<string, string> = {
   Proposal: "A written change put to a group or a place: the problem, the change, its cost and who it affects. Fixed once submitted.",
   "Universal Laws": "The ten principles every proposal and business is read against. A violation ends a proposal; tension is published for people to weigh.",
-  Alignment: "How right a proposal feels to you, from 0 to 1. A proposal passes when the average clears the threshold and its conditions are met.",
-  Conditions: "The rules set for one proposal before anyone responds: how many voices, who must be reached, which questions must be answered.",
+  Alignment: "How right a proposal feels to you, from 0 to 1. Once its conditions are met, a proposal passes only if the average alignment reaches the bar — 0.618 unless a group set its own.",
+  Conditions: "The rules set for one proposal before anyone responds: how many voices, who must be reached, which questions must be answered. Meeting them is what lets a proposal be decided; the responses then decide whether it passes.",
   Decision: "What a proposal became when it closed, with every response's numbers (no names) and the spread, so a split shows as a split.",
   Activation: "When a passed proposal becomes a project, once every need has someone against it.",
   Reflection: "The written account of what actually happened. A project cannot finish without one.",

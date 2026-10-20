@@ -723,6 +723,7 @@ export default async function ProposalPage({
         conditions={conditions}
         open={open || proposal.status === "in_review"}
         voters={summary?.voter_count ?? votesNow ?? 0}
+        alignmentBar={thresholds.alignment}
       />
 
       {/* ----------------------------------------------------- HUMAN LAYER */}

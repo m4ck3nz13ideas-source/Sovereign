@@ -25,11 +25,14 @@ export async function ConditionsSection({
   conditions,
   open,
   voters,
+  alignmentBar,
 }: {
   proposalId: string;
   conditions: Conditions | null;
   open: boolean;
   voters: number;
+  /** The alignment the responses must reach to pass (group or scale rule). */
+  alignmentBar: number;
 }) {
   if (!conditions) {
     return open && voters === 0 ? (
@@ -192,6 +195,16 @@ export async function ConditionsSection({
       ) : null}
 
       {open ? <ChallengeConditions proposalId={proposalId} fixed={fixed} unread={myUnread} /> : null}
+
+      <div className="mt-4 rounded-card border border-line bg-surface-soft px-4 py-3">
+        <p className="smallcaps text-[10px] text-paper-faint">How it is decided</p>
+        <p className="mt-1.5 text-sm leading-relaxed text-paper-dim">
+          <span className="text-paper">Meeting these conditions is what lets it be decided</span> — not a clock and
+          not a steward. Once they are met, the responses decide the outcome: it passes if the average alignment
+          reaches <span className="tabular-nums text-paper">{alignmentBar.toFixed(3)}</span>, with no Universal Law
+          broken and no critical flag left unanswered. Meeting the conditions alone does not pass it.
+        </p>
+      </div>
 
       <details className="mt-3">
         <summary className="cursor-pointer text-xs text-paper-faint">Why these</summary>

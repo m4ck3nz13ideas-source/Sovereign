@@ -178,9 +178,9 @@ export function Walkthrough() {
       name: "Vote",
       happening: "People who have read the proposal respond: does it feel right, will it work, how much does it matter now.",
       who: "Members it is addressed to, who have opened it. Nobody can respond to a proposal they haven't read.",
-      rule: "Responses are secret. The running result stays hidden until it closes, so nobody piles on.",
-      next: "When every condition is met, it closes and the result is published.",
-      couldStop: "Too few voices, an unanswered requirement, or alignment below the threshold.",
+      rule: "Responses are secret, and the running result stays hidden. Meeting the conditions lets it be decided; the responses decide whether it passes — average alignment must reach 0.618.",
+      next: "When every condition is met, it can be decided, and the result is published.",
+      couldStop: "Conditions not yet met (too few voices, a requirement unanswered) — then it waits. Alignment below 0.618 — then it does not pass, even with every condition met.",
       body: (
         <div className="space-y-4">
           <Card title="Try responding">

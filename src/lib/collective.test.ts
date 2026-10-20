@@ -208,3 +208,10 @@ describe("stage detail", () => {
     expect(stageDetail("in_deliberation")!.rule).toMatch(/never a veto/);
   });
 });
+
+describe("how a proposal passes", () => {
+  it("says meeting the conditions alone never passes a proposal", () => {
+    expect(stageDetail("voting")!.rule).toMatch(/Conditions alone never pass it/);
+    expect(whatHappensNext("voting", { hasGroup: true, closesAt: null })).toMatch(/passes only if alignment reaches the bar/);
+  });
+});

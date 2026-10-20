@@ -71,7 +71,7 @@ export const FAQ_GROUPS: { title: string; items: QA[] }[] = [
     items: [
       {
         q: "How does a proposal pass?",
-        a: "Three stages. Checked: read against ten laws; a violation ends it. Conditioned: the AI sets the voices needed, groups to reach and questions to answer. Decided: people respond with alignment, confidence and urgency, and it passes when the conditions are met and alignment clears the threshold.",
+        a: "Two tests, and it needs both. First, its own conditions must be met: the voices, the groups to reach and the questions to answer that the AI set for this proposal. That is what lets it be decided — never a clock alone. Second, the people who responded must support it: average alignment of at least 0.618 (a group can set its own bar). Meeting the conditions alone never passes a proposal. Throughout, it must break none of the ten laws and leave no critical flag unanswered.",
       },
       {
         q: "Why can't I see how others voted?",
