@@ -11,7 +11,8 @@ import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Conversation, FriendshipRequest, ProposalStatus, ThreadItem } from "@/lib/types";
 
-import { Inbox, markKey, type InboxItem, type Marks } from "./Inbox";
+import { Inbox, isFilter, markKey, type InboxItem, type Marks } from "./Inbox";
+import { PeoplePanel } from "./people/PeoplePanel";
 import { PlusMenu } from "./PlusMenu";
 import { ShareHandle } from "./ShareHandle";
 
@@ -28,7 +29,7 @@ export const metadata = { title: "Connection · Sovereign" };
  * circles, groups, proposals and businesses together, newest first, with
  * filters, a search over your own list, pin and mute (0055), and a line on
  * each row saying what is happening there. People — finding someone by
- * handle, requests, who you follow — is its own page, a tap away. A group's
+ * handle, requests, friends, who you follow — is one of those filters. A group's
  * decisions stay in Collective and a business's page in Market; this is the
  * way in, not a second copy. Nothing here is ranked, and nothing shows anybody
  * how connected anybody else is.
@@ -44,7 +45,13 @@ const BUSINESS_STATUS: Record<string, string> = {
   suspended: "Suspended",
 };
 
-export default async function ConnectionPage() {
+export default async function ConnectionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ show?: string; handle?: string }>;
+}) {
+  const { show: rawShow, handle: lookFor } = await searchParams;
+  const show = isFilter(rawShow) ? rawShow : lookFor ? "people" : "all";
   const { profile, groups: myGroups } = await requireSession();
   const supabase = await createClient();
 
@@ -176,7 +183,7 @@ export default async function ConnectionPage() {
   );
 
   const handle = profile.handle ?? null;
-  const link = handle ? `${env.canonicalUrl}/connection/people?handle=${encodeURIComponent(handle)}` : null;
+  const link = handle ? `${env.canonicalUrl}/connection?show=people&handle=${encodeURIComponent(handle)}` : null;
   const qr = link
     ? await QRCode.toString(link, { type: "svg", margin: 0, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } })
     : null;
@@ -186,24 +193,16 @@ export default async function ConnectionPage() {
       <TopBar
         title="Connection"
         action={<TabActions plus="/chats/new" plusLabel="New" plusSlot={<PlusMenu />} />}
-      >
-        <div className="flex justify-center px-5 pb-2.5 pt-0.5">
-          <Link
-            href="/connection/people"
-            className="press inline-flex items-center gap-1.5 rounded-pill bg-surface px-3.5 py-1.5 text-[0.8125rem] font-medium text-paper-dim"
-          >
-            People{waiting.length ? <span className="text-gold">· {waiting.length} waiting</span> : null}
-          </Link>
-        </div>
-      </TopBar>
+      />
+
 
       <Screen>
         <TabIntro space="connection" />
 
-        {waiting.length ? (
+        {waiting.length && show !== "people" ? (
           <Gutter className="pt-3">
             <Link
-              href="/connection/people"
+              href="/connection?show=people"
               className="press flex items-center justify-between gap-3 rounded-card border border-gold-dim bg-gold-wash px-4 py-3"
             >
               <span className="text-[0.9375rem] text-paper">
@@ -216,7 +215,13 @@ export default async function ConnectionPage() {
           </Gutter>
         ) : null}
 
-        <Inbox items={items} marks={marks} />
+        <Inbox
+          items={items}
+          marks={marks}
+          show={show}
+          waiting={waiting.length}
+          people={<PeoplePanel handle={(lookFor ?? "").replace(/^@/, "").slice(0, 40)} />}
+        />
 
         {friends.length < 3 ? (
           <Gutter className="pt-8">

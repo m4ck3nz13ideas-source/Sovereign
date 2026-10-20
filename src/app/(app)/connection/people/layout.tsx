@@ -8,7 +8,7 @@ import { TopBar } from "@/components/ui";
 export default function PeopleLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <TopBar title="Connection" back="/connection" />
+      <TopBar title="Connection" back="/connection?show=people" />
       {children}
     </>
   );

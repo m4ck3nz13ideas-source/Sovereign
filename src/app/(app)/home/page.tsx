@@ -249,7 +249,7 @@ export default async function HomePage({
                     ["Your groups", "/connection#groups"],
                     ["Businesses", "/market?view=businesses"],
                     ["Words", "/home/words"],
-                    ["A person, by handle", "/connection/people"],
+                    ["A person, by handle", "/connection?show=people"],
                   ] as const
                 ).map(([label, href]) => (
                   <li key={href}>

@@ -7,7 +7,7 @@ import { useState } from "react";
 const ITEMS = [
   { href: "/chats/new", label: "New chat" },
   { href: "/onboarding/group", label: "New group" },
-  { href: "/connection/people", label: "Find a person" },
+  { href: "/connection?show=people", label: "Find a person" },
   { href: "/market/sell", label: "Add a business" },
 ];
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
 
 import { Empty, Gutter, Tag } from "@/components/ui";
 import { ago } from "@/lib/format";
@@ -16,7 +16,8 @@ import { DecideButton } from "./DecideButton";
  * group, each proposal you wrote or back, each business you run — in one list.
  * Pinned first, then anything with something new, then newest first. The
  * pills filter rather than scroll; the search box narrows your own list by
- * name and never looks beyond it (finding a person is by handle, on People).
+ * name and never looks beyond it. People sits among the filters (20 October):
+ * finding someone by handle, requests, friends and who you follow.
  *
  * Muted conversations stay in the list but their unread count neither lifts
  * them nor adds to a filter's total. Pin and mute are yours alone (0055).
@@ -45,6 +46,7 @@ export type Marks = Record<string, { pinned: boolean; muted: boolean }>;
 const FILTERS = [
   { key: "all", label: "All", kinds: null },
   { key: "chats", label: "Chats", kinds: ["person", "circle"] },
+  { key: "people", label: "People", kinds: [] },
   { key: "groups", label: "Groups", kinds: ["group"] },
   { key: "proposals", label: "Proposals", kinds: ["proposal"] },
   { key: "businesses", label: "Businesses", kinds: ["business"] },
@@ -54,8 +56,40 @@ type FilterKey = (typeof FILTERS)[number]["key"];
 
 export const markKey = (kind: string, refId: string) => `${kind}:${refId}`;
 
-export function Inbox({ items, marks: initial }: { items: InboxItem[]; marks: Marks }) {
-  const [filter, setFilter] = useState<FilterKey>("all");
+export const isFilter = (v: string | undefined): v is FilterKey => FILTERS.some((f) => f.key === v);
+
+export function Inbox({
+  items,
+  marks: initial,
+  show,
+  people,
+  waiting,
+}: {
+  items: InboxItem[];
+  marks: Marks;
+  /** The filter to open on, from ?show=. */
+  show: FilterKey;
+  /** People — find by handle, requests, friends, following — rendered on the server. */
+  people: ReactNode;
+  /** Friend requests waiting on you: the People pill's count. */
+  waiting: number;
+}) {
+  const [filter, setFilterState] = useState<FilterKey>(show);
+  // A new ?show= from a link (the requests banner, a shared handle) wins.
+  const [lastShow, setLastShow] = useState(show);
+  if (show !== lastShow) {
+    setLastShow(show);
+    setFilterState(show);
+  }
+  const setFilter = (f: FilterKey) => {
+    setFilterState(f);
+    // Keep the address in step so back, refresh and shared links land here.
+    try {
+      window.history.replaceState(null, "", f === "all" ? "/connection" : `/connection?show=${f}`);
+    } catch {
+      /* not fatal */
+    }
+  };
   const [query, setQuery] = useState("");
   const [marks, setMarks] = useState<Marks>(initial);
   const [menu, setMenu] = useState<string | null>(null);
@@ -81,7 +115,9 @@ export function Inbox({ items, marks: initial }: { items: InboxItem[]; marks: Ma
   }, [items, filter, query, marks]);
 
   const unreadIn = (kinds: readonly string[] | null) =>
-    items.filter((i) => !kinds || kinds.includes(i.kind)).reduce((n, i) => n + live(i), 0);
+    kinds && kinds.length === 0
+      ? waiting
+      : items.filter((i) => !kinds || kinds.includes(i.kind)).reduce((n, i) => n + live(i), 0);
 
   function toggle(i: InboxItem, field: "pinned" | "muted") {
     const k = markKey(i.kind, i.refId);
@@ -97,7 +133,7 @@ export function Inbox({ items, marks: initial }: { items: InboxItem[]; marks: Ma
 
   return (
     <div>
-      <Gutter className="pt-3">
+      <Gutter className={filter === "people" ? "hidden" : "pt-3"}>
         <label className="flex items-center gap-2 rounded-pill bg-surface px-3.5 py-2">
           <SearchIcon />
           <input
@@ -138,7 +174,9 @@ export function Inbox({ items, marks: initial }: { items: InboxItem[]; marks: Ma
         </div>
       </div>
 
-      {shown.length ? (
+      {filter === "people" ? (
+        people
+      ) : shown.length ? (
         <ul>
           {shown.map((i) => {
             const m = mark(i);

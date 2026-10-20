@@ -53,7 +53,7 @@ async function call(fn: string, profileId: string, paths: string[]) {
   return { ok: true as const };
 }
 
-const PATHS = ["/connection/people", "/home"];
+const PATHS = ["/connection", "/connection/people", "/home"];
 
 export async function follow(profileId: string) {
   return call("follow_person", profileId, [...PATHS, `/connection/people/${profileId}`]);
