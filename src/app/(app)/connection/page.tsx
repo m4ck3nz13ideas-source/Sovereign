@@ -11,7 +11,8 @@ import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Conversation, FriendshipRequest, ProposalStatus, ThreadItem } from "@/lib/types";
 
-import { Inbox, isFilter, markKey, type InboxItem, type Marks } from "./Inbox";
+import { isFilter, markKey } from "./filters";
+import { Inbox, type InboxItem, type Marks } from "./Inbox";
 import { PeoplePanel } from "./people/PeoplePanel";
 import { PlusMenu } from "./PlusMenu";
 import { ShareHandle } from "./ShareHandle";
