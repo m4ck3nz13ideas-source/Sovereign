@@ -196,3 +196,16 @@ function CollectiveIcon({ filled }: IconProps) {
     </svg>
   );
 }
+
+/**
+ * The same five icons, by space, for screens that show the tabs before you
+ * have used them — onboarding's tour. One set of drawings, so the tour can
+ * never show a tab that looks different from the bar.
+ */
+export const TAB_ICON = {
+  individual: IndividualIcon,
+  connection: ConnectionIcon,
+  search: AskIcon,
+  market: MarketplaceIcon,
+  collective: CollectiveIcon,
+} as const;

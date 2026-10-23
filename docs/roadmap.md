@@ -127,6 +127,10 @@ through `0024`.
   through what the thing does. The agreement records which *revision* of each
   law was on the screen, so an amendment cannot retroactively rewrite what
   anybody consented to. It gates nothing.
+  Since 23 October the values step also rates the Spheres, and the last step
+  is a swipe tour built from `SPACES` (lib/capabilities), `proposalProgress()`
+  and the glossary rather than hand-written panels, so it cannot drift from
+  what the tabs actually do.
 
 ## Outstanding, and small
 

@@ -13,7 +13,8 @@ export const metadata = { title: "Welcome · Sovereign" };
  * First run.
  *
  * Four steps: who you are and where, the ten laws read and agreed to, what you
- * value and believe, and a walk through the rest. The laws come before the
+ * value, what matters to you and what you believe, and a tour of the five
+ * tabs drawn from the app's own capability list. The laws come before the
  * values because the laws are what the values are read alongside, and somebody
  * should know what they are joining before being asked to describe themselves
  * to it.
@@ -36,7 +37,7 @@ export default async function OnboardingPage() {
 
   const supabase = await createClient();
 
-  const [accession, { data: standing }, { data: values }, { data: passions }] =
+  const [accession, { data: standing }, { data: values }, { data: passions }, { data: ratings }] =
     await Promise.all([
       // Asked here rather than discovered at step two, because the error
       // PostgREST gives for a missing function reads like the feature was
@@ -53,6 +54,8 @@ export default async function OnboardingPage() {
         .select("name, note, position")
         .eq("profile_id", profile.id)
         .order("position"),
+      // Owner-only by policy (0047), so this is only ever this person's own.
+      supabase.from("sphere_priorities").select("sphere_id, rating").eq("profile_id", profile.id),
     ]);
 
   const agreed =
@@ -67,6 +70,10 @@ export default async function OnboardingPage() {
     note: (p.note as string | null) ?? "",
   }));
 
+  const sphereRatings = Object.fromEntries(
+    ((ratings ?? []) as { sphere_id: string; rating: number }[]).map((r) => [r.sphere_id, r.rating]),
+  );
+
   // A name that is still the default and no place written down means step one
   // has not really happened, whatever the row says.
   const detailsDone =
@@ -78,7 +85,7 @@ export default async function OnboardingPage() {
 
   return (
     <Page>
-      <PageTitle sub="Who you are, what you are agreeing to, what you believe, and a look round.">
+      <PageTitle sub="Four steps. A few minutes. Everything saves as you go.">
         Sovereign
       </PageTitle>
 
@@ -97,8 +104,7 @@ export default async function OnboardingPage() {
 
       {startAt > 0 ? (
         <p className="mb-6 text-sm leading-relaxed text-paper-faint">
-          Picking up where you left off. Everything you had already answered is
-          still here.
+          Picking up where you left off.
         </p>
       ) : null}
 
@@ -115,6 +121,7 @@ export default async function OnboardingPage() {
         savedPassions={savedPassions}
         purpose={profile.purpose ?? ""}
         faith={profile.faith_statement ?? ""}
+        sphereRatings={sphereRatings}
         agreed={agreed}
         startAt={startAt}
       />

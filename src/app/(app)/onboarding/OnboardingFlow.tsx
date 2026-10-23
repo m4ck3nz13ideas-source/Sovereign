@@ -1,10 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition, type ReactNode } from "react";
 
+import { TAB_ICON } from "@/components/nav/TabBar";
+import { SphereRatings } from "@/components/spheres/SphereRatings";
 import { Button, Card, Field, inputClass } from "@/components/ui";
-import { RESONANCE_THRESHOLD, UNIVERSAL_LAWS } from "@/lib/universal-law";
+import { SPACES, STATUS_LABEL } from "@/lib/capabilities";
+import { proposalProgress } from "@/lib/collective";
+import { GLOSSARY } from "@/lib/glossary";
+import { AMENDMENT_RULE, UNIVERSAL_LAWS } from "@/lib/universal-law";
 
 import { agreeToUniversalLaw, finishOnboarding, saveBeliefs, saveDetails } from "./actions";
 
@@ -15,12 +20,23 @@ type Pair = { name: string; definition: string };
 type Passion = { name: string; note: string };
 
 /**
- * First run, in four parts: who you are, the constitution you are agreeing to,
- * what you actually believe, and a walk through what the thing does.
+ * First run, in four parts, in Mackenzie's order: who you are, the ten laws
+ * read and agreed to, what you value and what matters to you, then a tour.
  *
- * The order is not arbitrary. The laws come before the values because the laws
- * are what the values are read alongside, and somebody should know what they
- * are joining before being asked to describe themselves to it.
+ * The laws come before the values because the laws are what the values are
+ * read alongside, and somebody should know what they are joining before being
+ * asked to describe themselves to it.
+ *
+ * THE TOUR READS THE APP, NOT A SCRIPT
+ *
+ * The tour used to be four hand-written panels, and they went stale as the
+ * app moved (three sliders that are not the three on screen, People under
+ * Collective, a guardian that "never speaks first"). It now draws from the
+ * same sources as everything else: each tab card is `SPACES` from
+ * lib/capabilities — the list the tab pop-ups and the public site read — the
+ * decision card is `proposalProgress()` and the glossary, and the icons are
+ * the tab bar's own. Change the app and the tour follows. Do not put
+ * hand-written claims about what a tab does back in here.
  */
 const BLANK_VALUES: Pair[] = [
   { name: "", definition: "" },
@@ -32,7 +48,20 @@ const BLANK_PASSIONS: Passion[] = [
   { name: "", note: "" },
 ];
 
-const STEP_NAMES = ["You", "The ten", "Yours", "A look round"];
+const STEP_NAMES = ["You", "The ten", "Yours", "Your tabs"];
+
+/** Each step's title, centred like every heading in the app. */
+function Heading({ children, sub }: { children: ReactNode; sub?: ReactNode }) {
+  return (
+    <div className="text-center">
+      <h2 className="display text-[1.375rem] text-paper">{children}</h2>
+      {sub ? <p className="mt-1.5 text-[0.95rem] leading-relaxed text-paper-dim">{sub}</p> : null}
+    </div>
+  );
+}
+
+/** The tab bar's order, left to right, so the tour walks it the same way. */
+const TAB_ORDER = ["individual", "connection", "search", "market", "collective"] as const;
 
 export function OnboardingFlow({
   displayName,
@@ -42,6 +71,7 @@ export function OnboardingFlow({
   savedPassions,
   purpose: savedPurpose,
   faith: savedFaith,
+  sphereRatings,
   agreed,
   startAt,
 }: {
@@ -52,6 +82,8 @@ export function OnboardingFlow({
   savedPassions: Passion[];
   purpose: string;
   faith: string;
+  /** Sphere id → 1–5, as already saved. Ratings save on tap, not with the step. */
+  sphereRatings: Record<string, number>;
   /** Whether the ten are already on the record, so the laws step knows. */
   agreed: boolean;
   /** Where the database says this person got to. See the page's comment. */
@@ -82,7 +114,8 @@ export function OnboardingFlow({
   const [purpose, setPurpose] = useState(savedPurpose);
   const [faith, setFaith] = useState(savedFaith);
 
-  const [demo, setDemo] = useState(0);
+  const [card, setCard] = useState(0);
+  const track = useRef<HTMLDivElement>(null);
 
   function setValue(i: number, key: keyof Pair, v: string) {
     setValues((vs) => vs.map((row, j) => (j === i ? { ...row, [key]: v } : row)));
@@ -104,7 +137,7 @@ export function OnboardingFlow({
             aria-hidden
           />
           <span
-            className={`smallcaps text-[9px] ${
+            className={`smallcaps text-center text-[9px] ${
               i === step ? "text-gold" : "text-paper-faint"
             }`}
           >
@@ -115,20 +148,17 @@ export function OnboardingFlow({
     </ol>
   );
 
-  // ---------------------------------------------------------------- 1. details
+  // ---------------------------------------------------------------- 1. you
 
   if (step === 0) {
     return (
       <div className="space-y-5">
         {Steps}
-        <p className="text-[0.95rem] leading-relaxed text-paper-dim">
-          Sovereign has two halves. One is yours alone — what you write, what
-          you are working out, what you believe. The other is shared, and is
-          where things get decided. The first never becomes the second unless
-          you send it there.
-        </p>
+        <Heading sub="Half of Sovereign is yours alone. Half is where things get decided. Nothing crosses unless you send it.">
+          You
+        </Heading>
 
-        <Field label="What should we call you?">
+        <Field label="Your name">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -137,30 +167,24 @@ export function OnboardingFlow({
           />
         </Field>
 
-        <Field label="A handle, if you want one">
+        <Field
+          label="Your handle"
+          hint="How people find you: share it as a link or QR code from Connection. There is no directory of people."
+        >
           <input
             value={tag}
             onChange={(e) => setTag(e.target.value)}
             placeholder="optional"
+            autoCapitalize="none"
             className={inputClass}
           />
-          <p className="mt-2 text-sm leading-relaxed text-paper-faint">
-            An address, not a username. It is how somebody who already knows you
-            can find you — there is no directory and no search, so if you never
-            hand it out, nobody arrives.
-          </p>
         </Field>
 
-        <div className="pt-2">
-          <p className="text-[0.95rem] leading-relaxed text-paper-dim">
-            Where are you? Proposals are addressed to places, and these lines
-            are what decides which ones reach you. Nothing is looked up or
-            verified — write them the way you would say them.
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-paper-faint">
-            They do not nest: being in a city does not put you in its country
-            unless you say so. Fill in as many as you want to hear from, and
-            leave the rest blank.
+        <div className="pt-2 text-center">
+          <p className="display text-[1.125rem] text-paper">Where you are</p>
+          <p className="mt-1 text-sm leading-relaxed text-paper-faint">
+            Decides which proposals reach you. Fill in as many as you want to
+            hear from. Nothing is looked up.
           </p>
         </div>
 
@@ -181,6 +205,7 @@ export function OnboardingFlow({
 
         <Button
           type="button"
+          className="w-full"
           disabled={!name.trim() || pending}
           onClick={() =>
             start(async () => {
@@ -210,15 +235,9 @@ export function OnboardingFlow({
     return (
       <div className="space-y-5">
         {Steps}
-        <p className="text-[0.95rem] leading-relaxed text-paper-dim">
-          Ten laws sit underneath everything here. They are not a rubric and not
-          a set of guidelines: every proposal is read against them, and one that
-          violates a law cannot pass whatever anybody votes.
-        </p>
-        <p className="text-sm leading-relaxed text-paper-faint">
-          Read them. They are short, and agreeing to something you scrolled past
-          is how people end up bound by things they never saw.
-        </p>
+        <Heading sub="Every proposal and every business is read against these. Break one and it cannot pass, whatever the vote.">
+          The ten
+        </Heading>
 
         <div
           onScroll={(e) => {
@@ -241,29 +260,18 @@ export function OnboardingFlow({
             </div>
           ))}
           <p className="border-t border-line-soft pt-4 text-sm leading-relaxed text-paper-faint">
-            These can be amended, one law&rsquo;s wording at a time, and only
-            when every voice is at 0.900 or above — not a majority, the
-            lowest one. If that ever happens you will be told what changed, and
-            what you agreed to today stays on the record as what you
-            read.
+            {AMENDMENT_RULE} What you agree to today stays on the record as the
+            wording you read.
           </p>
         </div>
 
-        {!read ? (
-          <p className="text-sm text-paper-faint">
-            Scroll to the end to agree.
-          </p>
-        ) : (
-          <p className="text-sm leading-relaxed text-paper-faint">
-            Agreeing records which wording of each law was on this screen, and
-            onboarding cannot finish without it — not as a formality, but
-            because the rest of the app reads every proposal against these.
-          </p>
-        )}
+        <p className="text-center text-sm text-paper-faint">
+          {read ? "Your agreement records the exact wording above." : "Read to the end to agree."}
+        </p>
 
         {error ? <p className="text-sm text-alarm">{error}</p> : null}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2">
           <Button
             type="button"
             disabled={!read || pending}
@@ -286,27 +294,22 @@ export function OnboardingFlow({
     );
   }
 
-  // --------------------------------------------- 3. values, passions, beliefs
+  // ------------------------------- 3. values, what matters, passions, beliefs
 
   if (step === 2) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-7">
         {Steps}
-        <div>
-          <p className="text-[0.95rem] leading-relaxed text-paper-dim">
-            Now your own. The ten laws are shared; these are not, and nothing
-            below is visible to anybody unless you turn sharing on.
-          </p>
-        </div>
+        <Heading sub="The ten are shared. These are yours, and private unless you choose to share them.">
+          Yours
+        </Heading>
 
-        <div className="space-y-4">
-          <div>
+        <section className="space-y-3">
+          <div className="text-center">
             <p className="display text-[1.125rem]">What you value</p>
             <p className="mt-1 text-sm leading-relaxed text-paper-faint">
-              In your own words, with your own definitions. Every proposal your
-              group considers is scored against these names using these
-              definitions — a word that sounds right is worth less than a
-              sentence that is yours.
+              In your own words. Proposals are scored against these definitions,
+              so a sentence that is yours beats a word that sounds right.
             </p>
           </div>
           {values.map((v, i) => (
@@ -330,18 +333,32 @@ export function OnboardingFlow({
           <button
             type="button"
             onClick={() => setValues((vs) => [...vs, { name: "", definition: "" }])}
-            className="smallcaps text-[11px] text-gold hover:underline"
+            className="smallcaps block w-full text-center text-[11px] text-gold hover:underline"
           >
             + one more
           </button>
-        </div>
+        </section>
 
-        <div className="space-y-4">
-          <div>
+        {/* Ratings save on tap through the same action as Individual → Self,
+            so leaving this step half-done loses nothing (0047). */}
+        <section>
+          <div className="text-center">
+            <p className="display text-[1.125rem]">What matters to you</p>
+            <p className="mt-1 text-sm leading-relaxed text-paper-faint">
+              Rate each Sphere. It fills your For you feed and shapes your AI
+              and Learn. Only you see your ratings.
+            </p>
+          </div>
+          <div className="mt-3 rounded-card border border-line bg-surface-soft px-4 pb-2 pt-1">
+            <SphereRatings initial={sphereRatings} compact />
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <div className="text-center">
             <p className="display text-[1.125rem]">What you keep returning to</p>
             <p className="mt-1 text-sm leading-relaxed text-paper-faint">
-              Not skills and not a CV. The things you think about when nobody
-              has asked you to. Optional.
+              The things you think about when nobody has asked. Optional.
             </p>
           </div>
           {passions.map((p, i) => (
@@ -365,39 +382,36 @@ export function OnboardingFlow({
           <button
             type="button"
             onClick={() => setPassions((ps) => [...ps, { name: "", note: "" }])}
-            className="smallcaps text-[11px] text-gold hover:underline"
+            className="smallcaps block w-full text-center text-[11px] text-gold hover:underline"
           >
             + one more
           </button>
-        </div>
+        </section>
 
         <Field label="Your purpose, in one sentence">
           <input
             value={purpose}
             onChange={(e) => setPurpose(e.target.value)}
-            placeholder="Optional. Updated rarely, and deliberately."
+            placeholder="Optional"
             className={inputClass}
           />
         </Field>
-
-        <Field label="What you believe">
+        <Field
+          label="What you believe"
+          hint="Optional. Every version is kept, privately, so you can see how it moves."
+        >
           <textarea
             value={faith}
             onChange={(e) => setFaith(e.target.value)}
             rows={4}
-            placeholder="Optional, and not a creed — your own articulation, in your own words."
+            placeholder="In your own words"
             className={inputClass}
           />
-          <p className="mt-2 text-sm leading-relaxed text-paper-faint">
-            This and your purpose are revisable and never overwritten. Every
-            version you write is kept, so you can see how it has moved — and the
-            history stays private even if you later share the current one.
-          </p>
         </Field>
 
         {error ? <p className="text-sm text-alarm">{error}</p> : null}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2">
           <Button
             type="button"
             disabled={pending || !values.some((v) => v.name.trim())}
@@ -425,131 +439,179 @@ export function OnboardingFlow({
     );
   }
 
-  // ------------------------------------------------------------- 4. the demo
+  // --------------------------------------------------------------- 4. the tour
 
-  const panels = [
+  const spaces = TAB_ORDER.map((id) => SPACES.find((s) => s.id === id)!);
+  const guardian = SPACES.find((s) => s.id === "individual")?.can.find((c) => /AI/.test(c.title));
+  const path = proposalProgress("completed");
+
+  const cards: { key: string; body: ReactNode }[] = [
     {
-      title: "Five tabs, and one of them is yours alone",
+      key: "intro",
       body: (
         <>
-          <p>
-            <strong className="text-paper">Individual</strong> is private, in the
-            database rather than by promise: your journal, your ideas, your
-            drafts, your values, the guardian. There is no policy anywhere that
-            lets another person read it.
+          <p className="smallcaps text-center text-[11px] font-semibold text-gold">Sovereign</p>
+          <h2 className="display mt-1 text-center text-[1.75rem] leading-tight text-paper">
+            Better decisions. Together.
+          </h2>
+          <p className="mt-3 text-center text-[0.95rem] leading-relaxed text-paper-dim">
+            Five tabs. One is yours alone. Four you share.
           </p>
-          <p>
-            <strong className="text-paper">Search</strong>, in the middle, is
-            where you land: look anything up, post a note or media, and see
-            the feed. <strong className="text-paper">Connection</strong> holds
-            your friends, chats and groups.
-          </p>
-          <p>
-            <strong className="text-paper">Collective</strong> is the shared
-            half — proposals, debate, projects, decisions, people — under a
-            selector for which scale you are looking at: local, regional,
-            national, continental, global.
-          </p>
+          <ul className="mt-6 flex justify-center gap-4 text-paper" aria-hidden>
+            {TAB_ORDER.map((id) => {
+              const Icon = TAB_ICON[id];
+              return (
+                <li key={id}>
+                  <Icon filled={id === "search"} />
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      ),
+    },
+    ...spaces.map((sp) => {
+      const Icon = TAB_ICON[sp.id];
+      return {
+        key: sp.id,
+        body: (
+          <>
+            <div className="flex justify-center text-gold" aria-hidden>
+              <Icon filled />
+            </div>
+            <h2 className="display mt-2 text-center text-[1.5rem] text-paper">{sp.name}</h2>
+            <p className="mt-2 text-center text-[0.95rem] leading-relaxed text-paper-dim">{sp.purpose}</p>
+            <ul className="mt-4 space-y-2">
+              {sp.can.map((c) => (
+                <li key={c.title} className="flex gap-2.5 text-[0.9rem] leading-snug">
+                  <span
+                    aria-hidden
+                    className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${c.status === "current" ? "bg-gold" : "bg-line"}`}
+                  />
+                  <span>
+                    <span className="text-paper">{c.title}</span>
+                    {c.status !== "current" ? (
+                      <span className="text-paper-faint"> · {STATUS_LABEL[c.status].toLowerCase()}</span>
+                    ) : null}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 rounded-lg bg-surface px-3.5 py-3 text-[0.9rem] leading-relaxed text-paper-dim">
+              <span className="font-semibold text-paper">Try first: </span>
+              {sp.firstAction}
+            </p>
+          </>
+        ),
+      };
+    }),
+    {
+      key: "decide",
+      body: (
+        <>
+          <h2 className="display text-center text-[1.5rem] text-paper">How a decision is made</h2>
+          <ol className="mt-4 flex flex-wrap justify-center gap-1.5">
+            {path.map((p, i) => (
+              <li key={p.key} className="flex items-center gap-1.5 text-[0.8125rem] text-paper">
+                <span className="rounded-pill bg-surface px-2.5 py-1">{p.label}</span>
+                {i < path.length - 1 ? <span aria-hidden className="text-paper-faint">→</span> : null}
+              </li>
+            ))}
+          </ol>
+          <dl className="mt-5 space-y-3 text-[0.9rem] leading-relaxed">
+            {(["Universal Laws", "Conditions", "Alignment", "Activation", "Reflection"] as const).map((t) => (
+              <div key={t}>
+                <dt className="font-semibold text-paper">{t}</dt>
+                <dd className="text-paper-dim">{GLOSSARY[t]}</dd>
+              </div>
+            ))}
+          </dl>
         </>
       ),
     },
     {
-      title: "A proposal goes through five things",
+      key: "ask",
       body: (
         <>
-          <p>
-            <strong className="text-paper">Propose.</strong> Six sections,
-            addressed to the smallest scale that can decide it. It does
-            not go anywhere until it has been read back to you and sharpened.
+          <div className="flex justify-center" aria-hidden>
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gold text-sm font-semibold text-ink">
+              AI
+            </span>
+          </div>
+          <h2 className="display mt-3 text-center text-[1.5rem] text-paper">Ask anywhere</h2>
+          <p className="mt-2 text-center text-[0.95rem] leading-relaxed text-paper-dim">
+            The gold button sits on every page. Ask where something is, what a
+            word means, or talk something through.
           </p>
-          <p>
-            <strong className="text-paper">Align.</strong> It is audited against
-            the ten laws, and scored against the values the group has named. A
-            violation ends it. A flag has to be answered in writing — it cannot
-            be dismissed.
+          <p className="mt-4 text-center text-[0.9rem] leading-relaxed text-paper-dim">
+            The <span className="font-semibold text-paper">i</span> at the top
+            of each tab brings back what it is for.
           </p>
-          <p>
-            <strong className="text-paper">Vote.</strong> Not yes or no. Three
-            sliders — how aligned, how confident, how willing — and the average
-            has to clear {RESONANCE_THRESHOLD}. You cannot move them until you
-            have read the review.
-          </p>
-          <p>
-            <strong className="text-paper">Activate.</strong> Agreement is not
-            resources. Nothing starts until every named need has somebody
-            against it.
-          </p>
-          <p>
-            <strong className="text-paper">Reflect.</strong> What
-            happened, in writing, before a project can close — and the next
-            proposal&rsquo;s review reads it.
-          </p>
-        </>
-      ),
-    },
-    {
-      title: "What is deliberately not here",
-      body: (
-        <>
-          <p>
-            No follower counts, no streaks, no notifications designed to pull
-            you back, no algorithmic feed, no read receipts, and no score on any
-            person. The running averages on a live proposal are hidden until it
-            closes, so nobody votes with the room.
-          </p>
-          <p>
-            Most of the design here is an absence: a column that is not in the
-            database, a policy that does not exist. Where something is missing
-            on purpose, the screen says so rather than leaving you to wonder.
-          </p>
-        </>
-      ),
-    },
-    {
-      title: "Where to start",
-      body: (
-        <>
-          <p>
-            Write something. Search takes anything — a thought, a question, an
-            idea — and files it without asking you to sort it.
-          </p>
-          <p>
-            Then read one proposal addressed to a place you named, and respond
-            to it. That is the whole loop in miniature, and it is worth doing
-            once before you write one of your own.
-          </p>
-          <p>
-            The guardian, under Individual, will read a draft with you if you
-            ask it to. It never speaks first, has no opinion on whether
-            something should pass, and keeps no model of you.
-          </p>
+          {guardian && guardian.status !== "current" && guardian.note ? (
+            <p className="mt-4 text-center text-[0.8125rem] leading-relaxed text-paper-faint">
+              {STATUS_LABEL[guardian.status]}: {guardian.note}
+            </p>
+          ) : null}
         </>
       ),
     },
   ];
 
-  const panel = panels[demo];
-  const last = demo === panels.length - 1;
+  const last = card === cards.length - 1;
+
+  function goTo(i: number) {
+    const el = track.current;
+    const next = Math.max(0, Math.min(cards.length - 1, i));
+    setCard(next);
+    el?.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+  }
 
   return (
     <div className="space-y-5">
       {Steps}
-      <div>
-        <p className="smallcaps text-[10px] text-paper-faint">
-          A quick look — {demo + 1} of {panels.length}
-        </p>
-        <p className="display mt-1 text-[1.25rem]">{panel.title}</p>
+
+      {/* Swipe, or use the buttons. Scroll-snap does the swiping, so it is a
+          plain scroll container a screen reader can walk card by card. */}
+      <div
+        ref={track}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          const i = Math.round(el.scrollLeft / el.clientWidth);
+          if (i !== card) setCard(i);
+        }}
+        className="-mx-1 flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        aria-roledescription="carousel"
+        aria-label="A look round"
+      >
+        {cards.map((c, i) => (
+          <section
+            key={c.key}
+            aria-roledescription="slide"
+            aria-label={`${i + 1} of ${cards.length}`}
+            className="w-full shrink-0 snap-start px-1"
+          >
+            <div className="min-h-[26rem] rounded-card border border-line bg-surface-soft p-5">{c.body}</div>
+          </section>
+        ))}
       </div>
 
-      <div className="space-y-3 text-[0.9375rem] leading-relaxed text-paper-dim">
-        {panel.body}
+      <div className="flex justify-center gap-1.5" aria-hidden>
+        {cards.map((c, i) => (
+          <button
+            key={c.key}
+            type="button"
+            tabIndex={-1}
+            onClick={() => goTo(i)}
+            className={`h-1.5 rounded-full transition-all ${i === card ? "w-5 bg-gold" : "w-1.5 bg-line"}`}
+          />
+        ))}
       </div>
 
       {error ? <p className="text-sm text-alarm">{error}</p> : null}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-2">
         {!last ? (
-          <Button type="button" onClick={() => setDemo((d) => d + 1)}>
+          <Button type="button" onClick={() => goTo(card + 1)}>
             Next
           </Button>
         ) : (
@@ -577,8 +639,8 @@ export function OnboardingFlow({
             {pending ? "One moment" : "Start"}
           </Button>
         )}
-        {demo > 0 ? (
-          <Button type="button" tone="ghost" onClick={() => setDemo((d) => d - 1)}>
+        {card > 0 ? (
+          <Button type="button" tone="ghost" onClick={() => goTo(card - 1)}>
             Back
           </Button>
         ) : (
