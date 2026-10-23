@@ -107,7 +107,7 @@ export function TopBar({
         {/* Centred on the bar itself, not on the space left between the back
             chevron and the actions, so every title sits in the same place. */}
         <span className="flex-1" aria-hidden />
-        <h1 className="display pointer-events-none absolute inset-x-24 truncate text-center text-[1.0625rem] text-paper">
+        <h1 className="display pointer-events-none absolute inset-x-28 truncate text-center text-[1.0625rem] text-paper">
           {title}
         </h1>
         {action ? <div className="shrink-0 pr-1">{action}</div> : null}

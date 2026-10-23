@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 
 import { chatWithAi } from "@/app/(app)/individual/ai/actions";
 
@@ -9,8 +10,24 @@ type Msg = { role: "you" | "ai"; text: string };
 /**
  * The private chat. Lives in the browser: close the tab and it is gone, which
  * is the point — there is nothing stored to leak, sell or subpoena.
+ *
+ * Since 23 October it is on every page. It is told which page you are on so
+ * it can help you find your way, and any app address in a reply (/settings,
+ * /collective/proposals …) becomes a link.
  */
-export function AiChat({ className = "" }: { className?: string }) {
+export function AiChat({
+  className = "",
+  where,
+  onNavigate,
+  greeting = "What\u2019s on your mind?",
+}: {
+  className?: string;
+  /** The page the chat was opened from. */
+  where?: string;
+  /** Called when a link in a reply is followed — the sheet closes itself. */
+  onNavigate?: () => void;
+  greeting?: string;
+}) {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +46,7 @@ export function AiChat({ className = "" }: { className?: string }) {
     setDraft("");
     setError(null);
     start(async () => {
-      const r = await chatWithAi(next);
+      const r = await chatWithAi(next, where);
       if (r.ok) setMsgs((m) => [...m, { role: "ai", text: r.reply }]);
       else setError(r.error);
     });
@@ -39,7 +56,7 @@ export function AiChat({ className = "" }: { className?: string }) {
     <div className={`flex min-h-0 flex-col ${className}`}>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {msgs.length === 0 ? (
-          <p className="pt-8 text-center font-serif text-xl text-paper-dim">What&apos;s on your mind?</p>
+          <p className="pt-8 text-center font-serif text-xl text-paper-dim">{greeting}</p>
         ) : null}
         {msgs.map((m, i) => (
           <div key={i} className={m.role === "you" ? "flex justify-end" : "flex justify-start"}>
@@ -48,7 +65,7 @@ export function AiChat({ className = "" }: { className?: string }) {
                 m.role === "you" ? "bg-gold text-ink" : "bg-surface text-paper"
               }`}
             >
-              {m.text}
+              {m.role === "ai" ? <WithLinks text={m.text} onNavigate={onNavigate} /> : m.text}
             </p>
           </div>
         ))}
@@ -90,4 +107,25 @@ export function AiChat({ className = "" }: { className?: string }) {
       </form>
     </div>
   );
+}
+
+/** App addresses in a reply ("/settings/data") as links; everything else as written. */
+const ADDRESS = /(^|[\s(])(\/(?:[a-z][a-z0-9-]*)(?:\/[a-z0-9-]+)*(?:[?#][a-z0-9=&#-]+)?)/g;
+
+function WithLinks({ text, onNavigate }: { text: string; onNavigate?: () => void }) {
+  const parts: ReactNode[] = [];
+  let at = 0;
+  for (const m of text.matchAll(ADDRESS)) {
+    const start = (m.index ?? 0) + m[1].length;
+    const href = m[2].replace(/[.,;:!?)]+$/, "");
+    parts.push(text.slice(at, start));
+    parts.push(
+      <Link key={start} href={href} onClick={onNavigate} className="font-medium text-gold underline underline-offset-2">
+        {href}
+      </Link>,
+    );
+    at = start + href.length;
+  }
+  parts.push(text.slice(at));
+  return <>{parts}</>;
 }

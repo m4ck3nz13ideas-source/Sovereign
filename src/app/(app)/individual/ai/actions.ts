@@ -101,6 +101,8 @@ export async function forgetGuardian() {
  */
 export async function chatWithAi(
   history: { role: "you" | "ai"; text: string }[],
+  /** The page they are on, from any tab (23 October). */
+  where?: string,
 ): Promise<{ ok: true; reply: string } | { ok: false; error: string }> {
   const last = history[history.length - 1];
   if (!last || last.role !== "you" || !last.text.trim()) return { ok: false, error: "Say something first." };
@@ -151,6 +153,7 @@ export async function chatWithAi(
       })),
       self,
       matters,
+      typeof where === "string" && where.startsWith("/") ? where.slice(0, 200) : null,
     );
     return { ok: true, reply };
   } catch (e) {

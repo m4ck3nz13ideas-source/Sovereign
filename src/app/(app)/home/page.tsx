@@ -216,7 +216,7 @@ export default async function HomePage({
     <>
       <TopBar
         title="Search"
-        action={<TabActions plus="/home#compose" plusLabel="New post" />}
+        action={<TabActions space="search" plus="/home#compose" plusLabel="New post" />}
       >
         {address ? (
           <ScaleSelector

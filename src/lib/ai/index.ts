@@ -1,6 +1,7 @@
 import "server-only";
 
 import { env } from "@/lib/env";
+import { findPlaces, placeOf, placesForAi } from "@/lib/places";
 import { UNIVERSAL_LAWS, lawAuditProblem } from "@/lib/universal-law";
 
 import { AnthropicProvider } from "./anthropic";
@@ -826,7 +827,13 @@ export async function chatTurn(
   self: { description: string; focus: string | null } | null = null,
   /** How much each Sphere matters to them, in their ratings (0047). */
   matters: string | null = null,
+  /** The page they asked from, so it can help them find their way. */
+  where: string | null = null,
 ): Promise<string> {
+  // With no model connected, finding your way around still works: the map is
+  // searched for what they asked, and the reply says it is the stand-in.
+  if (!provider().live) return offlineTurn(history, where);
+
   const vals = values.length
     ? values.map((v) => `- ${v.name}${v.definition ? `: ${v.definition}` : ""}`).join("\n")
     : "(none written yet)";
@@ -840,7 +847,11 @@ export async function chatTurn(
       }`
     : "";
   const priorities = matters ? `\n\nWHAT MATTERS TO THEM (the Spheres they rated, 1–5)\n${matters}` : "";
-  const input = `THEIR VALUES, IN THEIR WORDS\n${vals}${know}${priorities}\n\nTHE CONVERSATION SO FAR\n${convo}\n\nReply to their last message.`;
+  const here = where ? placeOf(where) : null;
+  const map = `\n\nTHE APP — every page with a fixed address\n${placesForAi()}\n\nTHEY ARE ON: ${where ?? "(unknown)"}${
+    here ? ` (${here.name})` : ""
+  }`;
+  const input = `THEIR VALUES, IN THEIR WORDS\n${vals}${know}${priorities}${map}\n\nTHE CONVERSATION SO FAR\n${convo}\n\nReply to their last message.`;
 
   const { data } = await provider().complete({
     prompt: AI_CHAT,
@@ -852,6 +863,25 @@ export async function chatTurn(
   const parsed = chatSchema.safeParse(data);
   if (!parsed.success) throw new AiError("The reply did not come back in the expected shape.");
   return parsed.data.reply;
+}
+
+/** The stand-in's turn: directions from the map, or an honest "not yet". */
+function offlineTurn(history: { role: "you" | "ai"; text: string }[], where: string | null): string {
+  const last = history[history.length - 1]?.text ?? "";
+  const asksHere = /\b(this page|this tab|here|what can i do)\b/i.test(last);
+  const here = where ? placeOf(where) : null;
+  if (asksHere && here) return `You're in ${here.name} (${here.path}): ${here.what}`;
+
+  const found = findPlaces(last);
+  if (found.length) {
+    const [first, ...rest] = found;
+    const also = rest.length ? `\n\nOr maybe: ${rest.map((p) => `${p.name} — ${p.path}`).join(", ")}.` : "";
+    return `${first.name}: ${first.what}\n\nIt's at ${first.path}${also}`;
+  }
+  return (
+    "No AI model is connected yet, so I can only help you find your way around for now. " +
+    "Ask me where something is — your journal, a proposal, friend requests, your data — and I'll take you there."
+  );
 }
 
 /** Sets one proposal's conditions: voices, window and what must be answered. */

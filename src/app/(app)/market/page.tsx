@@ -62,7 +62,7 @@ export default async function MarketplacePage({
 
   return (
     <Screen>
-      <TopBar title="Market" action={<TabActions plus="/market/sell" plusLabel="Sell" />}>
+      <TopBar title="Market" action={<TabActions space="market" plus="/market/sell" plusLabel="Sell" />}>
         <div className="grid grid-cols-2 gap-2 px-4 pb-2.5">
           <Link
             href="/market"

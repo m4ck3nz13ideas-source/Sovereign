@@ -16,7 +16,7 @@ export default function CollectiveLayout({
 }) {
   return (
     <>
-      <TopBar title="Collective" action={<TabActions plus="/collective/proposals/new" plusLabel="New proposal" />}>
+      <TopBar title="Collective" action={<TabActions space="collective" plus="/collective/proposals/new" plusLabel="New proposal" />}>
         <CollectiveTabs />
       </TopBar>
       <div className="mx-auto w-full max-w-2xl">

@@ -193,7 +193,7 @@ export default async function ConnectionPage({
     <>
       <TopBar
         title="Connection"
-        action={<TabActions plus="/chats/new" plusLabel="New" plusSlot={<PlusMenu />} />}
+        action={<TabActions space="connection" plus="/chats/new" plusLabel="New" plusSlot={<PlusMenu />} />}
       />
 
 

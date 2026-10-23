@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { TabIntro } from "@/components/TabIntro";
 
-import { AiBubble, IndividualTabs } from "@/components/nav/IndividualTabs";
+import { IndividualTabs } from "@/components/nav/IndividualTabs";
 import { TabActions } from "@/components/nav/TabActions";
 import { TopBar } from "@/components/ui";
 import { requireSession } from "@/lib/session";
@@ -24,7 +24,7 @@ export default async function IndividualLayout({ children }: { children: React.R
     <>
       <TopBar
         title={profile.handle ? `@${profile.handle}` : name}
-        action={<TabActions plus="/write" plusLabel="New" />}
+        action={<TabActions space="individual" plus="/write" plusLabel="New" />}
       />
 
       <section className="px-5 pb-4 pt-5">
@@ -70,7 +70,6 @@ export default async function IndividualLayout({ children }: { children: React.R
       <TabIntro space="individual" className="pb-4" />
       <IndividualTabs />
       {children}
-      <AiBubble />
     </>
   );
 }

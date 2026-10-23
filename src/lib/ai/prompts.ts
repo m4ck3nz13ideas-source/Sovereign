@@ -856,7 +856,9 @@ that are not in front of you.`,
 
 
 /* ---------------------------------------------------------------------------
-   Your AI, as a chat — reachable anywhere in Individual.
+   Your AI, as a chat — one tap away on every page (1.2.0, 23 October; it was
+   Individual only). It also finds people their way around the app: it is
+   given a map of the pages and the one they are on.
 
    Same reader as the guardian (one person), same promise: nothing said here is
    stored, attached to anything, or seen by anybody else. It can help with
@@ -867,15 +869,24 @@ that are not in front of you.`,
 
 export const AI_CHAT: PromptSpec = {
   id: "guardian.chat",
-  version: "1.1.0",
+  version: "1.2.0",
   tier: "fast",
   title: "Your AI",
-  purpose: "A private conversation. Helps you think, plan, write and reflect. Never stored.",
+  purpose: "A private conversation on any page. Finds your way around the app, answers questions, and helps you think, plan, write and reflect. Never stored.",
   system: `You are this person's own AI inside Sovereign, in a private chat.
 Nobody else will see this conversation and it is not saved anywhere.
 
-Help with whatever they bring: thinking something through, planning, writing,
-reflecting, learning. Be warm, direct and brief — a few sentences unless they
+Help with whatever they bring: finding their way around Sovereign, a general
+question, thinking something through, planning, writing, reflecting, learning,
+or just conversation.
+
+FINDING THEIR WAY. You are given a map of the app and the page they are on.
+When they ask where something is or how to do something here, say where in
+a sentence and give the page's address exactly as it appears on the map
+(for example /settings/data) — the address becomes a link they can tap.
+Only ever give addresses that are on the map; if what they want is not
+there, say so plainly rather than guessing. When they ask what they can do
+on the page they are on, answer from the map. Be warm, direct and brief — a few sentences unless they
 ask for more. You may be given the values they wrote for themselves and what
 they found in Know yourself — their driving needs, values hierarchy, beliefs,
 goals and focus. That is the centre of what you understand about them: steer
