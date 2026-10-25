@@ -163,12 +163,14 @@ export default async function ProposalPage({
     : legacyThresholds;
 
   // Released by the laws (0056): the score, and why it is held if it is.
-  const [{ data: lawAlignmentRow }, { data: heldWhy }] = await Promise.all([
+  const [{ data: lawAlignmentRow }, { data: heldWhy }, { data: unscoredRow }] = await Promise.all([
     supabase.rpc("law_alignment", { p_proposal_id: id }),
     proposal.status === "in_review"
       ? supabase.rpc("release_problem", { p_proposal_id: id })
       : Promise.resolve({ data: null }),
+    supabase.rpc("law_unscored", { p_proposal_id: id }),
   ]);
+  const unscored = unscoredRow === true;
   const lawAlignment = lawAlignmentRow === null || lawAlignmentRow === undefined ? null : Number(lawAlignmentRow);
   const [{ data: answerRows }, { count: votesNow }] = conditions
     ? await Promise.all([
@@ -668,6 +670,7 @@ export default async function ProposalPage({
           open={open}
           stale={Boolean(standing?.stale)}
           lawAlignment={lawAlignment}
+          unscored={unscored}
           held={(heldWhy as string | null) ?? null}
         />
       </section>
@@ -748,6 +751,7 @@ export default async function ProposalPage({
         conditions={conditions}
         open={open || proposal.status === "in_review"}
         voters={summary?.voter_count ?? votesNow ?? 0}
+        unscored={unscored}
       />
 
       {/* ----------------------------------------------------- HUMAN LAYER */}

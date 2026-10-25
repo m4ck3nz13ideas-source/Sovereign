@@ -26,11 +26,14 @@ export async function ConditionsSection({
   conditions,
   open,
   voters,
+  unscored = false,
 }: {
   proposalId: string;
   conditions: Conditions | null;
   open: boolean;
   voters: number;
+  /** Released without an AI reading (0061). */
+  unscored?: boolean;
 }) {
   if (!conditions) {
     return open && voters === 0 ? (
@@ -198,8 +201,16 @@ export async function ConditionsSection({
         <p className="smallcaps text-[10px] text-paper-faint">How it is decided</p>
         <p className="mt-1.5 text-sm leading-relaxed text-paper-dim">
           <span className="text-paper">Meeting these conditions is what passes it</span> — not a clock, not a
-          steward and not an average. It was released because its alignment with the Universal Laws reached{" "}
-          <span className="tabular-nums text-paper">{RELEASE_THRESHOLD.toFixed(3)}</span>; once its voices are in, its
+          steward and not an average.{" "}
+          {unscored ? (
+            <>It was released without an AI reading: no model scored it against the Universal Laws.</>
+          ) : (
+            <>
+              It was released because its alignment with the Universal Laws reached{" "}
+              <span className="tabular-nums text-paper">{RELEASE_THRESHOLD.toFixed(3)}</span>.
+            </>
+          )}{" "}
+          Once its voices are in, its
           requirements answered and its affected groups reached, it passes, with no Universal Law broken, no tension
           unanswered and no critical flag left open. One safeguard: if more than half of those who responded put it
           below <span className="tabular-nums text-paper">{OPPOSITION_THRESHOLD.toFixed(3)}</span>, it fails, whatever

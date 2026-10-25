@@ -64,6 +64,13 @@ export function Outcome({
           </Tag>
         </div>
 
+        {decision.law_unscored ? (
+          <p className="mt-3 rounded-md border border-alarm/40 bg-alarm/10 px-3 py-2.5 text-[0.95rem] leading-relaxed text-paper">
+            Released without an AI reading. No model scored this against the Universal Laws; the decision stands
+            on its own conditions and the people who responded.
+          </p>
+        ) : null}
+
         {!passed &&
         typeof decision.opposed === "number" &&
         decision.voter_count > 0 &&

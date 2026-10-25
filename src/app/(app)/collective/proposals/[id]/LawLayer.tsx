@@ -26,6 +26,7 @@ export function LawLayer({
   open,
   stale = false,
   lawAlignment = null,
+  unscored = false,
   held = null,
 }: {
   proposalId: string;
@@ -35,6 +36,8 @@ export function LawLayer({
   stale?: boolean;
   /** The mean of the ten readings' alignment (0056), or null until audited. */
   lawAlignment?: number | null;
+  /** Audited, but no reading carries a number: no model read it (0061). */
+  unscored?: boolean;
   /** Why it is still in review, from `release_problem()`; null once released. */
   held?: string | null;
 }) {
@@ -89,6 +92,18 @@ export function LawLayer({
             {released
               ? `Released to the people it is addressed to at ${RELEASE_THRESHOLD.toFixed(3)} or above.`
               : `Below ${RELEASE_THRESHOLD.toFixed(3)}: held with its author, not released.`}
+          </p>
+        </div>
+      ) : null}
+
+      {unscored ? (
+        <div className="rounded-card border border-alarm/40 bg-alarm/10 px-4 py-3 text-center">
+          <p className="smallcaps text-[10px] text-paper-faint">Alignment with the Universal Laws</p>
+          <p className="mt-1 font-serif text-2xl text-alarm">Unscored</p>
+          <p className="mt-1 text-sm text-paper-dim">
+            No AI model read this, so there is no score — not a perfect one. It can be released for the pilot,
+            and is recorded as released without an AI reading. A challenge, once a model is connected, reads it
+            properly.
           </p>
         </div>
       ) : null}

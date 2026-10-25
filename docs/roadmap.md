@@ -109,18 +109,29 @@ landed since this file was last honest:
   Vercel has `AI_SIGNING_SECRET` in production. An unsigned or stale law
   reading is refused.
 
+## The 25 October audit
+
+Production was checked against a database built from this repository:
+functions, columns, triggers, policies and grants. Everything matched except
+grants on six functions; 0060 reconciled them and closed a real leak
+(`place_at()` let any member read any other member's place). The migration
+ledger in Supabase has one row and is not a record of what is applied —
+compare schema fingerprints instead (`docs/deploying.md`).
+
 ## Before the founding 50 arrive
 
 In rough order. None of these is a feature.
 
-- **Apply 0056–0058 and deploy the patches** (`docs/deploying.md`). Then add
-  the founder: `insert into founders (profile_id) select id from auth.users
-  where email = '<founder email>' on conflict do nothing;`
 - **A real model.** Deliberately waiting on funding. Until then every
   reading comes from the offline stand-in, which records verdicts without
-  numbers — so every audited proposal counts as 1.000 with the laws and is
-  released. The release gate is real and enforced; it is only as good as the
-  reading behind it.
+  numbers. Since 0061 such an audit is **unscored**, never 1.000: a proposal
+  with no violation may still be released for the pilot, and it and its
+  decision say "released without an AI reading" (Mackenzie, 25 October).
+- **The first signed audit in production.** Every piece of signing is
+  deployed (0051, the key row, `AI_SIGNING_SECRET`), but no signed law audit
+  has ever been recorded in production, so whether Vercel's secret matches
+  the database's key is unproven. Submit one proposal and check that its ten
+  readings land; until then "signed law audits" stay in testing.
 - **The World ID browser step.** The server half is built and tested. Until
   the client widget is connected, national scale and above cannot gather the
   verified voices they need, for everyone equally.

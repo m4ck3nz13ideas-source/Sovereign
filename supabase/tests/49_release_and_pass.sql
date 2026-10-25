@@ -26,7 +26,8 @@ update release_epoch set since = '-infinity';
 insert into auth.users (id, email) values
   ('a4949494-9494-9494-9494-94949494949a', 'release-steward@example.com'),
   ('b4949494-9494-9494-9494-94949494949b', 'release-two@example.com'),
-  ('c4949494-9494-9494-9494-94949494949c', 'release-three@example.com');
+  ('c4949494-9494-9494-9494-94949494949c', 'release-three@example.com'),
+  ('d4949494-9494-9494-9494-94949494949d', 'release-outsider@example.com');
 
 -- Ten readings with the given verdict for one law and alignment for every
 -- law, written as the fixture stand-in for the signed path (00b_support).
@@ -121,13 +122,34 @@ begin
   if (select status from proposals where id = p) = 'in_deliberation' then passes := passes + 1;
   else fails := fails + 1; raise warning 'FAIL: a clean audit was not released'; end if;
 
-  ------------------------------------------ verdict-only readings still count
-  -- aligned with no number = 1.0, so a stand-in audit releases as before.
+  ------------------------ a reading with no number is unscored, never 1.000
+  -- 0061: what the offline stand-in writes. Released for the pilot, but
+  -- recorded as released without an AI reading.
   q := test_propose(s, gid, 'local', null, 'Release three', 'x', 'The noticeboard is out of date by a month.');
   perform test_r_review(q);
   perform test_r_read(q, null);
+  if law_alignment(q) is null then passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: an unscored audit scored % (it must never read as perfect)', law_alignment(q); end if;
+  if law_unscored(q) then passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: an audit with no numbers is not marked unscored'; end if;
+  update proposals set status = 'in_deliberation' where id = q;
+  if (select status from proposals where id = q) = 'in_deliberation' then passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: an unscored, unviolated audit could not be released'; end if;
+  if exists (select 1 from ledger_events where kind = 'proposal.released' and subject_id = q
+               and (payload->>'unscored')::boolean and payload->'law_alignment' = 'null'::jsonb) then
+    passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: the release is not on the ledger as unscored'; end if;
+
+  -- Readings from before numbers existed (prompt 1.0.0) still count by verdict.
+  q := test_propose(s, gid, 'local', null, 'Release legacy', 'x', 'The hall roof has leaked since the spring.');
+  declare l text; begin
+    foreach l in array universal_law_ids() loop
+      insert into law_assessments (proposal_id, law_id, verdict, reasoning, prompt_id, prompt_version, model)
+      values (q, l, 'aligned', 'clear', 'law.audit', '1.0.0', 'test');
+    end loop;
+  end;
   if law_alignment(q) = 1.000 then passes := passes + 1;
-  else fails := fails + 1; raise warning 'FAIL: verdict-only readings scored %', law_alignment(q); end if;
+  else fails := fails + 1; raise warning 'FAIL: pre-0056 readings scored %', law_alignment(q); end if;
 
   ------------------------------- passes on its requirements, not the average
   perform record_proposal_conditions(p, 3, null, '[]'::jsonb, '[]'::jsonb,
@@ -181,6 +203,61 @@ begin
   o := close_proposal(q);
   if o = 'passed' then passes := passes + 1;
   else fails := fails + 1; raise warning 'FAIL: one of two against failed it — a split is not a majority'; end if;
+
+  -------------------------------------------------- the brief's boundaries
+  -- Fewer than half strongly against: the other gates decide, and it passes.
+  q := test_propose(s, gid, 'local', null, 'Release seven', 'x', 'The bike rack by the hall is broken.');
+  perform test_r_review(q);
+  perform test_r_read(q, 0.95);
+  update proposals set status = 'in_deliberation' where id = q;
+  perform record_proposal_conditions(q, 3, null, '[]'::jsonb, '[]'::jsonb,
+    'Three voices for a bike rack.', 'proposal.conditions', '1.3.0', 'test');
+  perform test_r_vote(q, s, 0.90);
+  perform test_r_vote(q, b, 0.80);
+
+  -- Too few responses: refused, and it stays open.
+  perform set_config('test.uid', s::text, true);
+  begin
+    perform close_proposal(q);
+    fails := fails + 1; raise warning 'FAIL: closed with two of three voices';
+  exception when others then passes := passes + 1; end;
+
+  perform test_r_vote(q, c, 0.10);
+
+  -- A member who is not a steward cannot close it.
+  perform set_config('test.uid', b::text, true);
+  begin
+    perform close_proposal(q);
+    fails := fails + 1; raise warning 'FAIL: a member who is not a steward closed a group proposal';
+  exception when others then passes := passes + 1; end;
+
+  -- An outsider can neither move it nor give it conditions.
+  perform set_config('test.uid', 'd4949494-9494-9494-9494-94949494949d', true);
+  update proposals set status = 'withdrawn' where id = q;
+  if (select count(*) from proposals where id = q) = 0 then passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: an outsider can read a group proposal'; end if;
+  perform set_config('test.uid', s::text, true);
+  if (select status from proposals where id = q) in ('in_deliberation', 'voting') then passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: an outsider changed a proposal''s status'; end if;
+  perform set_config('test.uid', 'd4949494-9494-9494-9494-94949494949d', true);
+  begin
+    perform record_proposal_conditions(q, 2, null, '[]'::jsonb, '[]'::jsonb,
+      'An outsider trying to set conditions.', 'proposal.conditions', '1.3.0', 'forged');
+    fails := fails + 1; raise warning 'FAIL: an outsider set a proposal''s conditions';
+  exception when others then passes := passes + 1; end;
+
+  perform set_config('test.uid', s::text, true);
+  o := close_proposal(q);
+  if o = 'passed' then passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: one of three strongly against failed it (%)', o; end if;
+
+  -- Closing twice: the second is refused and the decision stands.
+  begin
+    perform close_proposal(q);
+    fails := fails + 1; raise warning 'FAIL: a decided proposal closed a second time';
+  exception when others then passes := passes + 1; end;
+  if (select count(*) from decisions where proposal_id = q) = 1 then passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: two decisions for one proposal'; end if;
 
   raise notice ' ';
   raise notice '  Release and pass: % passed, % failed', passes, fails;

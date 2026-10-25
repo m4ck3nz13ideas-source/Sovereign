@@ -838,6 +838,8 @@ export interface Decision {
   law_alignment?: number | null;
   /** How many responses were below 0.382 at close (0059). Null before then. */
   opposed?: number | null;
+  /** Released without an AI reading: audited, no score (0061). */
+  law_unscored?: boolean | null;
   /**
    * How many of the voices had proof of personhood when this closed. Recorded
    * at every scale, required at some — a decision carried by four accounts

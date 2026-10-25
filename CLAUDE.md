@@ -645,9 +645,10 @@ on purpose, in a commit that says so.
     a proposal to be RELEASED to the people it is addressed to: each of the
     ten readings carries an `alignment` 0–1 that must agree with its verdict
     (aligned ≥ 0.70, tension 0.30–0.70, violation < 0.30; checked in
-    `law_audit_payload()` and the zod schema), a reading without one counts
-    by its verdict (1 / 0.5 / 0), and `law_alignment()` is the mean of a
-    complete, current audit. `guard_proposal_status()` refuses the move into
+    `law_audit_payload()` and the zod schema), and `law_alignment()` is the
+    mean of a complete, current audit. A reading without a number is
+    UNSCORED (0061, rule 53) unless it predates numbers (prompt 1.0.0, which
+    counts by verdict: 1 / 0.5 / 0). `guard_proposal_status()` refuses the move into
     deliberation unless `release_problem()` is null — audited, no violation,
     alignment ≥ `release_threshold()`, a review on file — for proposals
     submitted after `release_epoch.since` (the harness moves it, like
@@ -698,6 +699,28 @@ on purpose, in a commit that says so.
     so `dormant_proposals()` never offers it back (rule 12). Mirrored as
     `OPPOSITION_THRESHOLD` in `src/lib/universal-law.ts`.
     `49_release_and_pass.sql`.
+
+53. **No reading is never a perfect reading.** (0061, Mackenzie, 25 October
+    2026, from the audit.) The offline stand-in records "aligned" for every
+    law with no number, because it cannot judge; counting that as 1.000
+    treated missing evidence as proof. Now any current reading without an
+    alignment (other than prompt 1.0.0) makes `law_alignment()` null and
+    `law_unscored()` true. An unscored audit with no violation may still be
+    released — the pilot needs to run before a model is funded — but the
+    release is a `proposal.released` ledger event carrying `unscored`, the
+    decision carries `law_unscored`, and the proposal, conditions and
+    outcome all say "released without an AI reading". Never show an unscored
+    audit as a number. A challenge re-reads it properly once a model exists,
+    superseding the stand-in's readings without erasing them (rule 8).
+    `49_release_and_pass.sql`.
+
+54. **Internal helpers are not the API.** (0060.) Supabase grants every new
+    function to `authenticated` directly, so `revoke ... from public` alone
+    leaves it callable by every signed-in user — that is how `place_at()`
+    leaked any member's place. A helper reached only from security definer
+    code is revoked from `public, anon, authenticated` explicitly; the test
+    shim grants new functions the way Supabase does, and
+    `52_internal_helpers.sql` lists the helpers and fails if any is callable.
 
 ## On the surface, not in the schema
 

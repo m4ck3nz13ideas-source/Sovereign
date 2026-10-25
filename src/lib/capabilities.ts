@@ -134,7 +134,7 @@ export const SPACES: Space[] = [
         title: "Universal Law reading of every proposal",
         detail: "Each proposal is read against the ten laws before anyone responds. A violation ends it; below 0.618 alignment it is not released.",
         status: "testing",
-        note: "Readings come from the offline stand-in, which judges structure, not meaning, and says so on every reading.",
+        note: "Readings come from the offline stand-in, which cannot judge, so they carry no score: a proposal it reads is released unscored and labelled as released without an AI reading.",
       },
       {
         title: "Proof of personhood at wide scales",
@@ -176,10 +176,12 @@ export const SAFEGUARDS: Capability[] = [
   {
     title: "Signed Universal Law audits",
     detail: "Every law reading signed by the server, exactly ten readings of the current text, and a fresh audit required when the text changes. Unsigned or stale readings refused.",
-    // Current since 25 October 2026: 0051's functions are in the live
-    // database, its signing key row exists, and AI_SIGNING_SECRET is set in
-    // Vercel production (checked through the Supabase and Vercel tools).
-    status: "current",
+    // Back to testing (audit, 25 October 2026): every piece is deployed —
+    // 0051's functions, the key row, AI_SIGNING_SECRET in Vercel — but no
+    // signed audit has yet been recorded in production, so the end-to-end
+    // path is unproven. Move to current in the commit after the first one is.
+    status: "testing",
+    note: "Deployed, but no signed audit has yet been recorded in production.",
   },
   {
     title: "A real AI model reading proposals",

@@ -18,9 +18,8 @@ export const ROADMAP: { stage: string; status: CapabilityStatus; lead: string; i
     lead: "In the app today.",
     items: [
       { title: "Released by the laws", detail: "Only at 0.618 alignment with the ten Universal Laws does a proposal go out to people." },
-      { title: "Passed on its own conditions", detail: "Voices needed, groups to reach, questions to answer. Public, with reasons. Met, it passes." },
+      { title: "Passed on its own conditions", detail: "Voices needed, groups to reach, questions to answer. Met, it passes — unless most were strongly against." },
       { title: "Group charters", detail: "Start from a template. From three members, the charter changes only by proposal." },
-      { title: "Signed law audits", detail: "Ten signed readings of the exact current text. Forged or stale readings are refused." },
       { title: "Secret ballots, open tallies", detail: "Every response visible after close. Nobody sees whose." },
       { title: "Shareable decisions", detail: "One public link per decision. Outcome and numbers, never names." },
       { title: "For you, Following, Discover", detail: "Three feeds at every scale. Time order, with the reason each item is there." },
@@ -42,6 +41,10 @@ export const ROADMAP: { stage: string; status: CapabilityStatus; lead: string; i
       {
         title: "AI readings by a real model",
         detail: "Proposals, posts and businesses are read against the ten laws today by an offline stand-in that judges structure, not meaning — and every reading says so. A model is switched on when funding allows.",
+      },
+      {
+        title: "Signed law audits",
+        detail: "Ten signed readings of the exact current text, refused if forged or stale. Deployed; no signed audit has yet been recorded in production.",
       },
       {
         title: "Proof of personhood",

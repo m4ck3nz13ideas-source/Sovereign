@@ -27,6 +27,15 @@ check that the newest migration's functions and policies exist
 (`to_regprocedure('…')`, `pg_policies`) before assuming it is current. Ours was
 once five migrations behind with nothing visibly broken.
 
+**Reconcile by fingerprint, not by ledger.** Build a database from the
+repository (`supabase/tests/00_supabase_shim.sql`, then every migration) and
+run the same query on both: a count and an md5 over every public function's
+definition (blank lines stripped, names ordered `collate "C"`), every column,
+trigger and policy, and the list of functions `authenticated` cannot execute.
+Equal fingerprints mean production is what the repository says; a difference
+tells you which bucket to look in. The query is in
+`docs/alignment-audit-2026-10-25.md`.
+
 Two things that bite when applying by hand:
 
 - **Supabase grants new functions to `anon` by default.** Every migration that

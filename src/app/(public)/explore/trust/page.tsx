@@ -194,8 +194,10 @@ export default function TrustPage() {
               <li>A business is approved only when a person signs the reading off.</li>
               <li>The ten laws are a framework for assessing a proposal. Passing them shows a proposal was checked, not that it is right.</li>
               <li>
-                Every law reading is signed by the server and tied to the exact text it read. A forged or stale reading
-                is refused, and a proposal is released to people only at 0.618 alignment with the ten laws.
+                Every law reading is to be signed by the server and tied to the exact text it read; a forged or stale
+                reading is refused. This is deployed, and no signed audit has yet been recorded in production. Until a
+                model is connected, readings carry no score, and a proposal released on one is labelled as released
+                without an AI reading — never as perfectly aligned.
               </li>
             </ul>
           </Block>
