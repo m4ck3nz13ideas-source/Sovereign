@@ -32,3 +32,8 @@ grant usage on schema public, auth to anon, authenticated;
 grant execute on function auth.uid() to anon, authenticated;
 alter default privileges in schema public grant all on tables to anon, authenticated;
 alter default privileges in schema public grant all on sequences to anon, authenticated;
+-- And every new FUNCTION, to both roles directly (0060). Postgres alone only
+-- grants functions to PUBLIC, so `revoke ... from public` looked like enough
+-- here while Supabase still let every signed-in user call the function —
+-- which is how place_at() ended up callable on production.
+alter default privileges in schema public grant execute on functions to anon, authenticated;
