@@ -60,7 +60,7 @@ on purpose, in a commit that says so.
 13. **A concern is not a veto.** Questions and concerns are answered in
     writing and counted onto the decision; they never fail a proposal. Only a
     review flag does, because that is the rubric against the group's own floor
-    rather than one person disagreeing.
+    rather than one person disagreeing (against `VALUES_FLOOR` since 0057).
     **0039: each proposal is decided by its own conditions**, set by the AI
     (prompt `proposal.conditions`) for that proposal alone — how many voices,
     how long it stays open, and up to eight requirements that must be
@@ -661,6 +661,30 @@ on purpose, in a commit that says so.
     they were put to people on. The app calls `releaseIfReady()` after the
     audit, the review and a challenge; the database decides.
     `49_release_and_pass.sql`, `collective.test.ts`.
+
+51. **A group has a charter, and from three members it changes by
+    proposal.** (0057, Mackenzie, 25 October 2026.) The steward-set
+    thresholds are gone from the app; a group's charter is its purpose,
+    goal, values, who may invite (`inviters`), who may propose
+    (`proposers`) and the `ai_context` the conditions prompt reads (1.2.0).
+    It can make the AI stricter, never looser than its floors. While a group
+    has fewer than `charter_founding_size()` (3) members its stewards write
+    it directly; from then on `guard_charter()` refuses a direct edit and
+    only a group proposal carrying `charter_change` (only charter fields,
+    `charter_change_problem()`, frozen after insert) can change it — enacted
+    by `enact_charter_on_pass()` the moment it passes, because rule 9 is
+    about resources and a charter needs none. Any member may propose a
+    charter change even where only stewards may propose anything else. The
+    change is written into the body (`draftBody()`, "The charter, as it
+    would change") so the sharpening, the audit and every reader see exactly
+    what would be enacted. Every version is in `charter_revisions`,
+    append-only, naming the proposal where there was one. Not in any
+    charter: the Universal Laws, release at 0.618, conditions' floors,
+    critical flags, secret ballots, and the values floor (`VALUES_FLOOR`,
+    0.3, the same for every group). 0057 also dropped `members_self_insert`,
+    a policy that let anybody seat themselves in any group in any role.
+    Groups are managed at `/connection/g/[id]/manage`, not in Settings.
+    `50_charters.sql`, `charters.test.ts`.
 
 ## On the surface, not in the schema
 

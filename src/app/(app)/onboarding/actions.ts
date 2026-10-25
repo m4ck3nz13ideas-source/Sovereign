@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { setActiveGroup } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { UNIVERSAL_LAWS } from "@/lib/universal-law";
+import type { TemplateId, Who } from "@/lib/charters";
 import type { GroupScope } from "@/lib/types";
 
 /**
@@ -264,7 +265,25 @@ export async function finishOnboarding() {
   return { ok: true as const };
 }
 
-export async function createGroup(name: string, purpose: string, scope: GroupScope) {
+/**
+ * Start a group, with its first charter (0057). The founder writes it here,
+ * usually from a template; while the group has fewer than three members its
+ * stewards can rewrite it directly, and from then on only a passed proposal
+ * can.
+ */
+export async function createGroup(
+  name: string,
+  purpose: string,
+  scope: GroupScope,
+  charter?: {
+    template: TemplateId;
+    goal: string;
+    values: string[];
+    inviters: Who;
+    proposers: Who;
+    aiContext: string;
+  },
+) {
   const supabase = await createClient();
 
   if (!name.trim()) return { ok: false as const, error: "A group needs a name." };
@@ -276,6 +295,27 @@ export async function createGroup(name: string, purpose: string, scope: GroupSco
   });
 
   if (error) return { ok: false as const, error: error.message };
+
+  if (charter) {
+    const { error: charterError } = await supabase
+      .from("groups")
+      .update({
+        template: charter.template,
+        goal: charter.goal.trim().slice(0, 600) || null,
+        group_values: [...new Set(charter.values.map((v) => v.trim()).filter(Boolean))].slice(0, 12),
+        inviters: charter.inviters,
+        proposers: charter.proposers,
+        ai_context: charter.aiContext.trim().slice(0, 1200) || null,
+      })
+      .eq("id", data as string);
+    // The group exists either way; a charter that did not save is written
+    // again from its page, where the founder lands next.
+    if (charterError) {
+      await setActiveGroup(data as string);
+      revalidatePath("/", "layout");
+      return { ok: true as const, groupId: data as string, warning: charterError.message };
+    }
+  }
 
   await setActiveGroup(data as string);
   revalidatePath("/", "layout");

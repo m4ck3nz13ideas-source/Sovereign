@@ -11,7 +11,8 @@ export const GLOSSARY: Record<string, string> = {
   Decision: "What a proposal became when it closed, with every response's numbers (no names) and the spread, so a split shows as a split.",
   Activation: "When a passed proposal becomes a project, once every need has someone against it.",
   Reflection: "The written account of what actually happened. A project cannot finish without one.",
-  Steward: "A member who looks after a group: its purpose, invitations and needs. A steward cannot see anybody's private space or ballot.",
+  Steward: "A member who looks after a group: invitations, closing proposals once their conditions are met, and its charter while it is founding. A steward cannot see anybody's private space or ballot.",
+  Charter: "A group's own rules: what it is for, its goal and values, who can invite and propose, and what the AI should weigh. From three members it changes only by a passed proposal.",
   Sphere: "An area of life a proposal touches, such as Health or Ecology. You can rate how much each matters to you; others see only the average.",
   SOV: "A record of finished contributions. A simulation, labelled as one — not money and not a token.",
 };
@@ -21,7 +22,7 @@ export type GlossaryTerm = keyof typeof GLOSSARY;
 /** Which words each tab's first-run note explains. */
 export const SPACE_TERMS: Record<"individual" | "connection" | "search" | "market" | "collective", string[]> = {
   individual: ["SOV", "Sphere"],
-  connection: ["Steward", "Proposal"],
+  connection: ["Charter", "Steward", "Proposal"],
   search: ["Sphere", "Proposal", "Decision"],
   market: ["Universal Laws"],
   collective: ["Proposal", "Universal Laws", "Conditions", "Alignment", "Decision", "Activation", "Reflection"],

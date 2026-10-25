@@ -6,6 +6,7 @@ import { useEffect, useState, useTransition } from "react";
 
 import { Button, Card, Field, Tag, inputClass } from "@/components/ui";
 import { SpherePicker } from "@/components/spheres/SpherePicker";
+import type { CharterChange } from "@/lib/charters";
 import { READINESS_THRESHOLD } from "@/lib/readiness";
 
 import { assessDraft, submitProposal } from "../../actions";
@@ -105,6 +106,7 @@ export function ComposeProposal({
   unsetScopes,
   takingUp,
   amend = null,
+  charter = null,
 }: {
   addresses: { value: string; label: string; detail: string | null }[];
   defaultAddress: string;
@@ -134,12 +136,31 @@ export function ComposeProposal({
     currentViolation: string;
     globalAddress: string;
   } | null;
+  /**
+   * A change to a group's charter (0057), opened from the group's Manage page.
+   * The same composer and the same gate; the change itself travels with the
+   * proposal and is written into its body, so what is read is what would be
+   * enacted when it passes.
+   */
+  charter?: {
+    groupId: string;
+    groupName: string;
+    change: CharterChange;
+    lines: string[];
+  } | null;
 }) {
   const router = useRouter();
   const [form, setForm] = useState(
     takingUp
       ? { ...EMPTY, ...stripId(takingUp), address: defaultAddress }
-      : { ...EMPTY, address: amend ? amend.globalAddress : defaultAddress },
+      : charter
+        ? {
+            ...EMPTY,
+            address: `group:${charter.groupId}`,
+            title: "Change the charter",
+            change: `The charter would change as follows. ${charter.lines.join(". ")}.`,
+          }
+        : { ...EMPTY, address: amend ? amend.globalAddress : defaultAddress },
   );
   // What a second attempt does differently. Held apart from `form` because it
   // is not part of the proposal's text and so is not part of the sharpening
@@ -158,7 +179,7 @@ export function ComposeProposal({
   // is being taken up from a dormant proposal wins over a stored one — it was
   // asked for explicitly, a moment ago.
   useEffect(() => {
-    if (takingUp) return;
+    if (takingUp || charter) return;
     try {
       const saved = window.localStorage.getItem(DRAFT_KEY);
       if (saved) {
@@ -171,7 +192,7 @@ export function ComposeProposal({
     } catch {
       // A browser that refuses storage just means no draft recovery.
     }
-  }, [takingUp]);
+  }, [takingUp, charter]);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -212,7 +233,11 @@ export function ComposeProposal({
   function sharpen() {
     start(async () => {
       setError(null);
-      const r = await assessDraft({ ...form, supersedes: takingUp?.id ?? null });
+      const r = await assessDraft({
+        ...form,
+        supersedes: takingUp?.id ?? null,
+        charterChange: charter?.change ?? null,
+      });
       if (!r.ok) {
         setError(r.error);
         return;
@@ -232,6 +257,7 @@ export function ComposeProposal({
         amendsLaw: amend?.lawId ?? null,
         amendmentText: newText,
         amendmentViolation: newViolation,
+        charterChange: charter?.change ?? null,
       });
       if (!r.ok) {
         setError(r.error);
@@ -290,6 +316,23 @@ export function ComposeProposal({
         </div>
       ) : null}
 
+      {charter ? (
+        <div className="space-y-2 rounded-card border border-gold-dim bg-gold-wash p-4">
+          <p className="text-[0.95rem] leading-relaxed text-paper">
+            A change to <strong>{charter.groupName}</strong>&rsquo;s charter. It is read,
+            released and decided like any proposal, and takes effect the moment it passes.
+          </p>
+          <ul className="space-y-1 text-[0.875rem] leading-relaxed text-paper-dim">
+            {charter.lines.map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+          </ul>
+          <p className="text-[0.8125rem] leading-relaxed text-paper-faint">
+            This is written into the proposal exactly as above. The sections below are the case for it.
+          </p>
+        </div>
+      ) : null}
+
       {amend ? (
         <div className="space-y-3 rounded-card border border-gold-dim bg-gold-wash p-4">
           <p className="text-[0.95rem] leading-relaxed text-paper">
@@ -337,6 +380,7 @@ export function ComposeProposal({
         <select
           value={form.address}
           onChange={(e) => set("address", e.target.value)}
+          disabled={Boolean(charter)}
           className={inputClass}
         >
           {addresses.map((a) => (

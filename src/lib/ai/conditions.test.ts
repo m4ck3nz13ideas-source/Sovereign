@@ -31,6 +31,11 @@ describe("proposal conditions (0042)", () => {
 
   it("the prompt tells the AI it may only add when challenged", () => {
     expect(PROPOSAL_CONDITIONS.system).toMatch(/may only ADD/);
-    expect(PROPOSAL_CONDITIONS.version).toBe("1.1.0");
+    expect(PROPOSAL_CONDITIONS.version).toBe("1.2.0");
+  });
+
+  it("the prompt says meeting the conditions passes it, and reads the charter (0056, 0057)", () => {
+    expect(PROPOSAL_CONDITIONS.system).toMatch(/MEETING THESE PASSES IT/);
+    expect(PROPOSAL_CONDITIONS.system).toMatch(/never take you below the floors/);
   });
 });

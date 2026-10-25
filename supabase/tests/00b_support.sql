@@ -131,6 +131,13 @@ end $$;
 drop policy if exists test_fixture_law_write on law_assessments;
 create policy test_fixture_law_write on law_assessments for insert to app with check (true);
 
+-- 0057 closed members_self_insert, the side door that let anybody insert
+-- themselves into any group. Two older suites (18, 22) seat their fixture
+-- members that way; this stands in for redeem_invite() for `app` only.
+-- `50_charters.sql` runs as `authenticated` and proves the door is shut.
+drop policy if exists test_fixture_member_write on group_members;
+create policy test_fixture_member_write on group_members for insert to app with check (true);
+
 -- Signs an AI payload the way src/lib/ai/sign.ts does, with whatever key the
 -- suite has put in private.ai_signing_key. Test-only (the `test_` prefix keeps
 -- it out of 44's anon check); a real server holds the key in Vercel instead.

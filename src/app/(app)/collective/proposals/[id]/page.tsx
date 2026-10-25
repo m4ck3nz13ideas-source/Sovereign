@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { Empty, Page, Prose, Readers, SectionLabel, Tag } from "@/components/ui";
 import { ago, money, shortDate, STATUS_LABEL } from "@/lib/format";
-import { asReview, isOpen } from "@/lib/collective";
+import { VALUES_FLOOR, asReview, isOpen } from "@/lib/collective";
 import { isSteward, requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type {
@@ -137,9 +137,7 @@ export default async function ProposalPage({
       }
     : { alignment: Number(rule?.threshold_alignment ?? 0.618), participation: 0 };
 
-  const valuesFloor = proposal.groups
-    ? Number(proposal.groups.threshold_values_floor)
-    : 0.3;
+  const valuesFloor = VALUES_FLOOR;
 
   const myRole = groups.find((g) => g.id === proposal.group_id)?.role ?? null;
 
@@ -760,7 +758,7 @@ export default async function ProposalPage({
         ) : (
           <Empty>
             {review
-              ? "Nothing in the review crossed the group's critical threshold."
+              ? "Nothing in the review crossed the critical floor."
               : "Flags appear once the review has run."}
           </Empty>
         )}
@@ -866,7 +864,26 @@ export default async function ProposalPage({
           </div>
         ) : null}
 
-        {proposal.status === "passed" ? (
+        {proposal.charter_change ? (
+          <div className="mt-6 rounded-card border border-gold-dim bg-gold-wash p-4 text-center">
+            <p className="smallcaps text-[10px] text-paper-faint">A change to the group&rsquo;s charter</p>
+            <p className="mt-1.5 text-[0.95rem] leading-relaxed text-paper">
+              {proposal.charter_enacted_at
+                ? `Enacted ${shortDate(proposal.charter_enacted_at)}, the moment it passed. The charter now reads this way.`
+                : "Takes effect the moment it passes. The change is written into the proposal above, exactly as it would be enacted."}
+            </p>
+            {proposal.group_id ? (
+              <Link
+                href={`/connection/g/${proposal.group_id}/manage#charter`}
+                className="smallcaps mt-2 inline-block text-[11px] text-gold hover:underline"
+              >
+                The charter →
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
+
+        {proposal.status === "passed" && !proposal.charter_change ? (
           <div className="mt-6">
             <SectionLabel
               right={

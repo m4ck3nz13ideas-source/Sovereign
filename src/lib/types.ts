@@ -122,9 +122,18 @@ export interface Group {
   group_values?: string[];
   scope: GroupScope;
   created_by: string | null;
+  /**
+   * Pre-0039 bars, kept for the proposals that were put to people on them
+   * (0056). Nothing in the app sets these any more; the charter replaced them.
+   */
   threshold_alignment: number;
   threshold_participation: number;
   threshold_values_floor: number;
+  /** The charter (0057): who may invite and propose, and the AI's context. */
+  inviters?: "stewards" | "members";
+  proposers?: "stewards" | "members";
+  ai_context?: string | null;
+  template?: string | null;
   created_at: string;
 }
 
@@ -155,6 +164,9 @@ export interface Proposal {
   amends_law: string | null;
   amendment_text: string | null;
   amendment_violation: string | null;
+  /** A change to the group's charter, enacted the moment it passes (0057). */
+  charter_change?: Record<string, unknown> | null;
+  charter_enacted_at?: string | null;
   scope: GroupScope;
   /** The six sections. `body` is these concatenated, and what was sharpened. */
   intent: string;

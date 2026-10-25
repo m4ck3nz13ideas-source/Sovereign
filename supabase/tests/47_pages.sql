@@ -61,9 +61,10 @@ begin
   perform set_config('test.uid', ann::text, true);
   gid := create_group('Pages Street', 'Keep the street tidy and the bins out on time.');
 
-  -- Ben and Cat join (as an invitation would).
+  -- Ben joins (as an invitation would). Cat joins after the rundown is set:
+  -- from three members the charter changes only by proposal (0057).
   reset role;
-  insert into group_members (group_id, profile_id) values (gid, ben), (gid, cat);
+  insert into group_members (group_id, profile_id) values (gid, ben);
   set role app;
 
   ----------------------------------------------- stewards set the rundown
@@ -79,6 +80,10 @@ begin
   select goal into t from groups where id = gid;
   if t like 'Every bin%' then passes := passes + 1; else fails := fails + 1;
     raise warning 'FAIL: a member who is not a steward rewrote the goal'; end if;
+
+  reset role;
+  insert into group_members (group_id, profile_id) values (gid, cat);
+  set role app;
 
   ----------------------------------- shared values: opted-in, two or more
   perform set_config('test.uid', ann::text, true);

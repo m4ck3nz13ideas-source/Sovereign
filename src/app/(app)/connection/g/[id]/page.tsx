@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Group } from "@/lib/types";
 
 import { DecideButton } from "../../DecideButton";
-import { AboutEditor } from "./AboutEditor";
+import { GroupHealth } from "./GroupHealth";
 
 export const metadata = { title: "Group · Sovereign" };
 
@@ -80,6 +80,12 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
               <DecideButton groupId={id} className="press rounded-pill border border-line px-4 py-2 text-sm font-semibold text-paper">
                 Decide
               </DecideButton>
+              <Link
+                href={`/connection/g/${id}/manage`}
+                className="press rounded-pill border border-line px-4 py-2 text-sm font-semibold text-paper"
+              >
+                {steward ? "Manage" : "Charter"}
+              </Link>
             </div>
           </header>
 
@@ -104,7 +110,7 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
                 ))}
               </ul>
             ) : (
-              <Empty>The stewards have not named its values yet.</Empty>
+              <Empty>Its charter names no values yet.</Empty>
             )}
           </section>
 
@@ -128,9 +134,15 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
             </p>
           </section>
 
-          {steward ? (
-            <AboutEditor groupId={id} purpose={group.purpose ?? ""} goal={group.goal ?? ""} values={stated} />
-          ) : null}
+          <p className="text-center text-[0.8125rem] text-paper-faint">
+            From its charter.{" "}
+            <Link href={`/connection/g/${id}/manage#charter`} className="text-gold hover:underline">
+              {steward ? "Read or change it" : "Read it, or propose a change"}
+            </Link>
+          </p>
+
+          {/* ------------------------------------------------- DASHBOARD */}
+          <GroupHealth groupId={id} members={members.length} />
 
           {/* ----------------------------------------------------- MEDIA */}
           {feed.media.length ? (

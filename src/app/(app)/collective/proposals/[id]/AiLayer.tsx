@@ -59,7 +59,7 @@ export function AiLayer({
                 label={name}
                 value={score}
                 critical={score < floor}
-                hint={score < floor ? `Below the group's floor of ${floor.toFixed(2)} — this has to be answered.` : undefined}
+                hint={score < floor ? `Below the floor of ${floor.toFixed(2)} — this has to be answered.` : undefined}
               />
             ))}
           </div>

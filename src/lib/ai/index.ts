@@ -201,6 +201,12 @@ export interface Draft {
   place: string | null;
   budget: string | null;
   termDays: string | null;
+  /**
+   * A charter change in words, one line per field (0057). Written into the
+   * body so the sharpening, the law audit and every reader see exactly what
+   * would be enacted.
+   */
+  charterLines?: string[] | null;
 }
 
 /** The whole draft as one block, and the exact text the readiness is bound to. */
@@ -218,6 +224,8 @@ ${d.risks.trim()}`,
 ${d.alternatives.trim()}`,
     d.evidence.trim() ? `## Evidence
 ${d.evidence.trim()}` : null,
+    d.charterLines?.length ? `## The charter, as it would change
+${d.charterLines.map((l) => `- ${l}`).join("\n")}` : null,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -896,14 +904,23 @@ export async function setConditions(ctx: {
   members: number | null;
   budget: string | null;
   challenge?: { argument: string; current: Record<string, unknown> } | null;
+  /** The group's charter (0057), for a group proposal. Context, never a floor. */
+  charter?: { purpose: string; goal: string; values: string[]; aiContext: string } | null;
 }): Promise<{ conditions: ConditionsOutput; model: string; prompt: typeof PROPOSAL_CONDITIONS }> {
+  const charterBlock = ctx.charter
+    ? `\n\nTHE GROUP'S CHARTER
+for: ${ctx.charter.purpose || "(not written)"}
+trying to: ${ctx.charter.goal || "(not written)"}
+values: ${ctx.charter.values.length ? ctx.charter.values.join(", ") : "(none named)"}
+asks you to weigh: ${ctx.charter.aiContext || "(nothing in particular)"}`
+    : "";
   const input = `THE PROPOSAL
 title: ${ctx.title}
 summary: ${ctx.summary ?? "(none)"}
 scale: ${ctx.scale}
 addressed to: ${ctx.where}
 members: ${ctx.members ?? "n/a"}
-budget: ${ctx.budget ?? "none"}
+budget: ${ctx.budget ?? "none"}${charterBlock}
 
 ${ctx.body}${
     ctx.challenge

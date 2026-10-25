@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 
 import { Button, Card, Field, inputClass } from "@/components/ui";
 
-import { makeInvite } from "./actions";
+import { makeInvite } from "../actions";
 
 export function InvitePanel({ groupId }: { groupId: string }) {
   const [uses, setUses] = useState("1");

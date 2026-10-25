@@ -25,6 +25,13 @@ export function asReview(row: Record<string, unknown>): ProposalReview {
   };
 }
 
+/**
+ * The values floor a review flags below (0057). One number for every group:
+ * the charter replaced the steward-set thresholds, and a floor a group could
+ * lower would be a way round its own review.
+ */
+export const VALUES_FLOOR = 0.3;
+
 export function isClosed(status: ProposalStatus): boolean {
   return CLOSED_STATUSES.includes(status);
 }

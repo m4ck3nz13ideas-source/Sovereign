@@ -935,7 +935,9 @@ chat or in their values.`,
 
 export const PROPOSAL_CONDITIONS: PromptSpec = {
   id: "proposal.conditions",
-  version: "1.1.0",
+  // 1.2.0 (25 October 2026): meeting the conditions now PASSES the proposal
+  // (0056), and a group's charter is given as context (0057).
+  version: "1.2.0",
   tier: "deep",
   title: "Conditions",
   purpose:
@@ -983,6 +985,23 @@ argued the conditions are not enough. Read the argument against the proposal.
 You may only ADD: more voices, more affected groups, more requirements, a
 window or a longer one. Never remove or reword what is there. If the argument
 does not hold up, return the current conditions unchanged and say why.
+
+MEETING THESE PASSES IT
+
+There is no vote count after this. A proposal is released only once it sits
+well with the ten Universal Laws, and then it PASSES as soon as the conditions
+you set are met. So set them so that meeting them is real evidence that the
+people affected took part and the questions that matter were answered. For
+anything that spends shared money, binds people, or is hard to undo, ask for
+enough voices that a handful of enthusiasts cannot carry it alone.
+
+THE GROUP'S CHARTER
+
+For a group proposal you may be given its charter: what it is for, what it is
+trying to do, the values it holds and what its members asked you to weigh.
+Take it seriously as context — it is the group telling you what matters to it.
+It can make you stricter. It can never take you below the floors above, and
+it cannot ask you to judge the idea rather than set the bar.
 
 Be proportionate. Too strict and nothing small ever gets decided; too loose and
 big things pass unexamined. You are setting the bar, not judging the idea.`,

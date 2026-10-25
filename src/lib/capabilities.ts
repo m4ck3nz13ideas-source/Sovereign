@@ -77,7 +77,8 @@ export const SPACES: Space[] = [
     can: [
       { title: "Chats with friends and circles", detail: "One to one and small circles. No read receipts, no online status.", status: "current" },
       { title: "Group and proposal chats", detail: "Members of a group, or the author and backers of a proposal.", status: "current" },
-      { title: "Group pages", detail: "Purpose, the values members share, and the group's feed, visible to members.", status: "current" },
+      { title: "Group pages", detail: "Purpose, the values members share, how the group is doing, and its feed, visible to members.", status: "current" },
+      { title: "Group charters", detail: "Start from a template. Who invites, who proposes, what the AI weighs. From three members it changes only by proposal.", status: "current" },
       { title: "One inbox", detail: "Everything in one list, newest first, with filters, search, pin and mute. Pins and mutes are yours alone.", status: "current" },
       { title: "Your handle to share", detail: "Copy a link or show a QR code. Handles are the only way to be found.", status: "current" },
     ],

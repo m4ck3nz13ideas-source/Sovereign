@@ -21,9 +21,10 @@ import { AiError } from "@/lib/ai/provider";
 import { aiWrite } from "@/lib/ai/sign";
 import { shortDate } from "@/lib/format";
 import { sphereLine, validateSpheres } from "@/lib/spheres";
+import { charterChangeLines, charterChangeProblem, charterOf, type CharterChange } from "@/lib/charters";
 import { READINESS_THRESHOLD, sha256 } from "@/lib/readiness";
 import { POST_AUDIENCES, POST_KINDS, type ContributionKind, type MediaKind, type PostAudience, type PostKind } from "@/lib/types";
-import { placeAt } from "@/lib/collective";
+import { VALUES_FLOOR, placeAt } from "@/lib/collective";
 import { ledger } from "@/lib/ledger";
 import { requireSession } from "@/lib/session";
 import { UNIVERSAL_LAWS } from "@/lib/universal-law";
@@ -313,6 +314,34 @@ export interface ProposalInput {
   amendsLaw?: string | null;
   amendmentText?: string;
   amendmentViolation?: string;
+  /** A change to the addressed group's charter (0057): only the fields it changes. */
+  charterChange?: CharterChange | null;
+}
+
+/** A group's charter as the conditions prompt reads it (0057). */
+function charterContext(g: unknown) {
+  const c = charterOf((g ?? {}) as Parameters<typeof charterOf>[0]);
+  return { purpose: c.purpose, goal: c.goal, values: c.group_values, aiContext: c.ai_context };
+}
+
+/**
+ * A charter change, checked and written out in words against the charter as
+ * it stands. Only for a group, and only that group's.
+ */
+async function charterLinesFor(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  groupId: string | null,
+  change: CharterChange | null | undefined,
+): Promise<{ ok: true; lines: string[] | null } | { ok: false; error: string }> {
+  if (!change) return { ok: true, lines: null };
+  if (!groupId) return { ok: false, error: "Only a group has a charter to change." };
+  const why = charterChangeProblem(change);
+  if (why) return { ok: false, error: why };
+  const { data: g } = await supabase.from("groups").select("*").eq("id", groupId).maybeSingle();
+  if (!g) return { ok: false, error: "You are not in that group." };
+  const lines = charterChangeLines(charterOf(g), change);
+  if (!lines.length) return { ok: false, error: "That is what the charter already says." };
+  return { ok: true, lines };
 }
 
 /** Where a draft is addressed, resolved once and used by both actions below. */
@@ -365,6 +394,9 @@ export async function assessDraft(input: ProposalInput) {
     return { ok: false as const, error: "A proposal needs a one-line summary." };
   }
 
+  const charter = await charterLinesFor(supabase, where.groupId, input.charterChange);
+  if (!charter.ok) return { ok: false as const, error: charter.error };
+
   const draft: Draft = {
     title: input.title.trim(),
     summary: input.summary.trim(),
@@ -378,6 +410,7 @@ export async function assessDraft(input: ProposalInput) {
     place: where.place,
     budget: input.budget.trim() || null,
     termDays: input.termDays.trim() || null,
+    charterLines: charter.lines,
   };
 
   try {
@@ -454,6 +487,9 @@ export async function submitProposal(input: ProposalInput) {
 
   const term = input.termDays.trim() ? Number(input.termDays) : null;
 
+  const charter = await charterLinesFor(supabase, groupId, input.charterChange);
+  if (!charter.ok) return { ok: false as const, error: charter.error };
+
   // The body is derived from the sections, which is what was sharpened and
   // what the readiness row is bound to. Composing it anywhere else would let
   // the two drift apart and the gate would stop meaning anything.
@@ -470,6 +506,7 @@ export async function submitProposal(input: ProposalInput) {
     place,
     budget: input.budget.trim() || null,
     termDays: input.termDays.trim() || null,
+    charterLines: charter.lines,
   };
 
   const { data: proposal, error } = await supabase
@@ -503,6 +540,7 @@ export async function submitProposal(input: ProposalInput) {
         : null,
       budget_amount: budget,
       term_days: term,
+      charter_change: input.charterChange ?? null,
       status: "in_review",
     })
     .select("id")
@@ -667,7 +705,10 @@ export async function runReview(proposalId: string) {
     // A place has no group to set a floor, so the protocol default stands.
     // Written in the same signed call as the review (0040), so a review can
     // never land without the flags it raises.
-    const floor = group ? Number(group.threshold_values_floor) : 0.3;
+    // One floor for every group since 0057: the charter replaced the
+    // steward-set numbers, and a floor a group could lower would be a way
+    // round the review.
+    const floor = VALUES_FLOOR;
     const flags: { kind: "values" | "risk"; label: string; severity: string; detail: string }[] = [];
 
     for (const [name, score] of Object.entries(review.values_alignment)) {
@@ -676,7 +717,7 @@ export async function runReview(proposalId: string) {
           kind: "values",
           label: `Scores ${score.toFixed(2)} against ${name}`,
           severity: "high",
-          detail: `The group's floor is ${floor.toFixed(2)}. This has to be answered — what changed, or why is it acceptable here?`,
+          detail: `The floor is ${floor.toFixed(2)}. This has to be answered — what changed, or why is it acceptable here?`,
         });
       }
     }
@@ -1854,6 +1895,7 @@ export async function runConditions(proposalId: string) {
       where: group?.name ?? placeName(proposal),
       members,
       budget: proposal.budget_amount ? `${proposal.budget_currency} ${proposal.budget_amount}` : null,
+      charter: group ? charterContext(proposal.groups) : null,
     });
     const minVoices = members ? Math.min(conditions.min_voices, members) : conditions.min_voices;
     const { error } = await aiWrite(supabase, "proposal.conditions", {
@@ -1992,6 +2034,7 @@ export async function answerMyChallenge(proposalId: string) {
       where: group?.name ?? placeName(proposal),
       members,
       budget: proposal.budget_amount ? `${proposal.budget_currency} ${proposal.budget_amount}` : null,
+      charter: group ? charterContext(proposal.groups) : null,
       challenge: { argument, current: current as Record<string, unknown> },
     });
     const { error } = await aiWrite(supabase, "proposal.conditions.challenge", {
