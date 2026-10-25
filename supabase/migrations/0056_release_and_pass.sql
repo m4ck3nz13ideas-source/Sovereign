@@ -439,3 +439,5 @@ grant execute on function release_threshold(), law_alignment(uuid), release_prob
   to authenticated;
 revoke all on function law_insert_readings(uuid, jsonb, uuid), law_audit_payload(text, text, text)
   from public, anon, authenticated;
+
+notify pgrst, 'reload schema';

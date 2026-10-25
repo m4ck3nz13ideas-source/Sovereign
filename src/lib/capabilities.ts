@@ -176,8 +176,10 @@ export const SAFEGUARDS: Capability[] = [
   {
     title: "Signed Universal Law audits",
     detail: "Every law reading signed by the server, exactly ten readings of the current text, and a fresh audit required when the text changes. Unsigned or stale readings refused.",
-    status: "testing",
-    note: "Built and tested, not yet deployed to the live database. Until it is, readings are not signed.",
+    // Current since 25 October 2026: 0051's functions are in the live
+    // database, its signing key row exists, and AI_SIGNING_SECRET is set in
+    // Vercel production (checked through the Supabase and Vercel tools).
+    status: "current",
   },
   {
     title: "A real AI model reading proposals",

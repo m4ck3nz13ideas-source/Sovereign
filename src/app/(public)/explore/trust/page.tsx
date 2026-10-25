@@ -194,9 +194,8 @@ export default function TrustPage() {
               <li>A business is approved only when a person signs the reading off.</li>
               <li>The ten laws are a framework for assessing a proposal. Passing them shows a proposal was checked, not that it is right.</li>
               <li>
-                Signed audits — each reading signed by the server, tied to the exact text, and a fresh audit required
-                once the text changes — are built and tested but not yet deployed. Until they are, an assessment is
-                not marked stale when a proposal&apos;s wording changes.
+                Every law reading is signed by the server and tied to the exact text it read. A forged or stale reading
+                is refused, and a proposal is released to people only at 0.618 alignment with the ten laws.
               </li>
             </ul>
           </Block>
@@ -244,7 +243,6 @@ export default function TrustPage() {
               <li>The people who run Sovereign, and our hosting providers, could technically read what is stored.</li>
               <li>The record of decisions is tamper-evident, not tamper-proof. It is not a blockchain and it is not decentralised.</li>
               <li>AI readings come from an offline stand-in until a model is connected.</li>
-              <li>Signed law audits are not yet deployed to the live database.</li>
               <li>Proof of personhood is not confirmed switched on, so proposals at national scale and above may not be able to pass.</li>
             </ul>
             <p>

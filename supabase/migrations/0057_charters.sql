@@ -345,3 +345,5 @@ revoke all on function charter_founding_size(), charter_is_founding(uuid),
 grant execute on function charter_founding_size(), charter_is_founding(uuid),
   charter_change_problem(jsonb) to authenticated;
 grant select on charter_revisions to authenticated;
+
+notify pgrst, 'reload schema';

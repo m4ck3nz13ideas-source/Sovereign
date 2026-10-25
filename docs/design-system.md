@@ -84,42 +84,34 @@ labels and metadata, never for content a person is meant to read closely.
 
 ## Navigation
 
-**Four tabs, bottom, always visible.** Three come straight from the overview's
-architecture diagram — `SOVEREIGN APP → HOME / INDIVIDUAL / COLLECTIVE` — with
-Home left of centre because it is the one you sit in. Ask is the fourth.
+**Five tabs, bottom, always visible, icons only.** The names stay as
+`aria-label` and `title`, so screen readers and a desktop hover still say where
+you are. Defined once, in `components/nav/TabBar.tsx`.
 
 ```
-Individual  ·  Home  ·  Ask  ·  Collective
+Individual  ·  Connection  ·  Search  ·  Market  ·  Collective
 ```
 
-Ask sits beside Home rather than raised in the middle. Rule 2 is understanding
-before opinion, and a surface for going and finding something out earns a place
-at this level; a raised centre button does not, because that is the shape of an
-app whose whole purpose is posting.
+Search is the centre tab and where you land. Icons are outline when idle and
+filled when active.
 
-Four is the ceiling. A fifth would start the argument about which of these
-matters least, and the answer would be whichever one was added last.
+**Nothing else lives in the tab bar.** Every tab has `+` and settings at the
+top right (`TabActions`).
 
-Icons are outline when idle and filled when active, the one convention every
-phone app shares, so nobody has to learn it.
-
-**Nothing else lives in the tab bar.** Writing is a `+` in the Home top bar. A
-raised centre button is the shape of an app whose whole purpose is posting, and
-that is not what this is.
-
-Each tab has its own strip of sub-tabs underneath it, rendered as a horizontal
-rail of pills rather than a fixed row — seven does not fit across a phone, and
-a dropdown hides where you are.
+Sub-tabs sit under the top bar as a horizontal rail of pills rather than a
+fixed row — seven does not fit across a phone, and a dropdown hides where you
+are.
 
 | Tab | Sub-tabs |
 |---|---|
-| Individual | Profile · AI · Values · Chats · Journal · Ideas · Drafts · Vault |
-| Home | *(none — Home is the feed)* |
-| Ask | *(none — Find and Ask are two modes of one field)* |
-| Collective | Proposals · Debate · Projects · Impact · Decisions · People |
+| Individual | Profile header, then Self · Ideas · To do · Learn · Vault (`IndividualTabs.tsx`) |
+| Connection | *(groups, businesses and chats in one list)* |
+| Search | *(none — search, compose and the feed in one place)* |
+| Market | *(none)* |
+| Collective | Proposals · Debate · Projects · Impact · Decisions · Words · People (`COLLECTIVE_TABS`) |
 
-The scale selector sits in the Home top bar, as Rule 6 requires: local,
-regional, national, continental, global should always be obvious.
+The scale selector — local, regional, national, continental, global — is
+always visible where scale matters (Rule 6).
 
 ## Components
 

@@ -225,7 +225,9 @@ surveillance project rather than a governance one. So the share is replaced by
 rather than filled with a percentage of a population nobody counted. The
 interface prints the count and the floor.
 
-The alignment threshold does not move. 0.618 at every scale.
+The release threshold does not move: 0.618 alignment with the Universal Laws
+at every scale (0056). After release, each proposal is decided by its own
+conditions, not by a per-scale bar.
 
 ### Who closes it, and when
 
@@ -413,9 +415,9 @@ is that a mean alone launders a rift into a consensus — everyone at 0.50 and
 half at 0.10 with half at 0.90 report identically — and that a governance tool
 which does that is lying by arithmetic.
 
-A polarized proposal still passes if it clears the threshold. The threshold is
-the threshold. What changes is that the record says the group was split, and
-anyone reading it later knows the difference.
+A polarized proposal still passes if its conditions are met. What changes is
+that the record says the group was split, and anyone reading it later knows
+the difference.
 
 ### The summary
 

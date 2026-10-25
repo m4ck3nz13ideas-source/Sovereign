@@ -15,108 +15,30 @@ The deployed build talks to the same Supabase project the local one does.
 There is no separate production database until you make one, and nothing
 below creates it for you.
 
-### First, find out what is actually in there
+### Apply every migration, in order
 
-Do not assume the live database is where the repository thinks it is. Ours
-was five migrations further behind than anyone believed — it had the tables
-from `0001` and the decision rule from `0003`, and nothing from `0005` onward,
-so it had never had the subsidiarity engine, the activation step, the
-readiness gate or the debate layer. Nothing looked broken, because all the
-development had been happening against a local database.
+Supabase dashboard → **SQL Editor** → paste each file in
+`supabase/migrations/` in order, one at a time, waiting for each to succeed.
+Or `supabase db push` with the CLI pointed at the project.
 
-The error that revealed it named one missing function and surfaced two
-thousand lines further into the file than the first statement that should
-have failed, which is a good reason not to read a migration error as a map.
-Ask the database directly instead:
+The live project's migration history is empty (everything was applied by
+SQL), so Supabase cannot tell you what is applied. Ask the database instead:
+check that the newest migration's functions and policies exist
+(`to_regprocedure('…')`, `pg_policies`) before assuming it is current. Ours was
+once five migrations behind with nothing visibly broken.
 
-```sql
-with want(name) as (values
-  ('can_reach_proposal'), ('can_steward_proposal'), ('in_scope'),
-  ('is_group_member'), ('place_key'), ('bind_proposal_readiness'),
-  ('dormant_proposals'), ('activate_proposal'), ('alignment_shape'))
-select w.name,
-       coalesce(
-         (select string_agg(p.oid::regprocedure::text, '  |  ')
-            from pg_proc p
-            join pg_namespace n on n.oid = p.pronamespace
-           where n.nspname = 'public' and p.proname = w.name),
-         '>>> MISSING <<<') as signature
-  from want w
- order by 1;
-```
+Two things that bite when applying by hand:
 
-Those nine come from `0002` through `0009`, one or two each. What is missing
-tells you where the database really stops.
+- **Supabase grants new functions to `anon` by default.** Every migration that
+  adds a function should revoke it from `anon` explicitly; check it did.
+- **A new function is invisible to the API until PostgREST reloads.** The
+  error is `Could not find the function public.x in the schema cache`.
+  Migrations end with `notify pgrst, 'reload schema'`; if you see that error,
+  run that line on its own.
 
-If it stops anywhere before the end, and the database holds nothing you would
-miss, the honest move is `supabase/reset.sql` followed by every migration in
-order rather than an incremental patch: `0004` and `0005` predate the
-convention of writing migrations to be safely re-runnable, so a partial state
-that includes some of either is not something you can paper over. Row counts
-per table, before deciding:
-
-```sql
-select 'public.' || table_name as tbl,
-       (xpath('/row/cnt/text()',
-              query_to_xml(format('select count(*) as cnt from public.%I', table_name),
-                           false, true, '')))[1]::text::int as row_count
-  from information_schema.tables
- where table_schema = 'public' and table_type = 'BASE TABLE'
- order by row_count desc, tbl;
-```
-
-Auth users live in the `auth` schema, which `reset.sql` does not touch, so
-resetting costs you your profile rows and not your ability to sign in.
-
-### If the database really is current up to 0009
-
-Migrations `0010` through `0017` are the ones that carry everything built
-since — predictions, personhood, people, contention, chats, amendment, the
-guardian, the mirror. The deployed app calls functions that do not exist
-until they are run.
-
-Supabase dashboard → **SQL Editor** → paste each file, in order, one at a
-time, waiting for each to say success:
-
-```
-supabase/migrations/0010_projection.sql    dated predictions, frozen and marked
-supabase/migrations/0011_personhood.sql    one person, one nullifier, no name
-supabase/migrations/0012_people.sql        follow, friendship, the social feed
-supabase/migrations/0013_contention.sql    two answers that cannot both happen
-supabase/migrations/0014_chat.sql          private conversation between friends
-supabase/migrations/0015_amendment.sql     the tenth law made operable
-supabase/migrations/0016_guardian.sql      a private reader that never speaks first
-supabase/migrations/0017_mirror.sql        where you and the audit differ
-supabase/migrations/0018_accession.sql     agreeing to the ten, and to which wording
-supabase/migrations/0019_inquiry.sql       what the ways of knowing hold, never an answer
-supabase/migrations/0020_ask.sql           the fourth tab: finding, and asking on its own
-supabase/migrations/0021_accession_required.sql you cannot arrive without agreeing
-supabase/migrations/0022_search_mine.sql   searching your own half, kept apart
-supabase/migrations/0023_lexicon.sql       what the group means by its words
-supabase/migrations/0024_lineage.sql       what changed the second time
-```
-
-In order, and one at a time. `0011` alters `scope_rules`, `0012` alters
-`profiles` and adds a trigger `0010` does not know about, and `0015` alters
-`proposals` and `law_assessments`. Running `0013` before `0012` fails in a way
-whose error message is about a missing function rather than about the order.
-
-Or, with the CLI pointed at the project:
-
-```bash
-supabase db push
-```
-
-### If you want a separate production project
-
-Better, and it costs one more free-tier project. Make a new Supabase project,
-run **all twenty-four** migrations into it, and use its URL and anon key in
-Vercel while `.env.local` keeps pointing at the old one. Nothing you do while
-building then touches the instance other people are using.
-
-Do not copy `supabase/seed.sql` into it. The worked example exists to make the
-shape legible on first open; a real instance's first proposal should be a real
-proposal.
+If you want a separate production project, make one, apply every migration to
+it, and point Vercel at it while `.env.local` keeps the old one. Do not load
+`supabase/seed.sql` into a real instance.
 
 ### Raise the local floor before anyone arrives
 
@@ -154,6 +76,8 @@ matters on a fresh install: one voice means one person can decide alone.
    | `ANTHROPIC_MODEL` | `claude-sonnet-5` | no |
    | `NEXT_PUBLIC_WORLD_ID_APP_ID` | `app_…` | no |
    | `NEXT_PUBLIC_WORLD_ID_ACTION` | `sovereign-personhood` | no |
+   | `AI_SIGNING_SECRET` | `openssl rand -hex 32` — the same value goes in `private.ai_signing_key` | yes, for AI results and law audits |
+   | `COMPANIES_HOUSE_API_KEY` | free, from Companies House | no |
 
    The anon key is meant to be public — it is in the browser bundle by
    design, and RLS is what protects the data. The Anthropic key is server-side
@@ -163,10 +87,14 @@ matters on a fresh install: one voice means one person can decide alone.
    reviewer, and every review it writes says plainly that no model read it.
    That is a defensible thing to deploy; a fabricated reading is not.
 
-   `NEXT_PUBLIC_SITE_URL` is only needed once you have a custom domain.
-   Without it, `src/lib/env.ts` falls back to Vercel's `VERCEL_URL`, which is
-   the correct per-deployment origin — set it on Production only, or preview
-   deployments will send their magic links to the production site.
+   `NEXT_PUBLIC_SITE_URL` is required on a deployed install — see section 5.
+   Set it on Production only, or preview deployments will send their magic
+   links to the production site.
+
+   `AI_SIGNING_SECRET` signs every AI result the server writes (rule 38). Set
+   it in Vercel and redeploy **before** inserting the same value into
+   `private.ai_signing_key`; with no key, law audits cannot be recorded at all
+   (rule 47).
 
 3. **Deploy.** First build takes two to four minutes.
 
@@ -260,15 +188,6 @@ as fine, because from Vercel's point of view it is. Either redeploy after
 adding the domain, or assign it to the current deployment explicitly. This
 cost an hour, misdiagnosed as DNS the whole time.
 
-**A new function is invisible to the API until PostgREST reloads.** Its cache
-is what answers `supabase.rpc(...)`, and a migration that adds a function does
-not update it. The error is `Could not find the function public.x in the schema
-cache`, which reads like the function was never written rather than like a
-cache being stale — and the fix is not to rewrite anything. Supabase reloads on
-its own eventually; every migration from `0018` on ends with
-`notify pgrst, 'reload schema'` so it happens immediately. If you ever see that
-error after applying a migration by hand, run that one line on its own.
-
 **`NEXT_PUBLIC_SITE_URL` is not optional on a deployed install**, whatever it
 looks like. Sign-in redirects are built from it, and the fallback — the origin
 the request arrived on — can resolve to the per-deployment `*.vercel.app` host
@@ -285,21 +204,11 @@ already there. Ours had `NEXT_PUB_SUPABASE_URL` sitting alongside the real
 one, which is not a variable, does nothing, and looks entirely correct in a
 list.
 
-**A stale DNS answer looks exactly like a broken deploy.** GitHub Pages
-returns a 404 for every path it does not serve, so a half-propagated cutover
-gives you the sign-in screen on one request and a GitHub 404 on the next,
-from the same URL. Before touching anything, check what the record actually
-resolves to from outside your own machine — `dns.google/resolve?name=…&type=CNAME`
-in a browser will tell you — and remember that your own laptop is the most
-stubbornly cached resolver in the chain. `sudo dscacheutil -flushcache;
-sudo killall -HUP mDNSResponder`, then a private window, then your phone on
-mobile data.
-
-There is no longer a `CNAME` file in this repository. There was, naming the
-apex, which is what tells GitHub Pages to claim the domain; it is gone so
-that GitHub stops answering for a name Vercel is serving. Turn Pages off
-under the repository's **Settings → Pages** as well — the file is only half
-of it.
+**A stale DNS answer looks exactly like a broken deploy.** Check what the
+record resolves to from outside your own machine
+(`dns.google/resolve?name=…&type=CNAME`) before touching anything, and turn
+GitHub Pages off under the repository's **Settings → Pages** so it stops
+answering for the domain.
 
 The apex `mackiavelli.co.uk` is still unclaimed here. Pointing it at Vercel
 too, with an A record to `76.76.21.21` and a redirect to `www`, is a separate
@@ -330,6 +239,9 @@ other and is worth fixing before it is not. See `docs/roadmap.md`.
 ```
 [ ] asked the database what it actually has, rather than assuming
 [ ] every migration applied, in order, no errors
+[ ] AI_SIGNING_SECRET in Vercel, redeployed, then the same value in private.ai_signing_key
+[ ] founders: insert into founders (profile_id) select id from auth.users
+    where email = '<founder email>' on conflict do nothing;   (0058)
 [ ] scope_rules local floor raised
 [ ] NEXT_PUBLIC_SUPABASE_URL and _ANON_KEY set in Vercel, spelled right
 [ ] redeployed AFTER the last environment variable change

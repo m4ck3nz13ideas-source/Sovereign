@@ -99,21 +99,22 @@ record, not a permission system.
 ## Collective — visible to one group, or to one place
 
 ### `groups`
-Name, purpose, scope, and three thresholds:
+Name, scope, and its **charter** (0057): `purpose`, `goal`, `group_values`,
+`inviters` and `proposers` (`stewards` or `members`), `ai_context` (what the
+conditions prompt should weigh) and the `template` it started from. Under
+three members its stewards edit the charter directly; from three, only a
+passed proposal carrying `charter_change` can, and `guard_charter()` refuses
+anything else. Every version is in `charter_revisions`, append-only.
 
-| | default | what it does |
-|---|---|---|
-| `threshold_alignment` | 0.600 | mean alignment a proposal must reach |
-| `threshold_participation` | 0.600 | share of members who must respond |
-| `threshold_values_floor` | 0.300 | below this, a value score becomes a flag |
-
-These are guesses and they are meant to be tuned. They are editable in Settings
-and readable by every member, because a group being governed by a rule should
-be able to read the rule.
+The three `threshold_*` columns remain only for proposals from before 0039,
+which are still decided by them. Nothing sets them any more; the values floor
+is `VALUES_FLOOR` (0.3) for every group.
 
 ### `group_members`, `group_invites`
 Invite-only. `redeem_invite()` is `SECURITY DEFINER` and checks expiry and use
-count. There is no self-join path and no public directory.
+count; `create_invite()` follows the charter's `inviters`. There is no
+self-join path (0057 dropped `members_self_insert`, which was one) and no
+public directory.
 
 ### `scope_rules`
 One row per scale, seeded by `0006`. `threshold_alignment` is 0.618 everywhere;
@@ -271,16 +272,21 @@ than prose, so `activation_standing()` can answer the question mechanically.
 nobody commits anyone else.
 
 ### `decisions`
-Written by `close_proposal()`, which applies the rule — Universal Law first,
-and not as a threshold:
+Written by `close_proposal()`, which applies the rule. Since 0056 a proposal
+reaches people at all only once released — ten current law readings, no
+violation, `law_alignment()` ≥ 0.618 — and one with its own conditions is then
+decided by them:
 
 ```
 passed  ⟺  no Universal Law violation
        ∧  no unanswered Universal Law tension
        ∧  no unresolved critical flag
-       ∧  participation ≥ threshold_participation
-       ∧  mean alignment ≥ threshold_alignment   (0.618 by default)
+       ∧  its voices, requirements and affected groups all met
 ```
+
+Before 0039 (no conditions) the old rule still applies: participation ≥
+`threshold_participation` and mean alignment ≥ `threshold_alignment`. Each
+decision records `law_alignment`, the score it was released on.
 
 A proposal that passes stops at `passed`. `activate_proposal()` creates the
 project, and only once every need has a name against it.

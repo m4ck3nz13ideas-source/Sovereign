@@ -112,3 +112,5 @@ grant execute on function is_founder(), founder_pulse() to authenticated;
 --   insert into founders (profile_id)
 --   select id from auth.users where email = 'mackenzie@mackiavelli.co.uk'
 --   on conflict do nothing;
+
+notify pgrst, 'reload schema';
