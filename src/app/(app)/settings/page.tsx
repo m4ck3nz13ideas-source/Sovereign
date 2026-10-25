@@ -22,6 +22,7 @@ export default async function SettingsPage() {
   });
 
   const live = aiIsLive();
+  const { data: founder } = await supabase.rpc("is_founder");
 
   return (
     <Page>
@@ -116,6 +117,20 @@ export default async function SettingsPage() {
           </Link>
         </Card>
       </section>
+
+      {founder ? (
+        <section className="mb-10">
+          <SectionLabel right={<Tag tone="gold">founders</Tag>}>Founder</SectionLabel>
+          <Card>
+            <p className="text-[0.95rem] leading-relaxed text-paper-dim">
+              How the founding 50 are getting on: the way in, activity, proposals and what needs attention.
+            </p>
+            <Link href="/settings/founder" className="smallcaps mt-3 inline-block text-[11px] text-gold hover:underline">
+              Open the dashboard →
+            </Link>
+          </Card>
+        </section>
+      ) : null}
 
       {/* Groups are managed on their own pages in Connection since 0057:
           the charter, members and invitations live with the group. */}

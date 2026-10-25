@@ -18,7 +18,7 @@ export interface Place {
 export const PLACES: Place[] = [
   // Individual — the I
   { path: "/individual", name: "Individual", what: "Your private space and profile.", words: ["me", "my profile", "private", "individual"] },
-  { path: "/individual/self", name: "Self", what: "What you know about yourself: values, Know yourself, what matters to you.", words: ["self", "values", "about me", "spheres", "matters"] },
+  { path: "/individual/self", name: "Self", what: "What you know about yourself: values, Know yourself, what matters to you, and your record.", words: ["self", "values", "about me", "spheres", "matters", "my record", "my stats", "dashboard", "my activity"] },
   { path: "/individual/self/know", name: "Know yourself", what: "The beliefs, values and goals test. Your AI builds on what it finds.", words: ["know yourself", "test", "beliefs", "goals", "needs", "quiz", "tony robbins", "assessment"] },
   { path: "/write", name: "Journal", what: "Write a private note. Only you can read it.", words: ["journal", "write", "note", "diary", "entry"] },
   { path: "/individual/ideas", name: "Ideas", what: "Your ideas and proposal drafts.", words: ["ideas", "idea", "drafts", "draft"] },
@@ -31,6 +31,7 @@ export const PLACES: Place[] = [
   // Connection — the We
   { path: "/connection", name: "Connection", what: "One inbox: friends, chats, groups, proposal chats and your businesses.", words: ["connection", "inbox", "messages", "chats", "chat", "dm", "friends", "groups"] },
   { path: "/connection?show=people", name: "People", what: "Find someone by handle, friend requests, friends and who you follow.", words: ["people", "find someone", "find a person", "friend", "add friend", "follow", "following", "requests", "handle"] },
+  { path: "/onboarding/group", name: "Start or join a group", what: "Start a group from a template and write its charter, or join one with a code.", words: ["start a group", "new group", "create group", "join a group", "invite code", "charter", "template"] },
   { path: "/chats/new", name: "New chat", what: "Start a chat with a friend or a small circle.", words: ["new chat", "start a chat", "message someone", "circle"] },
 
   // Search — the lens, and where you land
