@@ -4,6 +4,8 @@ import QRCode from "qrcode";
 import { TabIntro } from "@/components/TabIntro";
 import { TabActions } from "@/components/nav/TabActions";
 import { Gutter, Screen, TopBar } from "@/components/ui";
+import { InviteCard } from "@/app/(app)/market/_ops/Team";
+import type { Desk } from "@/lib/business";
 import { isOpen } from "@/lib/collective";
 import { env } from "@/lib/env";
 import { shortDate, STATUS_LABEL } from "@/lib/format";
@@ -56,18 +58,44 @@ export default async function ConnectionPage({
   const { profile, groups: myGroups } = await requireSession();
   const supabase = await createClient();
 
-  const [{ data: convos }, { data: threadRows }, { data: vendors }, { data: asks }, { data: markRows }] =
-    await Promise.all([
-      supabase.rpc("my_conversations"),
-      supabase.rpc("my_threads"),
-      supabase.from("vendors").select("id, name, location").eq("owner_id", profile.id).order("name"),
-      supabase.rpc("friendship_requests"),
-      supabase.from("connection_marks").select("kind, ref_id, pinned, muted"),
-    ]);
+  const [
+    { data: convos },
+    { data: threadRows },
+    { data: deskRows },
+    { data: asks },
+    { data: markRows },
+    { data: chatRows },
+    { data: inviteRows },
+  ] = await Promise.all([
+    supabase.rpc("my_conversations"),
+    supabase.rpc("my_threads"),
+    supabase.rpc("my_vendor_desks"),
+    supabase.rpc("friendship_requests"),
+    supabase.from("connection_marks").select("kind, ref_id, pinned, muted"),
+    supabase.rpc("my_vendor_chats"),
+    supabase.rpc("my_vendor_invites"),
+  ]);
 
   const friends = (convos ?? []) as Conversation[];
   const threads = (threadRows ?? []) as ThreadItem[];
-  const businesses = (vendors ?? []) as { id: string; name: string; location: string | null }[];
+  // Businesses you run or work for (0062): each opens its desk.
+  const businesses = (deskRows ?? []) as Desk[];
+  // Businesses you have written to as a customer.
+  const vendorChats = (chatRows ?? []) as {
+    conversation_id: string;
+    vendor_id: string;
+    vendor_name: string;
+    last_body: string | null;
+    last_from_business: boolean | null;
+    last_at: string;
+    unread: number;
+  }[];
+  const invites = (inviteRows ?? []) as {
+    vendor_id: string;
+    vendor_name: string;
+    role: string;
+    invited_by: string;
+  }[];
   const waiting = ((asks ?? []) as FriendshipRequest[]).filter((r) => r.direction === "they asked");
 
   const groupIds = myGroups.map((g) => g.id);
@@ -91,8 +119,8 @@ export default async function ConnectionPage({
       : Promise.resolve({ data: [] }),
     Promise.all(
       businesses.map(async (b) => {
-        const { data } = await supabase.rpc("vendor_status", { p_vendor_id: b.id });
-        return [b.id, (data as string | null) ?? null] as const;
+        const { data } = await supabase.rpc("vendor_status", { p_vendor_id: b.vendor_id });
+        return [b.vendor_id, (data as string | null) ?? null] as const;
       }),
     ),
   ]);
@@ -158,22 +186,36 @@ export default async function ConnectionPage({
       };
     }),
     ...businesses.map((b) => {
-      const s = standing.get(b.id) ?? null;
+      const s = standing.get(b.vendor_id) ?? null;
       return {
-        key: `business:${b.id}`,
+        key: `business:${b.vendor_id}`,
         kind: "business" as const,
-        refId: b.id,
-        href: `/market/v/${b.id}`,
-        title: b.name,
-        preview: s ? (BUSINESS_STATUS[s] ?? s) : "Your business",
-        at: null,
-        unread: 0,
+        refId: b.vendor_id,
+        href: `/market/b/${b.vendor_id}`,
+        title: b.vendor_name,
+        preview: deskLine(b) ?? (s ? (BUSINESS_STATUS[s] ?? s) : "Your business"),
+        at: b.last_at,
+        unread: b.to_answer + b.problems + b.unread,
         avatar: null,
-        detail: b.location,
+        detail: `${b.role === "owner" ? "You own it" : `You are ${b.role}`}${s ? ` · ${BUSINESS_STATUS[s] ?? s}` : ""}`,
         stage: null,
         chatHref: null,
       };
     }),
+    ...vendorChats.map((c) => ({
+      key: `business:${c.conversation_id}`,
+      kind: "business" as const,
+      refId: c.conversation_id,
+      href: `/market/m/${c.conversation_id}`,
+      title: c.vendor_name,
+      preview: c.last_body ? `${c.last_from_business ? "" : "You: "}${c.last_body}` : "Nothing said yet.",
+      at: c.last_at,
+      unread: c.unread ?? 0,
+      avatar: null,
+      detail: null,
+      stage: null,
+      chatHref: null,
+    })),
   ];
 
   const marks: Marks = Object.fromEntries(
@@ -216,6 +258,20 @@ export default async function ConnectionPage({
           </Gutter>
         ) : null}
 
+        {invites.length && (show === "all" || show === "businesses") ? (
+          <Gutter className="space-y-2 pt-3">
+            {invites.map((i) => (
+              <InviteCard
+                key={i.vendor_id}
+                vendorId={i.vendor_id}
+                vendorName={i.vendor_name}
+                role={i.role}
+                invitedBy={i.invited_by}
+              />
+            ))}
+          </Gutter>
+        ) : null}
+
         <Inbox
           items={items}
           marks={marks}
@@ -232,6 +288,17 @@ export default async function ConnectionPage({
       </Screen>
     </>
   );
+}
+
+/** "2 to answer · 1 problem · 3 unread" — what the desk is waiting on, or nothing. */
+function deskLine(b: Desk): string | null {
+  const parts = [
+    b.to_answer ? `${b.to_answer} to answer` : null,
+    b.problems ? `${b.problems} ${b.problems === 1 ? "problem" : "problems"}` : null,
+    b.unread ? `${b.unread} unread` : null,
+    b.in_progress ? `${b.in_progress} in progress` : null,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : null;
 }
 
 /** "3 proposals open · one closes Friday" — or nothing, when nothing is. */

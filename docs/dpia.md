@@ -28,13 +28,15 @@ a DPIA is required before launch.
 in with an email link. They write privately (journal, ideas, to-dos, values,
 Know yourself, learning notes), post socially (posts, likes, comments, chats
 with friends), decide collectively (proposals, responses on three sliders,
-debate, flags, predictions, projects), trade (verified businesses, link-out
-buying, pay-per-click ads), and hold a simulated contribution token (SOV).
+debate, flags, predictions, projects), trade (verified businesses with their
+teams, orders and bookings, messages with a business, reviews from completed
+orders, payment still settled off the app, pay-per-click ads), and hold a simulated contribution token (SOV).
 
 **Scope.** Founding 50 before 2027; then open. UK-based people. Over 18 only.
 Data: email; profile; places named by the person (no coordinates); everything
 written; the record of decisions; consent and law-acceptance records; one
-personhood nullifier; business details; ad clicks.
+personhood nullifier; business details and team roles; orders, their steps
+and messages with businesses; reviews; ad clicks.
 
 **Context.** People join specifically to express political opinions and
 beliefs, so they expect it — but they will also expect those opinions to stay
@@ -94,6 +96,7 @@ Likelihood and severity: remote / possible / probable; minimal / significant / s
 | R8 | Personhood verifier processes biometrics; a person doesn't realise | Possible | Significant | Medium |
 | R9 | Data transferred to the US is accessed by authorities | Remote | Significant | Low |
 | R10 | Founder's own access to the production database (single admin, no separation) | Possible | Significant | Medium |
+| R12 | A business's staff see a customer's orders and messages; a review names its author publicly; orders outlive the customer's account | Possible | Minor | Low |
 
 ## 6. Measures
 
@@ -110,6 +113,7 @@ Likelihood and severity: remote / possible / probable; minimal / significant / s
 | R8 | Optional, off unless the person chooses it; only needed at national scale and above; Sovereign receives a nullifier only; personhood screen to say plainly that the verifier processes a biometric and link to its notice before launch | Reduced | Low |
 | R9 | Data bridge / IDTA; minimise what goes to the AI provider (only the text involved in a request) | Accepted | Low |
 | R10 | Separate admin account; MFA; avoid reading private tables in the SQL editor; consider Supabase audit logs | Reduced | Low |
+| R12 | Only the business's accepted team and the customer see an order or a conversation; reviewers only once a problem is reported (0062); the review form says it is public with the author's name; on erasure messages, conversations and reviews are deleted and orders kept unattributed for the business's records; the notice says so | Reduced | Low |
 
 ## 7. Sign-off
 

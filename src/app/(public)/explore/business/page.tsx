@@ -91,7 +91,15 @@ export default function BusinessPage() {
             items={[
               {
                 q: "Do you handle payments?",
-                a: "Not yet. Listings link to your site. Payments held until the buyer approves the work are next on the roadmap.",
+                a: "Not yet. Customers order or book here, you agree the price and the time, and payment is settled between you. Payments held until the buyer confirms the work are next on the roadmap.",
+              },
+              {
+                q: "Can my team run it with me?",
+                a: "Yes. Invite managers and staff by their handle. They answer customers and run orders; managers also keep your listings and updates. What your business claims, its ads and its team stay with you.",
+              },
+              {
+                q: "Can customers review us?",
+                a: "Only after an order with you completes, once each. You can reply publicly, once. Reviews never change your approval or where you appear.",
               },
               {
                 q: "We're not a UK company. Can we list?",

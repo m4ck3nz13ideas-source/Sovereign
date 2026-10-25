@@ -101,7 +101,9 @@ landed since this file was last honest:
 - **Search** across both halves, the feed (For you, Following, Discover) with
   public likes and comments that never rank anything, and Words inline.
 - **Market**: verified listings, AI reading plus human sign-off, one
-  sponsored slot by fit rather than bid, link-out buying.
+  sponsored slot by fit rather than bid; businesses run here (0062) with a
+  team, orders and bookings the customer confirms, messages, and reviews from
+  completed orders only. Payment is settled off the app.
 - **Individual**: journal, ideas, to-do, Know yourself, Learn, Vault and the
   SOV simulation.
 - **Data rights**: explicit consent, 18+, a full export, a full erasure.
@@ -153,7 +155,10 @@ today and decide nothing (rule 40); envelopes will have to break
 it goes.
 
 ### Payments held until work is approved
-Stripe Connect first, an internal escrow later. Today the Market links out.
+Stripe Connect first, an internal escrow later. Since 0062 a customer orders,
+books and messages a business in the app and their confirmation completes an
+order — the step escrow will release money on. Payment itself is still settled
+between them.
 
 *Earns its place when:* founding members are buying from listed businesses
 often enough that link-out is the thing in the way.

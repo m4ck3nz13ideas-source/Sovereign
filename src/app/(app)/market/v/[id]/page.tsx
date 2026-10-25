@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Compose } from "@/app/(app)/home/Compose";
@@ -5,11 +6,14 @@ import { Feed } from "@/app/(app)/home/Feed";
 import { Page, Prose, SectionLabel, Tag, TopBar } from "@/components/ui";
 import { shortDate } from "@/lib/format";
 import { safeUrl, type Offering, type Vendor } from "@/lib/marketplace";
+import type { Review, ReviewSummary } from "@/lib/business";
 import { pageFeed } from "@/lib/page-feed";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { UNIVERSAL_LAWS } from "@/lib/universal-law";
 
+import { MessageButton, OrderForm } from "../../_ops/OrderForm";
+import { ReviewBars, ReviewList } from "../../_ops/Reviews";
 import { ConcernForm } from "./ConcernForm";
 
 export const metadata = { title: "Business · Sovereign" };
@@ -37,6 +41,10 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
     { data: approvedRaw },
     { data: siteVerified },
     { data: companyRows },
+    { data: role },
+    { data: reviewRows },
+    { data: summaryRows },
+    { data: reviewer },
     feed,
   ] = await Promise.all([
     supabase.rpc("vendor_status", { p_vendor_id: id }),
@@ -44,6 +52,10 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
     supabase.rpc("market_vendors", { p_q: null }),
     supabase.rpc("vendor_domain_verified", { p_vendor_id: id }),
     supabase.rpc("vendor_company", { p_vendor_id: id }),
+    supabase.rpc("vendor_team_role", { p_vendor_id: id }),
+    supabase.rpc("vendor_reviews_page", { p_vendor_id: id }),
+    supabase.rpc("vendor_review_summary", { p_vendor_id: id }),
+    supabase.rpc("is_marketplace_reviewer"),
     pageFeed({ vendorId: id }, userId),
   ]);
   const company = ((companyRows ?? []) as { verified: boolean; detail: string }[])[0] ?? null;
@@ -55,7 +67,13 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
     (v) => v.id === id,
   )?.approved_at;
   const website = safeUrl(vendor.website);
-  const mine = vendor.owner_id === userId;
+  // On the team: the owner or anyone they invited (0062). Owners and managers
+  // speak for the business; customers order and write to it.
+  const team = !!role;
+  const mine = role === "owner" || role === "manager";
+  const approved = status === "approved";
+  const reviews = (reviewRows ?? []) as Review[];
+  const summary = ((summaryRows ?? []) as ReviewSummary[])[0] ?? null;
 
   return (
     <>
@@ -83,6 +101,16 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
             ) : null}
           </p>
         </header>
+
+        <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
+          {team ? (
+            <Link href={`/market/b/${id}`} className="text-sm font-semibold text-gold hover:underline">
+              Open the desk →
+            </Link>
+          ) : approved ? (
+            <MessageButton vendorId={id} />
+          ) : null}
+        </div>
 
         {vendor.mission ? (
           <section className="mb-8">
@@ -130,16 +158,19 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
                       <span className="text-sm text-paper">{o.price}</span>
                     </div>
                     <p className="mt-1 text-sm leading-relaxed text-paper-dim">{o.description}</p>
-                    {href ? (
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-2 inline-block text-sm text-gold hover:underline"
-                      >
-                        Buy ↗
-                      </a>
-                    ) : null}
+                    <div className="mt-2 flex flex-wrap items-center gap-4">
+                      {approved && !team ? <OrderForm offeringId={o.id} kind={o.kind} price={o.price} /> : null}
+                      {href ? (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-paper-faint hover:text-paper"
+                        >
+                          On their site ↗
+                        </a>
+                      ) : null}
+                    </div>
                   </li>
                 );
               })}
@@ -147,6 +178,16 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
           ) : (
             <p className="text-sm text-paper-faint">Nothing listed right now.</p>
           )}
+        </section>
+
+        <section className="mb-8">
+          <SectionLabel>Reviews</SectionLabel>
+          {summary ? <ReviewBars summary={summary} /> : null}
+          <ReviewList reviews={reviews} canReply={mine} reviewer={!!reviewer && !team} />
+          <p className="mt-3 text-center text-[0.8125rem] text-paper-faint">
+            Only from customers whose order here completed. Reviews never affect approval or where a
+            business appears.
+          </p>
         </section>
 
         {feed.media.length ? (
@@ -172,7 +213,7 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
               <Compose hasGroup={false} target={{ vendorId: id, label: `everyone who opens ${vendor.name}` }} />
               {status !== "approved" ? (
                 <p className="text-center text-[0.8125rem] text-paper-faint">
-                  Only you can see these until the business is approved.
+                  Until the business is approved, each update is seen only by whoever posted it.
                 </p>
               ) : null}
             </>
@@ -185,7 +226,7 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
           />
         </section>
 
-        {!mine && status === "approved" ? (
+        {!team && status === "approved" ? (
           <section className="mb-8">
             <SectionLabel>Something not right?</SectionLabel>
             <p className="mb-3 text-sm leading-relaxed text-paper-faint">

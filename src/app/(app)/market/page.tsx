@@ -15,8 +15,9 @@ export const metadata = { title: "Market · Sovereign" };
  * Marketplace — trade with businesses that align with the Universal Laws.
  *
  * Every business here was read against all ten laws by the AI and signed off
- * by a reviewer, for the words it stands on now. Buying happens on the
- * business's own site; a listing links out.
+ * by a reviewer, for the words it stands on now. A customer orders, books
+ * and messages a business here (0062); payment is settled between them for
+ * now, and a listing still links to the business's own site.
  *
  * One slot is sponsored, and says so. Of the approved businesses running a
  * campaign, it goes to the one that best fits the person looking — their own
@@ -38,13 +39,15 @@ export default async function MarketplacePage({
   const q = (rawQ ?? "").trim().slice(0, 80);
 
   const supabase = await createClient();
-  const [{ data: adRaw }, listing, { data: reviewer }] = await Promise.all([
+  const [{ data: adRaw }, listing, { data: reviewer }, { data: deskRows }] = await Promise.all([
     supabase.rpc("pick_ad"),
     businesses
       ? supabase.rpc("market_vendors", { p_q: q || null })
       : supabase.rpc("market_offerings", { p_kind: kind, p_q: q || null }),
     supabase.rpc("is_marketplace_reviewer"),
+    supabase.rpc("my_vendor_desks"),
   ]);
+  const desks = (deskRows ?? []) as { vendor_id: string; vendor_name: string; to_answer: number; problems: number; unread: number }[];
 
   const ad = ((adRaw ?? []) as Ad[])[0] ?? null;
   const offerings = businesses ? [] : ((listing.data ?? []) as MarketOffering[]);
@@ -97,6 +100,24 @@ export default async function MarketplacePage({
 
       {selling ? (
         <Gutter className="space-y-3 pt-5 pb-6">
+          {desks.map((d) => {
+            const waiting = d.to_answer + d.problems + d.unread;
+            return (
+              <Link
+                key={d.vendor_id}
+                href={`/market/b/${d.vendor_id}`}
+                className="press flex items-center justify-between rounded-card border border-gold/40 bg-surface-soft px-4 py-4 active:bg-surface"
+              >
+                <span>
+                  <span className="block font-serif text-lg text-paper">{d.vendor_name}</span>
+                  <span className="mt-0.5 block text-sm text-paper-dim">
+                    {waiting ? `${waiting} waiting on you` : "Orders, messages, reviews and team"}
+                  </span>
+                </span>
+                <span aria-hidden className="text-gold">→</span>
+              </Link>
+            );
+          })}
           {[
             ["product", "A product", "Something you make or stock."],
             ["service", "A service", "Work you do for people."],
@@ -218,6 +239,9 @@ export default async function MarketplacePage({
 
       <Gutter className="mt-10 pb-4">
         <div className="flex flex-wrap gap-4 text-sm">
+          <Link href="/market/orders" className="text-gold hover:underline">
+            Your orders
+          </Link>
           <Link href="/market/sell" className="text-gold hover:underline">
             Sell here
           </Link>

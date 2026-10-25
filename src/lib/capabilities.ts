@@ -104,7 +104,7 @@ export const SPACES: Space[] = [
   {
     id: "market",
     name: "Market",
-    purpose: "Businesses that proved their website is theirs and passed the ten laws, signed off by a person. Buying links out to their site.",
+    purpose: "Businesses that proved their website is theirs and passed the ten laws, signed off by a person. Order, book and message them here; payment is settled between you for now.",
     firstAction: "Browse the listed businesses, or apply to list your own.",
     href: "/market",
     can: [
@@ -116,6 +116,10 @@ export const SPACES: Space[] = [
         note: "The reading is from the offline stand-in until an AI model is connected; the human sign-off is real.",
       },
       { title: "One sponsored slot, chosen by fit", detail: "The best-aligned business for you; bids only break ties.", status: "current" },
+      { title: "Orders and bookings", detail: "The business agrees a price and a time; your confirmation completes it. A problem goes to a reviewer.", status: "current" },
+      { title: "Message a business", detail: "One conversation with its whole team.", status: "current" },
+      { title: "Reviews from completed orders only", detail: "Written once. The business can reply, never remove. Reviews never affect approval or placement.", status: "current" },
+      { title: "A team behind each business", detail: "Owners invite managers and staff by handle to run orders, messages and listings.", status: "current" },
       { title: "Pay in the app, held until work is approved", detail: "Escrowed payments.", status: "planned" },
     ],
   },

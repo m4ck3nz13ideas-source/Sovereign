@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Page, TopBar } from "@/components/ui";
 import type { Campaign, Offering, Vendor, VendorStatus, Verification, Vetting } from "@/lib/marketplace";
 import { requireSession } from "@/lib/session";
@@ -85,6 +87,16 @@ export default async function SellPage({
     <>
       <TopBar title={vendor.name} back="/market" />
       <Page>
+        <Link
+          href={`/market/b/${vendor.id}`}
+          className="press mb-6 flex items-center justify-between rounded-card border border-gold/40 bg-surface-soft px-4 py-3.5 active:bg-surface"
+        >
+          <span>
+            <span className="block font-serif text-lg text-paper">Run it from the desk</span>
+            <span className="mt-0.5 block text-sm text-paper-dim">Orders, bookings, messages, reviews and your team</span>
+          </span>
+          <span aria-hidden className="text-gold">→</span>
+        </Link>
         <SellerConsole
           vendor={vendor}
           status={(status ?? "unvetted") as VendorStatus}

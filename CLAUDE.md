@@ -438,7 +438,7 @@ on purpose, in a commit that says so.
     bid, spend and budget and fails if any appears. Organic listings are
     newest first and not for sale. A concern is seen by whoever raised it and
     the reviewers, never by the business. Not here yet: in-app checkout
-    (listings link out), card billing for ads, ratings, SOV.
+    (listings link out; orders and reviews since 0062, rule 55), card billing for ads, SOV.
     **0038 adds proof of identity.** Approval also needs a verified website:
     the business publishes its token as a DNS TXT record or at
     /.well-known/sovereign-verify.txt, and a reviewer runs the check, which
@@ -721,6 +721,39 @@ on purpose, in a commit that says so.
     code is revoked from `public, anon, authenticated` explicitly; the test
     shim grants new functions the way Supabase does, and
     `52_internal_helpers.sql` lists the helpers and fails if any is callable.
+
+55. **A business runs here, and running it buys nothing.** (0062,
+    Mackenzie, 25 October 2026: "make businesses operable".) A business has
+    a TEAM: the owner invites by exact handle (`invite_vendor_member()`), the
+    invitee accepts, and `vendor_team_role()` answers for the caller only —
+    it takes no profile id and must not grow one. Managers list, withdraw,
+    post updates and reply to reviews; staff and managers answer customers
+    and run orders. What the business CLAIMS (the vetted words), its ADS and
+    its TEAM stay with the owner. Anyone on the team counts as "their own
+    business" for signing off, verifying, ordering, reviewing, and being
+    charged for an ad click. ENQUIRIES are one conversation per customer per
+    business, answered by anyone on the team as the business
+    (`from_business`), reaching nothing collective (rule 23). ORDERS move
+    only through their functions — requested → accepted (agreed price, a
+    time for a booking) | declined (reason) | cancelled; accepted →
+    delivered → completed by the CUSTOMER'S confirmation, or disputed
+    (reason) and settled by a reviewer who is on neither side; the team may
+    close a delivered order after `order_reply_days()` (14) of silence.
+    Every move is a `vendor_order_events` row naming who and why; reviewers
+    see an order only once a problem is reported. Payment is still settled
+    off the app; this is the shape escrow will hold money against. REVIEWS
+    come only from a completed order, one each, within
+    `review_window_days()` (90), written once; the business replies once and
+    never deletes; a reviewer may remove one with a note. No average is
+    stored; `vendor_review_summary()` returns counts per star and the screen
+    shows a mean only beside them, from `REVIEW_MEAN_FLOOR` (5) reviews.
+    **No approval, listing order, ad fit or ad slot function reads an
+    order, a review, an enquiry or the team** — `53_business_operations.sql`
+    reads their source. No table here has a write policy or a write grant.
+    On erasure a customer's messages, conversations and reviews go; their
+    orders are kept for the business's records, unattributed.
+    `src/lib/business.ts`, `business.test.ts`, `/market/b/[id]` (the desk),
+    `/market/orders`, `/market/m/[id]`.
 
 ## On the surface, not in the schema
 

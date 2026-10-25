@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Page, TopBar } from "@/components/ui";
+import { Page, SectionLabel, TopBar } from "@/components/ui";
+import { shortDate } from "@/lib/format";
 import type { Vendor, Verification, Vetting } from "@/lib/marketplace";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
@@ -25,7 +27,7 @@ export default async function ReviewPage() {
   const { data: reviewer } = await supabase.rpc("is_marketplace_reviewer");
   if (!reviewer) notFound();
 
-  const [{ data: queueRaw }, { data: concernRaw }, { data: suspRaw }] = await Promise.all([
+  const [{ data: queueRaw }, { data: concernRaw }, { data: suspRaw }, { data: disputeRaw }] = await Promise.all([
     supabase
       .from("vendor_vettings")
       .select("*, vendors(*)")
@@ -42,7 +44,19 @@ export default async function ReviewPage() {
       .select("*, vendors(name)")
       .is("lifted_at", null)
       .order("created_at", { ascending: true }),
+    // Orders with a problem reported (0062). A reviewer sees no other order.
+    supabase
+      .from("vendor_orders")
+      .select("id, item_name, disputed_at, vendors(name)")
+      .eq("status", "disputed")
+      .order("disputed_at", { ascending: true }),
   ]);
+  const disputes = (disputeRaw ?? []) as unknown as {
+    id: string;
+    item_name: string;
+    disputed_at: string;
+    vendors: { name: string } | null;
+  }[];
 
   // A vetting of words the business has since changed cannot be signed; the
   // database refuses it, so do not offer it.
@@ -67,6 +81,26 @@ export default async function ReviewPage() {
     <>
       <TopBar title="Review queue" back="/market" />
       <Page>
+        {disputes.length ? (
+          <section className="mb-8">
+            <SectionLabel right={disputes.length}>Problems with orders</SectionLabel>
+            <ul className="space-y-2">
+              {disputes.map((d) => (
+                <li key={d.id}>
+                  <Link
+                    href={`/market/orders/${d.id}`}
+                    className="press block rounded-card border border-alarm/40 bg-surface-soft px-4 py-3 active:bg-surface"
+                  >
+                    <span className="text-[0.95rem] text-paper">{d.item_name}</span>
+                    <span className="mt-0.5 block text-xs text-paper-faint">
+                      {d.vendors?.name ?? "A business"} · reported {shortDate(d.disputed_at)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
         <ReviewConsole
           queue={queue}
           concerns={

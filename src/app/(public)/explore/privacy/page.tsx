@@ -42,7 +42,7 @@ export default function PrivacyPage() {
   return (
     <Legal
       title="Privacy notice"
-      updated="13 October 2026"
+      updated="25 October 2026"
       intro={
         <>
           <p>
@@ -108,6 +108,11 @@ export default function PrivacyPage() {
               <li>If you prove you&apos;re one person: one opaque code from the verifier. No name, document, photo or biometric reaches us.</li>
               <li>If you run a business: what you tell us about it, your website check and, for UK companies, the public Companies House record.</li>
               <li>If you advertise: your campaigns, clicks and spend.</li>
+              <li>
+                If you order, book or message a business: the order and its record, your messages, and any review you
+                write. The business&apos;s team sees the order and the messages; your review is public with your name.
+              </li>
+              <li>If you work for a business here: which business, and your role.</li>
             </ul>
           ),
         },
@@ -122,6 +127,8 @@ export default function PrivacyPage() {
                 ["Choosing the one sponsored slot", "Your values, matched against a business's words when you look — not stored", "Contract, and explicit consent"],
                 ["Keeping the collective record after you leave", "Proposals, responses and debate, no longer linked to you", "Legitimate interests: decisions others relied on must stay true"],
                 ["Vetting businesses", "Business details, website check, Companies House record", "Contract with the business"],
+                ["Orders, bookings and messages with a business", "What you asked for, what was agreed, every step, your messages", "Contract"],
+                ["Keeping an order's record after you leave", "The order and its steps, no longer linked to your name", "Legitimate interests: the business must keep its trading records"],
                 ["Security and preventing abuse", "Sign-in records, technical logs kept by our hosts", "Legitimate interests"],
                 ["Legal and tax records for advertisers", "Invoices and payments, once billing starts", "Legal obligation"],
               ]}
@@ -220,7 +227,9 @@ export default function PrivacyPage() {
                 Everything is kept while your account exists. When you delete your account, everything that is yours
                 alone is deleted at once: email and sign-in, profile, journal, ideas, values, beliefs, Know yourself,
                 to-dos, learning, posts, comments, likes, messages you wrote, follows, friendships, your personhood
-                code, any business you own, and your group memberships.
+                code, any business you own, your place on any business&apos;s team, your messages to businesses and
+                your reviews. Orders you placed are kept for the business&apos;s records, shown as a &ldquo;Former
+                member&rdquo;.
               </p>
               <p>
                 The collective record — proposals, responses, debate, flags, predictions, decisions, projects and SOV

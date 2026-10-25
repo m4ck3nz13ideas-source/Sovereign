@@ -30,6 +30,7 @@ export const ROADMAP: { stage: string; status: CapabilityStatus; lead: string; i
       { title: "Spheres", detail: "Health, education, ecology and five more. Tag proposals, rate what matters to you." },
       { title: "Know yourself and Learn", detail: "Needs, values, beliefs, goals. Courses shaped by your answers." },
       { title: "Verified Market", detail: "Website proven, ten laws read, signed off by a person." },
+      { title: "Businesses run here", detail: "Orders, bookings and messages with a business's team. Reviews only from completed orders." },
       { title: "Your data, yours", detail: "Consent first. A full copy or a full deletion, any time." },
     ],
   },
