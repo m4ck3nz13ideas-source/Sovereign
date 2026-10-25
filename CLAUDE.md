@@ -686,6 +686,19 @@ on purpose, in a commit that says so.
     Groups are managed at `/connection/g/[id]/manage`, not in Settings.
     `50_charters.sql`, `charters.test.ts`.
 
+52. **Most strongly against, and it fails.** (0059, Mackenzie, 25 October
+    2026.) The one safeguard on rule 50: a proposal with conditions FAILS,
+    whatever else is met, if more than half of those who responded gave it
+    an alignment below `opposition_threshold()` (0.382, the golden ratio's
+    other side). Not a bar to clear — lukewarm support passes, a split passes
+    and is reported as one (rule 14), exactly half is not more than half.
+    Counted inside `close_proposal()` at close, the only moment the numbers
+    may be read (rule 3), and recorded as `decisions.opposed` so the outcome
+    says why without saying who. A proposal failed this way had the people,
+    so `dormant_proposals()` never offers it back (rule 12). Mirrored as
+    `OPPOSITION_THRESHOLD` in `src/lib/universal-law.ts`.
+    `49_release_and_pass.sql`.
+
 ## On the surface, not in the schema
 
 These are interface conventions rather than rules the database enforces, but

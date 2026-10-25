@@ -525,7 +525,7 @@ export function OnboardingFlow({
             </div>
             <div className="rounded-lg bg-surface px-3 py-2.5">
               <p className="font-serif text-xl text-gold">Its own</p>
-              <p className="mt-0.5 text-[0.8125rem] leading-snug text-paper-dim">conditions, once met, pass it into a project</p>
+              <p className="mt-0.5 text-[0.8125rem] leading-snug text-paper-dim">conditions, once met, pass it — unless most responses are strongly against</p>
             </div>
           </div>
           <dl className="mt-5 space-y-3 text-[0.9rem] leading-relaxed">

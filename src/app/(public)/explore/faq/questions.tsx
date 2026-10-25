@@ -71,7 +71,7 @@ export const FAQ_GROUPS: { title: string; items: QA[] }[] = [
     items: [
       {
         q: "How does a proposal pass?",
-        a: "Two steps. First it is released: the AI reads it against the ten Universal Laws, and only at 0.618 alignment or above does it go out to the people it is addressed to. Then it passes once its own conditions are met: the voices, the groups to reach and the questions to answer that the AI set for this proposal alone. Throughout, it must break none of the ten laws and leave no tension or critical flag unanswered.",
+        a: "Two steps. First it is released: the AI reads it against the ten Universal Laws, and only at 0.618 alignment or above does it go out to the people it is addressed to. Then it passes once its own conditions are met: the voices, the groups to reach and the questions to answer that the AI set for this proposal alone. One safeguard: if more than half of the people who responded were strongly against it (below 0.382), it fails anyway. Throughout, it must break none of the ten laws and leave no tension or critical flag unanswered.",
       },
       {
         q: "Why can't I see how others voted?",

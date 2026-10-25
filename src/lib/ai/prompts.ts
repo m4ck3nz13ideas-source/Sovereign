@@ -937,7 +937,8 @@ export const PROPOSAL_CONDITIONS: PromptSpec = {
   id: "proposal.conditions",
   // 1.2.0 (25 October 2026): meeting the conditions now PASSES the proposal
   // (0056), and a group's charter is given as context (0057).
-  version: "1.2.0",
+  // 1.3.0 (25 October 2026): states the opposition safeguard (0059).
+  version: "1.3.0",
   tier: "deep",
   title: "Conditions",
   purpose:
@@ -988,9 +989,10 @@ does not hold up, return the current conditions unchanged and say why.
 
 MEETING THESE PASSES IT
 
-There is no vote count after this. A proposal is released only once it sits
-well with the ten Universal Laws, and then it PASSES as soon as the conditions
-you set are met. So set them so that meeting them is real evidence that the
+There is no average for it to clear after this. A proposal is released only
+once it sits well with the ten Universal Laws, and then it PASSES as soon as
+the conditions you set are met — unless more than half of the people who
+respond are strongly against it, which fails it whatever else is met. So set them so that meeting them is real evidence that the
 people affected took part and the questions that matter were answered. For
 anything that spends shared money, binds people, or is hard to undo, ask for
 enough voices that a handful of enthusiasts cannot carry it alone.

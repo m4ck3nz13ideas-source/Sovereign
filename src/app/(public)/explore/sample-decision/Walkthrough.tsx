@@ -178,7 +178,7 @@ export function Walkthrough() {
       name: "Vote",
       happening: "People who have read the proposal respond: does it feel right, will it work, how much does it matter now.",
       who: "Members it is addressed to, who have opened it. Nobody can respond to a proposal they haven't read.",
-      rule: "Responses are secret, and the running result stays hidden. Once its own conditions are met, it passes.",
+      rule: "Responses are secret, and the running result stays hidden. Once its own conditions are met, it passes — unless more than half of the responses were strongly against it.",
       next: "When every condition is met it is decided, and every response is published without names.",
       couldStop: "Conditions not yet met (too few voices, a requirement unanswered, a group not reached) — then it waits.",
       body: (

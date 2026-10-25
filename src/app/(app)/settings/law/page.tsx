@@ -152,7 +152,8 @@ export default async function LawPage() {
       <p className="mt-8 text-xs leading-relaxed text-paper-faint">
         A proposal is released to the people it is addressed to once its
         alignment with these ten reaches {RELEASE_THRESHOLD} — the golden ratio
-        — and passes once its own conditions are met. A violation of any one
+        — and passes once its own conditions are met, unless most of those who
+        responded were strongly against it. A violation of any one
         ends it, whatever its score.
       </p>
     </Page>

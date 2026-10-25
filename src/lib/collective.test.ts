@@ -221,4 +221,8 @@ describe("how a proposal passes", () => {
     expect(stageDetail("voting")!.rule).not.toMatch(/average alignment/);
     expect(whatHappensNext("voting", { hasGroup: true, closesAt: null })).not.toMatch(/reaches the bar/);
   });
+  it("says what the safeguard is (0059)", () => {
+    expect(stageDetail("voting")!.rule).toMatch(/more than half of those who responded were strongly against/);
+    expect(stageDetail("voting")!.couldStop).toMatch(/0\.382/);
+  });
 });

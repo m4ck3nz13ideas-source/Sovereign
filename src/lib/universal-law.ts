@@ -158,6 +158,14 @@ export const LAWS_BY_ID: Record<LawId, UniversalLaw> = Object.fromEntries(
  */
 export const RELEASE_THRESHOLD = 0.618;
 
+/**
+ * The safeguard (0059): a proposal with its own conditions fails, whatever
+ * else is met, if more than half of those who responded gave it an alignment
+ * below this — the golden ratio's other side, 1 − 0.618. Mirrors
+ * `opposition_threshold()` in Postgres.
+ */
+export const OPPOSITION_THRESHOLD = 0.382;
+
 /** Amending a law requires the agreement of every user. Stated, not inferred. */
 export const AMENDMENT_RULE =
   "To change or add a Universal Law, all users must agree with the proposal and vote.";

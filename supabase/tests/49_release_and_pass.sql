@@ -133,9 +133,10 @@ begin
   perform record_proposal_conditions(p, 3, null, '[]'::jsonb, '[]'::jsonb,
     'Three voices; nothing else needed for something this small.',
     'proposal.conditions', '1.1.0', 'test');
-  perform test_r_vote(p, s, 0.30);
+  -- Lukewarm, all above 0.382: no average stands in its way (0056).
+  perform test_r_vote(p, s, 0.45);
   perform test_r_vote(p, b, 0.40);
-  perform test_r_vote(p, c, 0.35);
+  perform test_r_vote(p, c, 0.39);
   perform set_config('test.uid', s::text, true);
   o := close_proposal(p);
   if o = 'passed' then passes := passes + 1;
@@ -144,6 +145,42 @@ begin
   else fails := fails + 1; raise warning 'FAIL: the decision did not record its law alignment'; end if;
   if (select avg_alignment from decisions where proposal_id = p) is not null then passes := passes + 1;
   else fails := fails + 1; raise warning 'FAIL: the responses were not still recorded on the decision'; end if;
+
+  if (select opposed from decisions where proposal_id = p) = 0 then passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: the decision did not record how many were strongly against'; end if;
+
+  ------------------- the safeguard (0059): most strongly against, it fails
+  q := test_propose(s, gid, 'local', null, 'Release five', 'x', 'The hall closes at nine on weekdays.');
+  perform test_r_review(q);
+  perform test_r_read(q, 0.95);
+  update proposals set status = 'in_deliberation' where id = q;
+  perform record_proposal_conditions(q, 3, null, '[]'::jsonb, '[]'::jsonb,
+    'Three voices for a small change.', 'proposal.conditions', '1.2.0', 'test');
+  perform test_r_vote(q, s, 0.90);
+  perform test_r_vote(q, b, 0.10);
+  perform test_r_vote(q, c, 0.20);
+  perform set_config('test.uid', s::text, true);
+  o := close_proposal(q);
+  if o = 'failed' then passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: two of three strongly against, and it still passed'; end if;
+  if (select opposed from decisions where proposal_id = q) = 2 then passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: the decision does not say two were strongly against'; end if;
+  if opposition_threshold() = 0.382 then passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: the opposition line is not 0.382'; end if;
+
+  -- Exactly half against is not a majority against: it passes.
+  q := test_propose(s, gid, 'local', null, 'Release six', 'x', 'The kitchen kettle is broken again.');
+  perform test_r_review(q);
+  perform test_r_read(q, 0.95);
+  update proposals set status = 'in_deliberation' where id = q;
+  perform record_proposal_conditions(q, 2, null, '[]'::jsonb, '[]'::jsonb,
+    'Two voices for a kettle.', 'proposal.conditions', '1.2.0', 'test');
+  perform test_r_vote(q, s, 0.90);
+  perform test_r_vote(q, b, 0.10);
+  perform set_config('test.uid', s::text, true);
+  o := close_proposal(q);
+  if o = 'passed' then passes := passes + 1;
+  else fails := fails + 1; raise warning 'FAIL: one of two against failed it — a split is not a majority'; end if;
 
   raise notice ' ';
   raise notice '  Release and pass: % passed, % failed', passes, fails;

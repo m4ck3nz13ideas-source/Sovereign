@@ -238,8 +238,8 @@ export function stageDetail(
     case "voting":
       return {
         who: "People it is addressed to who have read it. Each response is secret.",
-        rule: "Meeting its own conditions is what passes it: its voices, its requirements answered, its affected groups reached. The responses stay hidden until then and are published with their spread.",
-        couldStop: "Too few voices, a group not yet reached, an unanswered requirement, an unanswered law tension or an open critical flag.",
+        rule: "Meeting its own conditions is what passes it: its voices, its requirements answered, its affected groups reached — unless more than half of those who responded were strongly against it. The responses stay hidden until then and are published with their spread.",
+        couldStop: "Too few voices, a group not yet reached, an unanswered requirement, an unanswered law tension, an open critical flag, or more than half of the responses below 0.382.",
       };
     case "passed":
       return {

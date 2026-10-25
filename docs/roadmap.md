@@ -69,8 +69,10 @@ Agreed 25 October 2026 (0056, CLAUDE.md rule 50):
    below, it is held with its author, and the page says why.
 3. **Passed by its own conditions** — the voices, the requirements answered
    and the affected groups reached that the AI set for it alone. Once they are
-   met, with no tension or critical flag left unanswered, it passes. The
-   responses stay secret ballots and are published with their spread.
+   met, with no tension or critical flag left unanswered, it passes — unless
+   more than half of those who responded were strongly against it (below
+   0.382), which fails it whatever else is met (0059). The responses stay
+   secret ballots and are published with their spread.
 4. **Activated** — a project, once every need has somebody against it. A
    charter change is the exception: it takes effect the moment it passes.
 5. **Reflected on** — it cannot complete without a written account.

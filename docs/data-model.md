@@ -282,6 +282,7 @@ passed  ⟺  no Universal Law violation
        ∧  no unanswered Universal Law tension
        ∧  no unresolved critical flag
        ∧  its voices, requirements and affected groups all met
+       ∧  NOT more than half of the responses below 0.382   (0059)
 ```
 
 Before 0039 (no conditions) the old rule still applies: participation ≥

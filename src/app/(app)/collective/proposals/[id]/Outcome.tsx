@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Card, Empty, ScoreBar, Tag } from "@/components/ui";
 import { shortDate } from "@/lib/format";
 import type { Decision } from "@/lib/types";
+import { OPPOSITION_THRESHOLD } from "@/lib/universal-law";
 
 /**
  * The outcome layer.
@@ -62,6 +63,16 @@ export function Outcome({
             {shortDate(decision.decided_at)}
           </Tag>
         </div>
+
+        {!passed &&
+        typeof decision.opposed === "number" &&
+        decision.voter_count > 0 &&
+        decision.opposed * 2 > decision.voter_count ? (
+          <p className="mt-3 rounded-md border border-alarm/40 bg-alarm/10 px-3 py-2.5 text-[0.95rem] leading-relaxed text-paper">
+            {decision.opposed} of {decision.voter_count} who responded were strongly against it (below{" "}
+            {OPPOSITION_THRESHOLD.toFixed(3)}). More than half, so it did not pass, whatever else was met.
+          </p>
+        ) : null}
 
         {decision.rationale_summary ? (
           <p className="mt-3 whitespace-pre-wrap text-[0.95rem] leading-relaxed text-paper-dim">

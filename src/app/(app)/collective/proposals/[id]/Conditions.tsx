@@ -1,7 +1,7 @@
 import { SectionLabel } from "@/components/ui";
 import { shortDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
-import { RELEASE_THRESHOLD } from "@/lib/universal-law";
+import { OPPOSITION_THRESHOLD, RELEASE_THRESHOLD } from "@/lib/universal-law";
 
 import { AffectedReached, ChallengeConditions, ChallengeReply, RequirementAnswer, RunConditions } from "./ConditionsClient";
 
@@ -201,7 +201,9 @@ export async function ConditionsSection({
           steward and not an average. It was released because its alignment with the Universal Laws reached{" "}
           <span className="tabular-nums text-paper">{RELEASE_THRESHOLD.toFixed(3)}</span>; once its voices are in, its
           requirements answered and its affected groups reached, it passes, with no Universal Law broken, no tension
-          unanswered and no critical flag left open. The responses are published with their spread when it closes.
+          unanswered and no critical flag left open. One safeguard: if more than half of those who responded put it
+          below <span className="tabular-nums text-paper">{OPPOSITION_THRESHOLD.toFixed(3)}</span>, it fails, whatever
+          else was met. The responses are published with their spread when it closes.
         </p>
       </div>
 

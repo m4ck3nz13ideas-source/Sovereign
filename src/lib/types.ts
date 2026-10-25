@@ -836,6 +836,8 @@ export interface Decision {
   open_concerns: number;
   /** The Universal Law alignment it was released on (0056). Null before then. */
   law_alignment?: number | null;
+  /** How many responses were below 0.382 at close (0059). Null before then. */
+  opposed?: number | null;
   /**
    * How many of the voices had proof of personhood when this closed. Recorded
    * at every scale, required at some — a decision carried by four accounts

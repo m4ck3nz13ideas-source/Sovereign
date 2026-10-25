@@ -84,7 +84,7 @@ const START: Lesson[] = [
     body: [
       "There are no fixed rules by size. Each proposal gets its own conditions from the AI: how many voices it needs, what has to be answered on the record, and which groups must have had a real chance to take part — tenants of a block, the youth club, the people on a rota.",
       "A time window is optional. A clock can run out while the people affected have never seen the proposal, so where a window would not help, there is none: the proposal is decided when its conditions are met, and nobody can close it before then.",
-      "Meeting them is what passes it — there is no vote count after that — so they are set to show that the people affected really took part. In a group, the AI also reads the group's charter: what it is for and what its members asked it to weigh.",
+      "Meeting them is what passes it — with one safeguard: if more than half of those who respond are strongly against it, it fails — so they are set to show that the people affected really took part. In a group, the AI also reads the group's charter: what it is for and what its members asked it to weigh.",
       "Once anybody has responded, the conditions are fixed. Nobody moves the goalposts mid-vote.",
     ],
     ask: "Think of a decision that affected you without you having a say. Who should have had to reach you, and how?",
@@ -109,7 +109,7 @@ const START: Lesson[] = [
     body: [
       "You do not vote yes or no. You say how far a proposal aligns with what matters, how confident you are, and how urgent it is — each on a scale.",
       "Nobody sees the running average until the proposal closes. A live score makes people follow the crowd, which is exactly what resonance exists to stop. You can see how many have responded, never which way it is leaning.",
-      "A proposal is released to the public when its alignment with the Universal Laws reaches 0.618, and passes once its own conditions are met.",
+      "A proposal is released to the public when its alignment with the Universal Laws reaches 0.618, and passes once its own conditions are met — unless more than half of the responses are strongly against it.",
     ],
     ask: "When have you changed your answer because you saw what everybody else said?",
   },
