@@ -84,6 +84,7 @@ const START: Lesson[] = [
     body: [
       "There are no fixed rules by size. Each proposal gets its own conditions from the AI: how many voices it needs, what has to be answered on the record, and which groups must have had a real chance to take part — tenants of a block, the youth club, the people on a rota.",
       "A time window is optional. A clock can run out while the people affected have never seen the proposal, so where a window would not help, there is none: the proposal is decided when its conditions are met, and nobody can close it before then.",
+      "Meeting them is what passes it — there is no vote count after that — so they are set to show that the people affected really took part. In a group, the AI also reads the group's charter: what it is for and what its members asked it to weigh.",
       "Once anybody has responded, the conditions are fixed. Nobody moves the goalposts mid-vote.",
     ],
     ask: "Think of a decision that affected you without you having a say. Who should have had to reach you, and how?",

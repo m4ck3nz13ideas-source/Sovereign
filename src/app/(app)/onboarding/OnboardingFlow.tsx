@@ -9,7 +9,7 @@ import { Button, Card, Field, inputClass } from "@/components/ui";
 import { SPACES, STATUS_LABEL } from "@/lib/capabilities";
 import { proposalProgress } from "@/lib/collective";
 import { GLOSSARY } from "@/lib/glossary";
-import { AMENDMENT_RULE, UNIVERSAL_LAWS } from "@/lib/universal-law";
+import { AMENDMENT_RULE, RELEASE_THRESHOLD, UNIVERSAL_LAWS } from "@/lib/universal-law";
 
 import { agreeToUniversalLaw, finishOnboarding, saveBeliefs, saveDetails } from "./actions";
 
@@ -518,8 +518,18 @@ export function OnboardingFlow({
               </li>
             ))}
           </ol>
+          <div className="mt-5 grid grid-cols-2 gap-2 text-center">
+            <div className="rounded-lg bg-surface px-3 py-2.5">
+              <p className="font-serif text-xl tabular-nums text-gold">{RELEASE_THRESHOLD}</p>
+              <p className="mt-0.5 text-[0.8125rem] leading-snug text-paper-dim">alignment with the laws releases it to the public</p>
+            </div>
+            <div className="rounded-lg bg-surface px-3 py-2.5">
+              <p className="font-serif text-xl text-gold">Its own</p>
+              <p className="mt-0.5 text-[0.8125rem] leading-snug text-paper-dim">conditions, once met, pass it into a project</p>
+            </div>
+          </div>
           <dl className="mt-5 space-y-3 text-[0.9rem] leading-relaxed">
-            {(["Universal Laws", "Conditions", "Alignment", "Activation", "Reflection"] as const).map((t) => (
+            {(["Universal Laws", "Alignment", "Conditions", "Activation", "Reflection"] as const).map((t) => (
               <div key={t}>
                 <dt className="font-semibold text-paper">{t}</dt>
                 <dd className="text-paper-dim">{GLOSSARY[t]}</dd>
@@ -639,6 +649,23 @@ export function OnboardingFlow({
             {pending ? "One moment" : "Start"}
           </Button>
         )}
+        {last ? (
+          <Button
+            type="button"
+            tone="quiet"
+            disabled={pending}
+            onClick={() =>
+              start(async () => {
+                setError(null);
+                const r = await finishOnboarding();
+                if (r.ok) router.push("/onboarding/group");
+                else setError(r.error);
+              })
+            }
+          >
+            Start, and set up a group
+          </Button>
+        ) : null}
         {card > 0 ? (
           <Button type="button" tone="ghost" onClick={() => goTo(card - 1)}>
             Back
