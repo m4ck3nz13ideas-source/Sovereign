@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { LawRevision } from "@/lib/types";
 import {
   AMENDMENT_RULE,
-  RESONANCE_THRESHOLD,
+  RELEASE_THRESHOLD,
   UNIVERSAL_LAWS,
 } from "@/lib/universal-law";
 
@@ -150,10 +150,10 @@ export default async function LawPage() {
       </Card>
 
       <p className="mt-8 text-xs leading-relaxed text-paper-faint">
-        Resonance ratifies at ≥ {RESONANCE_THRESHOLD} — the golden ratio, as
-        specified, so that consensus comes through harmony rather than
-        dominance. It is a threshold on those who responded, not a share of any
-        population.
+        A proposal is released to the people it is addressed to once its
+        alignment with these ten reaches {RELEASE_THRESHOLD} — the golden ratio
+        — and passes once its own conditions are met. A violation of any one
+        ends it, whatever its score.
       </p>
     </Page>
   );

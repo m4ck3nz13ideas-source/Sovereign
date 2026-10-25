@@ -46,7 +46,22 @@ export const lawAuditSchema = z.object({
         law_id: z.string().min(1),
         verdict: z.enum(["aligned", "tension", "violation"]),
         reasoning: z.string().min(1),
-      }),
+        /**
+         * 0056: how well the proposal sits with this law, 0 to 1, agreeing
+         * with the verdict (aligned 0.70–1, tension 0.30–0.70, violation
+         * below 0.30). The mean of the ten must reach 0.618 for a proposal to
+         * be released. Optional because the offline stand-in has none, and a
+         * reading without one counts by its verdict.
+         */
+        alignment: z.number().min(0).max(1).optional(),
+      }).refine(
+        (r) =>
+          r.alignment === undefined ||
+          (r.verdict === "aligned" && r.alignment >= 0.7) ||
+          (r.verdict === "tension" && r.alignment >= 0.3 && r.alignment <= 0.7) ||
+          (r.verdict === "violation" && r.alignment < 0.3),
+        { message: "A reading's alignment must agree with its verdict." },
+      ),
     )
     .length(10),
 });
@@ -216,7 +231,7 @@ export const lawAuditJsonSchema = {
       description: "One reading per Universal Law, all ten, in the order given.",
       items: {
         type: "object",
-        required: ["law_id", "verdict", "reasoning"],
+        required: ["law_id", "verdict", "alignment", "reasoning"],
         properties: {
           law_id: {
             type: "string",
@@ -226,11 +241,41 @@ export const lawAuditJsonSchema = {
             type: "string",
             enum: ["aligned", "tension", "violation"],
           },
+          alignment: {
+            type: "number",
+            minimum: 0,
+            maximum: 1,
+            description:
+              "How well the proposal sits with this law, 0 to 1. Aligned 0.70–1, tension 0.30–0.70, violation below 0.30.",
+          },
           reasoning: {
             type: "string",
             description:
               "One paragraph. What in the proposal, against what part of the law.",
           },
+        },
+      },
+    },
+  },
+} as const;
+
+/**
+ * A business's vetting reads the same ten laws with the same three verdicts,
+ * but carries no alignment number: nothing releases a business by a score
+ * (rule 37), so the model is not asked for one.
+ */
+export const vendorVettingJsonSchema = {
+  ...lawAuditJsonSchema,
+  properties: {
+    readings: {
+      ...lawAuditJsonSchema.properties.readings,
+      items: {
+        type: "object",
+        required: ["law_id", "verdict", "reasoning"],
+        properties: {
+          law_id: lawAuditJsonSchema.properties.readings.items.properties.law_id,
+          verdict: lawAuditJsonSchema.properties.readings.items.properties.verdict,
+          reasoning: lawAuditJsonSchema.properties.readings.items.properties.reasoning,
         },
       },
     },

@@ -208,7 +208,9 @@ If nothing is recurring, return an empty question. Most weeks nothing is.`,
 
 export const LAW_AUDIT: PromptSpec = {
   id: "law.audit",
-  version: "1.0.0",
+  // 1.1.0 (25 October 2026): each reading also scores alignment 0–1, and the
+  // mean of the ten releases a proposal at 0.618 (0056).
+  version: "1.1.0",
   tier: "deep",
   title: "Universal Law audit",
   purpose:
@@ -262,6 +264,23 @@ If you cannot do all four, it is a tension or it is aligned.
 Equally: do not soften a real violation into a tension because the proposal
 seems well-meant, or because the group clearly wants it. A law that bends for
 good intentions is not a law. Coercion dressed as consensus is still coercion.
+
+A NUMBER FOR EACH LAW
+
+Give each reading an alignment from 0 to 1: how fully the proposal honours
+that law, not how much you like it. It must agree with the verdict:
+
+  aligned    0.70 to 1.00 — 1.00 where the law is simply not engaged, or
+             the proposal actively serves it; lower where it is served
+             only in part.
+  tension    0.30 to 0.70 — where in that band says how much is unresolved.
+  violation  below 0.30.
+
+The mean of your ten numbers decides whether the proposal is released to the
+people it is addressed to: 0.618 or above, and it goes out; below, it stays
+with its author to improve. So the numbers carry weight, as the verdicts do.
+Do not shade them up to let something through or down to hold it back — score
+what is in front of you, and let the reasoning say why.
 
 HOW TO WRITE EACH READING
 

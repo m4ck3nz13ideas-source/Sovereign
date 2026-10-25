@@ -68,7 +68,7 @@ on purpose, in a commit that says so.
     responds; public with the AI's reasons; never changed. Floors the AI
     cannot go under: two voices and 24 hours. Nobody — not a steward —
     closes a proposal with conditions before its window ends. The Universal
-    Law audit, the alignment threshold, the review-before-resonance rule and
+    Law audit, the release threshold, the review-before-resonance rule and
     personhood at wide scales are NOT conditions: they are the constitution
     and stay fixed. Proposals from before 0039 keep the old per-scale and
     participation rules. (Named "conditions", not "terms", because `terms` is
@@ -639,6 +639,28 @@ on purpose, in a commit that says so.
     written only by its owner (trigger), readable by anyone signed in while it
     is approved, and kept out of `witness_feed()` and `discover_feed()`:
     being in people's feeds is what ads are for. `47_pages.sql`.
+
+50. **Released by the laws, passed by its own conditions.** (0056, Mackenzie,
+    25 October 2026.) 0.618 is the bar the Universal Law audit must clear for
+    a proposal to be RELEASED to the people it is addressed to: each of the
+    ten readings carries an `alignment` 0–1 that must agree with its verdict
+    (aligned ≥ 0.70, tension 0.30–0.70, violation < 0.30; checked in
+    `law_audit_payload()` and the zod schema), a reading without one counts
+    by its verdict (1 / 0.5 / 0), and `law_alignment()` is the mean of a
+    complete, current audit. `guard_proposal_status()` refuses the move into
+    deliberation unless `release_problem()` is null — audited, no violation,
+    alignment ≥ `release_threshold()`, a review on file — for proposals
+    submitted after `release_epoch.since` (the harness moves it, like
+    `conditions_epoch`). A proposal WITH conditions then passes once they are
+    met, with no law violation, no unanswered tension and no open flag:
+    `close_proposal()` applies no average of the responses to it. Responses
+    are still secret, recorded and published with their spread at close
+    (rules 3, 14), and each decision records the `law_alignment` it was
+    released on. Proposals from before 0039 keep the old per-group and
+    per-scale alignment and participation bars, because those were the terms
+    they were put to people on. The app calls `releaseIfReady()` after the
+    audit, the review and a challenge; the database decides.
+    `49_release_and_pass.sql`, `collective.test.ts`.
 
 ## On the surface, not in the schema
 

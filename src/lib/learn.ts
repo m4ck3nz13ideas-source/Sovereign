@@ -108,7 +108,7 @@ const START: Lesson[] = [
     body: [
       "You do not vote yes or no. You say how far a proposal aligns with what matters, how confident you are, and how urgent it is — each on a scale.",
       "Nobody sees the running average until the proposal closes. A live score makes people follow the crowd, which is exactly what resonance exists to stop. You can see how many have responded, never which way it is leaning.",
-      "A proposal passes when alignment clears the group's threshold — by default 0.618 — and its own conditions are met.",
+      "A proposal is released to the public when its alignment with the Universal Laws reaches 0.618, and passes once its own conditions are met.",
     ],
     ask: "When have you changed your answer because you saw what everybody else said?",
   },

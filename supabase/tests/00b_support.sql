@@ -114,6 +114,11 @@ do $$ begin
   if to_regclass('public.conditions_epoch') is not null then
     update conditions_epoch set since = 'infinity';
   end if;
+  -- 0056 the same way: the release gate applies to proposals submitted
+  -- after release_epoch.since. 49_release_and_pass.sql moves it back.
+  if to_regclass('public.release_epoch') is not null then
+    update release_epoch set since = 'infinity';
+  end if;
 end $$;
 
 -- 0051 took away every direct write to law_assessments: readings arrive only

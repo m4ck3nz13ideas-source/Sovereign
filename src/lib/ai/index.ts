@@ -28,6 +28,7 @@ import {
   debateJsonSchema,
   debateSchema,
   lawAuditJsonSchema,
+  vendorVettingJsonSchema,
   lawAuditSchema,
   rationaleJsonSchema,
   rationaleSchema,
@@ -455,7 +456,7 @@ Return exactly ten readings, one per law, using the ids given above.`;
   const { data, model } = await provider().complete({
     prompt: VENDOR_VETTING,
     input,
-    schema: lawAuditJsonSchema as unknown as Record<string, unknown>,
+    schema: vendorVettingJsonSchema as unknown as Record<string, unknown>,
     schemaName: "record_law_audit",
     maxTokens: 4000,
   });
@@ -482,7 +483,8 @@ export interface RationaleContext {
   participation: number | null;
   voters: number;
   members: number;
-  thresholds: { alignment: number; participation: number };
+  /** Null where it was not a bar: decided by its own conditions (0056). */
+  thresholds: { alignment: number | null; participation: number | null };
   reviewSummary: string | null;
   comments: { author: string; body: string }[];
   flags: { label: string; resolution: string | null }[];
@@ -638,10 +640,10 @@ CRITICAL FLAGS
 ${ctx.flags.length ? ctx.flags.map((f) => `- ${f.label}\n  answered: ${f.resolution ?? "UNANSWERED"}`).join("\n") : "(none raised)"}
 
 RESONANCE
-alignment: ${fmt(ctx.alignment)} (threshold ${ctx.thresholds.alignment})
+alignment: ${fmt(ctx.alignment)} (${ctx.thresholds.alignment === null ? "recorded, not a bar: it was decided by its own conditions" : `threshold ${ctx.thresholds.alignment}`})
 confidence: ${fmt(ctx.confidence)}
 urgency: ${fmt(ctx.urgency)}
-participation: ${fmt(ctx.participation)} — ${ctx.voters} of ${ctx.members} members (threshold ${ctx.thresholds.participation})
+participation: ${fmt(ctx.participation)} — ${ctx.voters} of ${ctx.members} members (${ctx.thresholds.participation === null ? "recorded, not a bar" : `threshold ${ctx.thresholds.participation}`})
 
 OUTCOME: ${ctx.outcome}`;
 

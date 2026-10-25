@@ -210,8 +210,15 @@ describe("stage detail", () => {
 });
 
 describe("how a proposal passes", () => {
-  it("says meeting the conditions alone never passes a proposal", () => {
-    expect(stageDetail("voting")!.rule).toMatch(/Conditions alone never pass it/);
-    expect(whatHappensNext("voting", { hasGroup: true, closesAt: null })).toMatch(/passes only if alignment reaches the bar/);
+  // 0056 (Mackenzie, 25 October): released by the laws at 0.618, passed by
+  // its own conditions. No screen may say an average of responses decides.
+  it("says it is released at 0.618 alignment with the Universal Laws", () => {
+    expect(stageDetail("in_review")!.rule).toMatch(/alignment with the laws reaches 0\.618/);
+    expect(whatHappensNext("in_review", { hasGroup: true, closesAt: null })).toMatch(/0\.618/);
+  });
+  it("says meeting its own conditions is what passes it", () => {
+    expect(stageDetail("voting")!.rule).toMatch(/Meeting its own conditions is what passes it/);
+    expect(stageDetail("voting")!.rule).not.toMatch(/average alignment/);
+    expect(whatHappensNext("voting", { hasGroup: true, closesAt: null })).not.toMatch(/reaches the bar/);
   });
 });

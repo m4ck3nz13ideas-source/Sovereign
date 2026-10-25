@@ -125,13 +125,13 @@ export const SPACES: Space[] = [
     firstAction: "Open a proposal and read it. You can respond only after reading.",
     href: "/collective/proposals",
     can: [
-      { title: "Proposals with their own conditions", detail: "How many voices, which groups must be reached, which questions answered — public, with reasons. Meeting them lets a proposal be decided; the responses decide whether it passes.", status: "current" },
+      { title: "Proposals with their own conditions", detail: "How many voices, which groups must be reached, which questions answered — public, with reasons. Once they are met, it passes.", status: "current" },
       { title: "Secret ballots, open tallies", detail: "After close, every response's numbers without names. A split is reported as a split.", status: "current" },
       { title: "Projects and reflections", detail: "What passes becomes a project; it cannot complete without a written reflection.", status: "current" },
       { title: "Shareable decisions", detail: "One public link per decision: outcome and numbers, never names.", status: "current" },
       {
         title: "Universal Law reading of every proposal",
-        detail: "Each proposal is read against the ten laws before anyone responds. A violation ends it.",
+        detail: "Each proposal is read against the ten laws before anyone responds. A violation ends it; below 0.618 alignment it is not released.",
         status: "testing",
         note: "Readings come from the offline stand-in, which judges structure, not meaning, and says so on every reading.",
       },

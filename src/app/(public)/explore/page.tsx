@@ -223,8 +223,8 @@ export default async function ExplorePage() {
         <ol className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {[
             ["Propose", "A member writes the problem, the change and its costs, to a group or a place.", "Submitted"],
-            ["Align", "It is read against the ten Universal Laws and given its own public conditions before anyone responds.", "Review"],
-            ["Decide", "It can be decided only once its own conditions are met. Then the responses decide: it passes if average alignment reaches 0.618. Conditions decide when; people decide whether.", "Deliberation, Resonance"],
+            ["Align", "The AI reads it against the ten Universal Laws. At 0.618 alignment or above it is released to the public, with its own conditions.", "Review"],
+            ["Decide", "People respond, answer its requirements and reach who it affects. Once its own conditions are met, it passes.", "Deliberation, Resonance"],
             ["Act", "What passes becomes a project once every need has someone against it.", "Passed, Under way"],
             ["Reflect", "A project cannot finish without a written account of what actually happened.", "Done"],
           ].map(([t, d, app], i) => (

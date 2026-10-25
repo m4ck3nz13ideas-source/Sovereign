@@ -201,10 +201,6 @@ export default async function HomePage({
   }
   const ad = ((adRows ?? []) as Ad[])[0] ?? null;
 
-  // The bar every decision at this address has to clear. Shown because it was
-  // invisible: the numbers live in scope_rules, which is readable by everyone
-  // and was read by nothing.
-
   const here =
     address?.kind === "group"
       ? address.group.name

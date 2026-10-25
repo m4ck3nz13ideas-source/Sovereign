@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 
 import { Button, Card, Empty, Tag, inputClass } from "@/components/ui";
 import { shortDate } from "@/lib/format";
-import { LAWS_BY_ID, UNIVERSAL_LAWS, type LawId } from "@/lib/universal-law";
+import { LAWS_BY_ID, RELEASE_THRESHOLD, UNIVERSAL_LAWS, type LawId } from "@/lib/universal-law";
 import type { LawAssessment } from "@/lib/types";
 
 import { answerLawTension, challengeLawReading, runLawAudit } from "../../actions";
@@ -25,12 +25,18 @@ export function LawLayer({
   assessments,
   open,
   stale = false,
+  lawAlignment = null,
+  held = null,
 }: {
   proposalId: string;
   assessments: (LawAssessment & { profiles: { display_name: string } | null })[];
   open: boolean;
   /** Readings in force are not ten readings of the text as it stands (0051). */
   stale?: boolean;
+  /** The mean of the ten readings' alignment (0056), or null until audited. */
+  lawAlignment?: number | null;
+  /** Why it is still in review, from `release_problem()`; null once released. */
+  held?: string | null;
 }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -69,8 +75,31 @@ export function LawLayer({
   const openTensions = tensions.filter((a) => !a.resolved_at);
   const isMock = assessments[0]?.model === "mock";
 
+  const released = lawAlignment !== null && lawAlignment >= RELEASE_THRESHOLD;
+
   return (
     <div className="space-y-4">
+      {lawAlignment !== null ? (
+        <div className="rounded-card border border-line bg-surface-soft px-4 py-3 text-center">
+          <p className="smallcaps text-[10px] text-paper-faint">Alignment with the Universal Laws</p>
+          <p className={`mt-1 font-serif text-2xl tabular-nums ${released ? "text-calm" : "text-alarm"}`}>
+            {lawAlignment.toFixed(3)}
+          </p>
+          <p className="mt-1 text-sm text-paper-dim">
+            {released
+              ? `Released to the people it is addressed to at ${RELEASE_THRESHOLD.toFixed(3)} or above.`
+              : `Below ${RELEASE_THRESHOLD.toFixed(3)}: held with its author, not released.`}
+          </p>
+        </div>
+      ) : null}
+
+      {held ? (
+        <p className="rounded-md border border-alarm/40 bg-alarm/10 px-3 py-2.5 text-sm leading-relaxed text-alarm">
+          Not released yet: {held}. Improve it and submit a second attempt, or
+          challenge a reading below if you think the audit is wrong.
+        </p>
+      ) : null}
+
       {isMock ? (
         <p className="rounded-md border border-alarm/40 bg-alarm/10 px-3 py-2.5 text-sm leading-relaxed text-alarm">
           No model read this. The offline reviewer records no objection because
@@ -212,6 +241,7 @@ function LawRow({
           {assessment.verdict === "tension" && assessment.resolved_at
             ? "answered"
             : assessment.verdict}
+          {typeof assessment.alignment === "number" ? ` · ${Number(assessment.alignment).toFixed(2)}` : ""}
         </Tag>
       </button>
 

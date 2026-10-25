@@ -712,6 +712,8 @@ export interface LawAssessment {
   law_id: string;
   verdict: "aligned" | "tension" | "violation";
   reasoning: string;
+  /** 0–1 from the model (0056); null for readings from before, or the stand-in. */
+  alignment?: number | null;
   resolution: string | null;
   resolved_at: string | null;
   resolved_by: string | null;
@@ -820,6 +822,8 @@ export interface Decision {
   polarized: boolean;
   open_questions: number;
   open_concerns: number;
+  /** The Universal Law alignment it was released on (0056). Null before then. */
+  law_alignment?: number | null;
   /**
    * How many of the voices had proof of personhood when this closed. Recorded
    * at every scale, required at some — a decision carried by four accounts

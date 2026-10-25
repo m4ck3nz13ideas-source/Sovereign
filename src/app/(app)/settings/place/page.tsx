@@ -61,8 +61,10 @@ Leave a line blank and that scale is not yours. Global is everyone, always.`}
           them responded. A place cannot: there is no list of everyone in a
           city, and building one would be a surveillance project rather than a
           governance one. So the share is replaced by a floor on how many people
-          responded. The alignment threshold does not move — 0.618 at
-          every scale.
+          responded. Every proposal is released at 0.618 alignment with the
+          Universal Laws, at every scale, and passes on its own conditions.
+          These per-scale numbers apply only to proposals from before
+          conditions existed.
         </p>
 
         <ul className="space-y-2">

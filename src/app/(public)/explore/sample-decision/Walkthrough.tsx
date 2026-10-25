@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
-import { RESONANCE_THRESHOLD, UNIVERSAL_LAWS, type LawId } from "@/lib/universal-law";
+import { UNIVERSAL_LAWS, type LawId } from "@/lib/universal-law";
 
 /**
  * The sample decision, one stage at a time.
@@ -137,8 +137,8 @@ export function Walkthrough() {
       name: "Alignment",
       happening: "The proposal is read against each of the ten Universal Laws, and its own conditions are set: how many voices, who must be reached, which questions must be answered.",
       who: "Everyone it is addressed to can read the reading and the conditions, with reasons, and can challenge them.",
-      rule: "A violation of any law ends the proposal, whatever the vote. Tension does not; it is published so people weigh it.",
-      next: "Once conditions exist, people who have read it can respond.",
+      rule: "A violation of any law ends the proposal. Otherwise it is released to the public only once its alignment with the ten laws reaches 0.618; tension is published so people weigh it.",
+      next: "Once released, with its conditions, people who have read it can respond.",
       couldStop: "A violation. A challenge never stalls a proposal — it re-runs the reading and the argument goes on the record.",
       body: (
         <div className="space-y-4">
@@ -178,9 +178,9 @@ export function Walkthrough() {
       name: "Vote",
       happening: "People who have read the proposal respond: does it feel right, will it work, how much does it matter now.",
       who: "Members it is addressed to, who have opened it. Nobody can respond to a proposal they haven't read.",
-      rule: "Responses are secret, and the running result stays hidden. Meeting the conditions lets it be decided; the responses decide whether it passes — average alignment must reach 0.618.",
-      next: "When every condition is met, it can be decided, and the result is published.",
-      couldStop: "Conditions not yet met (too few voices, a requirement unanswered) — then it waits. Alignment below 0.618 — then it does not pass, even with every condition met.",
+      rule: "Responses are secret, and the running result stays hidden. Once its own conditions are met, it passes.",
+      next: "When every condition is met it is decided, and every response is published without names.",
+      couldStop: "Conditions not yet met (too few voices, a requirement unanswered, a group not reached) — then it waits.",
       body: (
         <div className="space-y-4">
           <Card title="Try responding">
@@ -218,11 +218,11 @@ export function Walkthrough() {
       couldStop: "Passing is not activation. Nothing happens until someone takes on each need.",
       body: (
         <div className="space-y-4">
-          <Card title={avg >= RESONANCE_THRESHOLD ? "Passed — narrowly, and not unanimously" : "Did not pass"}>
+          <Card title="Passed — its conditions met, and not unanimously">
             <p>
-              Alignment <span className="font-semibold tabular-nums text-paper">{avg.toFixed(2)}</span> against a
-              threshold of {RESONANCE_THRESHOLD}. Spread <span className="tabular-nums">{spread.toFixed(2)}</span>.{" "}
-              {against} of {all.length} responses leaned against.
+              Responses averaged <span className="font-semibold tabular-nums text-paper">{avg.toFixed(2)}</span>, spread{" "}
+              <span className="tabular-nums">{spread.toFixed(2)}</span>. {against} of {all.length} leaned against —
+              published, so nobody mistakes it for a consensus.
             </p>
             <div className="mt-3 flex h-16 items-end gap-1" role="img" aria-label={`${all.length} responses, sorted, from ${Math.min(...all).toFixed(2)} to ${Math.max(...all).toFixed(2)}`}>
               {[...all].sort((a, b) => b - a).map((x, k) => (
@@ -235,12 +235,6 @@ export function Walkthrough() {
             </div>
             <p className="text-xs text-paper-faint">Each bar is one response, without a name. Outlined bars leaned against.</p>
           </Card>
-          {avg < RESONANCE_THRESHOLD ? (
-            <Example>
-              Your response tipped this example below the threshold. In the app it would not go ahead; the rest of
-              this walkthrough carries on as if it had passed, to show the later stages.
-            </Example>
-          ) : null}
           <Card title="Conditions, met">
             <ul className="ml-5 list-disc space-y-1.5">
               <li>{all.length} voices, against 15 needed.</li>

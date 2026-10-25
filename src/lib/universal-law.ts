@@ -146,16 +146,17 @@ export const LAWS_BY_ID: Record<LawId, UniversalLaw> = Object.fromEntries(
 ) as Record<LawId, UniversalLaw>;
 
 /**
- * The golden-ratio threshold, from the paper:
+ * The golden ratio, and where it now sits (Mackenzie, 25 October 2026).
  *
- *   "Proposals are ratified when collective resonance exceeds a golden-ratio
- *    threshold (≥0.618), ensuring consensus through harmony rather than
- *    dominance."
+ * A proposal is RELEASED to the people it is addressed to once its alignment
+ * with the ten Universal Laws — the mean of the ten readings' alignment, 0 to
+ * 1 — reaches 0.618. It then PASSES once its own conditions are met (0056).
+ * Mirrors `release_threshold()` in Postgres, which is the copy that decides.
  *
- * This is specified, not chosen, which is why it lives here rather than in the
- * per-group settings a steward can edit.
+ * Specified, not chosen, which is why it lives here rather than in anything a
+ * steward can edit.
  */
-export const RESONANCE_THRESHOLD = 0.618;
+export const RELEASE_THRESHOLD = 0.618;
 
 /** Amending a law requires the agreement of every user. Stated, not inferred. */
 export const AMENDMENT_RULE =

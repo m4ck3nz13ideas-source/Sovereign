@@ -385,7 +385,6 @@ function VoteDemo() {
   const missing: string[] = [];
   if (voices < NEEDS.voices) missing.push(`${NEEDS.voices} voices`);
   if (!answered) missing.push("its open question answered");
-  if (avg < NEEDS.threshold) missing.push(`alignment of ${NEEDS.threshold}`);
   const passes = missing.length === 0;
 
   return (
@@ -439,7 +438,7 @@ function VoteDemo() {
             {passes ? "Passed." : "Not yet."}
           </p>
           <p className="mt-2 text-sm text-paper-dim">
-            Alignment {avg.toFixed(2)} (needs {NEEDS.threshold}) · {voices} of {NEEDS.voices} voices
+            Released at {NEEDS.threshold} with the laws · responses {avg.toFixed(2)} · {voices} of {NEEDS.voices} voices
           </p>
           <p className="mt-2 text-sm text-paper-faint">
             {passes

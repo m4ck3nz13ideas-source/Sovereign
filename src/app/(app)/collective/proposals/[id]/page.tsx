@@ -127,7 +127,10 @@ export default async function ProposalPage({
   const lineage = (ancestors ?? []) as ProposalLineageRow[];
   const later = (successors ?? []) as ProposalSuccessor[];
 
-  const thresholds = proposal.groups
+  // Only proposals from before 0039 have bars on the responses; one with its
+  // own conditions passes on them (0056). Reassigned below once conditions
+  // are known.
+  const legacyThresholds = proposal.groups
     ? {
         alignment: Number(proposal.groups.threshold_alignment),
         participation: Number(proposal.groups.threshold_participation),
@@ -157,6 +160,18 @@ export default async function ProposalPage({
     .eq("proposal_id", id)
     .maybeSingle();
   const conditions = conditionsRow as Conditions | null;
+  const thresholds: { alignment: number | null; participation: number | null } = conditions
+    ? { alignment: null, participation: null }
+    : legacyThresholds;
+
+  // Released by the laws (0056): the score, and why it is held if it is.
+  const [{ data: lawAlignmentRow }, { data: heldWhy }] = await Promise.all([
+    supabase.rpc("law_alignment", { p_proposal_id: id }),
+    proposal.status === "in_review"
+      ? supabase.rpc("release_problem", { p_proposal_id: id })
+      : Promise.resolve({ data: null }),
+  ]);
+  const lawAlignment = lawAlignmentRow === null || lawAlignmentRow === undefined ? null : Number(lawAlignmentRow);
   const [{ data: answerRows }, { count: votesNow }] = conditions
     ? await Promise.all([
         supabase.from("proposal_requirement_answers").select("kind, idx").eq("proposal_id", id),
@@ -654,6 +669,8 @@ export default async function ProposalPage({
           assessments={lawAssessments}
           open={open}
           stale={Boolean(standing?.stale)}
+          lawAlignment={lawAlignment}
+          held={(heldWhy as string | null) ?? null}
         />
       </section>
 
@@ -733,7 +750,6 @@ export default async function ProposalPage({
         conditions={conditions}
         open={open || proposal.status === "in_review"}
         voters={summary?.voter_count ?? votesNow ?? 0}
-        alignmentBar={thresholds.alignment}
       />
 
       {/* ----------------------------------------------------- HUMAN LAYER */}

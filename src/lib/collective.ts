@@ -184,12 +184,12 @@ export function whatHappensNext(
 ): string {
   switch (status) {
     case "in_review":
-      return "The reviewer and the law audit read it first. Nobody is asked to respond to something that has not been read.";
+      return "The law audit and the reviewer read it first. It is released to the people it is addressed to once its alignment with the Universal Laws reaches 0.618.";
     case "in_deliberation":
       return "Questions and concerns are open. Each person's resonance unlocks once they have read it.";
     case "voting":
       return opts.hasGroup
-        ? "Resonance is open. Once its conditions are met a steward closes it, and the averages appear then — it passes only if alignment reaches the bar."
+        ? "Resonance is open. Once its conditions are met a steward closes it and it passes; the responses appear then, with their spread."
         : opts.closesAt
           ? `Resonance is open until ${new Date(opts.closesAt).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}, and the averages stay hidden until then.`
           : "Resonance is open, and the averages stay hidden until it closes.";
@@ -219,8 +219,8 @@ export function stageDetail(
     case "in_review":
       return {
         who: "Nobody responds yet. Its author can withdraw it, in writing.",
-        rule: "It is read against the ten Universal Laws and given its own conditions before anybody responds.",
-        couldStop: "A violation of any Universal Law ends it, whatever a vote would have said.",
+        rule: "It is read against the ten Universal Laws and given its own conditions. It is released to the people it is addressed to only once its alignment with the laws reaches 0.618.",
+        couldStop: "A violation of any Universal Law ends it. Alignment below 0.618 holds it here until it is improved or a reading is challenged.",
       };
     case "in_deliberation":
       return {
@@ -231,8 +231,8 @@ export function stageDetail(
     case "voting":
       return {
         who: "People it is addressed to who have read it. Each response is secret.",
-        rule: "Meeting its conditions is what lets it be decided. Then the responses decide: it passes only if the average alignment reaches the bar. Conditions alone never pass it. The lean stays hidden until then.",
-        couldStop: "Too few voices, a group not yet reached, an unanswered requirement, or alignment below the threshold.",
+        rule: "Meeting its own conditions is what passes it: its voices, its requirements answered, its affected groups reached. The responses stay hidden until then and are published with their spread.",
+        couldStop: "Too few voices, a group not yet reached, an unanswered requirement, an unanswered law tension or an open critical flag.",
       };
     case "passed":
       return {

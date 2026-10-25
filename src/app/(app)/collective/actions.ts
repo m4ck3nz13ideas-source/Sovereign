@@ -530,6 +530,29 @@ export async function submitProposal(input: ProposalInput) {
 }
 
 /**
+ * Release a proposal to the people it is addressed to, if the laws allow it
+ * (0056): a complete audit of its current text, no violation, law alignment of
+ * 0.618 or more, and a review on file. The database decides —
+ * `guard_proposal_status()` refuses the move otherwise — so this asks first
+ * only to avoid a refused write, and is safe to call after any step that might
+ * have been the last one missing. A held proposal stays in review, and its page
+ * says why (`release_problem()`).
+ */
+async function releaseIfReady(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  proposalId: string,
+): Promise<boolean> {
+  const { data: why } = await supabase.rpc("release_problem", { p_proposal_id: proposalId });
+  if (why) return false;
+  const { error } = await supabase
+    .from("proposals")
+    .update({ status: "in_deliberation" })
+    .eq("id", proposalId)
+    .eq("status", "in_review");
+  return !error;
+}
+
+/**
  * Run the AI review of a proposal.
  *
  * Three things happen: past decisions are retrieved by value overlap and given
@@ -683,12 +706,6 @@ export async function runReview(proposalId: string) {
 
     if (error) return { ok: false as const, error: error.message };
 
-    await supabase
-      .from("proposals")
-      .update({ status: "in_deliberation" })
-      .eq("id", proposalId)
-      .eq("status", "in_review");
-
     await ledger().record({
       groupId: proposal.group_id,
       kind: "proposal.reviewed",
@@ -696,6 +713,8 @@ export async function runReview(proposalId: string) {
       subjectId: proposalId,
       payload: { prompt_version: prompt.version, model, flags: flags.length },
     });
+
+    await releaseIfReady(supabase, proposalId);
 
     revalidatePath(`/collective/proposals/${proposalId}`);
     revalidatePath("/collective/proposals");
@@ -883,6 +902,7 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
           law_id: r.law_id,
           verdict: r.verdict,
           reasoning: r.reasoning,
+          ...(r.alignment !== undefined ? { alignment: r.alignment } : {}),
         })),
         prompt_id: prompt.id,
         prompt_version: prompt.version,
@@ -900,6 +920,7 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
           law_id: r.law_id,
           verdict: r.verdict,
           reasoning: r.reasoning,
+          ...(r.alignment !== undefined ? { alignment: r.alignment } : {}),
           law_revision: revisionOf.get(r.law_id) ?? 1,
         })),
         prompt_id: prompt.id,
@@ -926,6 +947,9 @@ export async function runLawAudit(proposalId: string, challengeId?: string) {
         challenged: Boolean(challengeId),
       },
     });
+
+    // The audit may have been the last thing holding it back (0056).
+    await releaseIfReady(supabase, proposalId);
 
     revalidatePath(`/collective/proposals/${proposalId}`);
     revalidatePath("/collective/proposals");
@@ -1236,6 +1260,12 @@ export async function closeProposal(proposalId: string) {
       supabase.from("decisions").select("*").eq("proposal_id", proposalId).single(),
     ]);
 
+  const { data: cond } = await supabase
+    .from("proposal_conditions")
+    .select("proposal_id")
+    .eq("proposal_id", proposalId)
+    .maybeSingle();
+
   const { data: rule } = proposal!.group_id
     ? { data: null }
     : await supabase
@@ -1255,7 +1285,7 @@ export async function closeProposal(proposalId: string) {
       participation: decision?.participation ?? null,
       voters: decision?.voter_count ?? 0,
       members: decision?.member_count ?? 0,
-      thresholds: closingThresholds(proposal, rule),
+      thresholds: closingThresholds(proposal, rule, Boolean(cond)),
       reviewSummary: reviews?.[0]?.summary ?? null,
       comments: (comments ?? []).map((c) => ({
         author:
@@ -1308,7 +1338,10 @@ function placeName(proposal: { scope: string; place: string | null }): string {
 function closingThresholds(
   proposal: { group_id: string | null; groups?: unknown } | null,
   rule: { threshold_alignment: number } | null,
-): { alignment: number; participation: number } {
+  hasConditions: boolean,
+): { alignment: number | null; participation: number | null } {
+  // 0056: a proposal with its own conditions passed or failed on them.
+  if (hasConditions) return { alignment: null, participation: null };
   const g = proposal?.groups as
     | { threshold_alignment: number; threshold_participation: number }
     | null

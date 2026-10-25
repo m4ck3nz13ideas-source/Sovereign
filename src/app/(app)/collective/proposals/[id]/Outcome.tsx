@@ -25,7 +25,11 @@ export function Outcome({
   /** Whether the proposal has moved past 'passed' into a live project. */
   activated: boolean;
   proposalId: string;
-  thresholds: { alignment: number; participation: number };
+  /**
+   * The bars the responses had to clear. Null where there was none: a
+   * proposal with its own conditions passes on them, not on an average (0056).
+   */
+  thresholds: { alignment: number | null; participation: number | null };
   /**
    * The floor this scale required, for a proposal addressed to a place. Null
    * for a group proposal, which has a participation share instead.
@@ -71,14 +75,26 @@ export function Outcome({
         )}
 
         <div className="mt-5 grid gap-3.5 border-t border-line pt-4 sm:grid-cols-2">
+          {decision.law_alignment !== null && decision.law_alignment !== undefined ? (
+            <ScoreBar
+              label="With the Universal Laws"
+              value={Number(decision.law_alignment)}
+              hint="released at 0.618"
+            />
+          ) : null}
           <ScoreBar
-            label="Alignment"
+            label="Responses' alignment"
             value={decision.avg_alignment === null ? null : Number(decision.avg_alignment)}
             critical={
+              thresholds.alignment !== null &&
               decision.avg_alignment !== null &&
               Number(decision.avg_alignment) < thresholds.alignment
             }
-            hint={`threshold ${thresholds.alignment.toFixed(2)}`}
+            hint={
+              thresholds.alignment !== null
+                ? `threshold ${thresholds.alignment.toFixed(2)}`
+                : "recorded, not a bar"
+            }
           />
           {decision.participation === null ? (
             // No register, so no share. The honest number is the count, and
@@ -104,8 +120,15 @@ export function Outcome({
             <ScoreBar
               label="Participation"
               value={Number(decision.participation)}
-              critical={Number(decision.participation) < thresholds.participation}
-              hint={`${decision.voter_count} of ${decision.member_count} · threshold ${thresholds.participation.toFixed(2)}`}
+              critical={
+                thresholds.participation !== null &&
+                Number(decision.participation) < thresholds.participation
+              }
+              hint={`${decision.voter_count} of ${decision.member_count}${
+                thresholds.participation !== null
+                  ? ` · threshold ${thresholds.participation.toFixed(2)}`
+                  : ""
+              }`}
             />
           )}
           <ScoreBar
@@ -138,7 +161,7 @@ export function Outcome({
             {decision.polarized ? (
               <p className="mt-1 text-sm leading-relaxed text-paper-dim">
                 {passed
-                  ? "This passed, and the threshold is the threshold. But the mean above describes two groups rather than one, and anyone reading this later should know that."
+                  ? "This passed on what it was asked to do. But the responses describe two groups rather than one, and anyone reading this later should know that."
                   : "Not a room that was unsure. A room that disagreed."}
               </p>
             ) : null}

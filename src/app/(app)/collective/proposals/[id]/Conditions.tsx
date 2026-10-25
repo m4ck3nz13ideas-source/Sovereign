@@ -1,6 +1,7 @@
 import { SectionLabel } from "@/components/ui";
 import { shortDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+import { RELEASE_THRESHOLD } from "@/lib/universal-law";
 
 import { AffectedReached, ChallengeConditions, ChallengeReply, RequirementAnswer, RunConditions } from "./ConditionsClient";
 
@@ -25,14 +26,11 @@ export async function ConditionsSection({
   conditions,
   open,
   voters,
-  alignmentBar,
 }: {
   proposalId: string;
   conditions: Conditions | null;
   open: boolean;
   voters: number;
-  /** The alignment the responses must reach to pass (group or scale rule). */
-  alignmentBar: number;
 }) {
   if (!conditions) {
     return open && voters === 0 ? (
@@ -199,10 +197,11 @@ export async function ConditionsSection({
       <div className="mt-4 rounded-card border border-line bg-surface-soft px-4 py-3">
         <p className="smallcaps text-[10px] text-paper-faint">How it is decided</p>
         <p className="mt-1.5 text-sm leading-relaxed text-paper-dim">
-          <span className="text-paper">Meeting these conditions is what lets it be decided</span> — not a clock and
-          not a steward. Once they are met, the responses decide the outcome: it passes if the average alignment
-          reaches <span className="tabular-nums text-paper">{alignmentBar.toFixed(3)}</span>, with no Universal Law
-          broken and no critical flag left unanswered. Meeting the conditions alone does not pass it.
+          <span className="text-paper">Meeting these conditions is what passes it</span> — not a clock, not a
+          steward and not an average. It was released because its alignment with the Universal Laws reached{" "}
+          <span className="tabular-nums text-paper">{RELEASE_THRESHOLD.toFixed(3)}</span>; once its voices are in, its
+          requirements answered and its affected groups reached, it passes, with no Universal Law broken, no tension
+          unanswered and no critical flag left open. The responses are published with their spread when it closes.
         </p>
       </div>
 

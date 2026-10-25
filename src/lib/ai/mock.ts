@@ -560,8 +560,8 @@ export class MockProvider implements AiProvider {
     const passed = text.includes("outcome: passed");
     return {
       rationale: passed
-        ? "Recorded without a model. The proposal met the group's participation and alignment thresholds with no unresolved critical flag, and so passed. Set ANTHROPIC_API_KEY and re-run to get a written rationale that engages with what was actually argued."
-        : "Recorded without a model. The proposal did not meet the group's decision rule — either participation or mean alignment fell short, or a critical flag was left unanswered. Set ANTHROPIC_API_KEY and re-run for a rationale that names the objection.",
+        ? "Recorded without a model. The proposal met what it was asked to meet, with no Universal Law broken and no critical flag left unanswered, and so passed. Set ANTHROPIC_API_KEY and re-run to get a written rationale that engages with what was actually argued."
+        : "Recorded without a model. The proposal did not meet what it was asked to meet — its voices or requirements fell short, a law tension or critical flag was left unanswered, or (for an older proposal) mean alignment fell short. Set ANTHROPIC_API_KEY and re-run for a rationale that names the objection.",
     };
   }
 

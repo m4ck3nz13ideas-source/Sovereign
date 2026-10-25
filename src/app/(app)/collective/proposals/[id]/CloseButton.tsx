@@ -33,7 +33,8 @@ export function CloseButton({
   /** Null at a place: no register, so no share. `minVoices` is the floor instead. */
   members: number | null;
   minVoices: number;
-  thresholds: { alignment: number; participation: number };
+  /** Null where there is no such bar — a proposal decided by its own conditions. */
+  thresholds: { alignment: number | null; participation: number | null };
 }) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,9 +42,10 @@ export function CloseButton({
 
   const hasRegister = members !== null;
   const participation = hasRegister && members > 0 ? voters / members : 0;
-  const turnoutShort = hasRegister
-    ? participation < thresholds.participation
-    : voters < minVoices;
+  const turnoutShort =
+    hasRegister && thresholds.participation !== null
+      ? participation < thresholds.participation
+      : voters < minVoices;
 
   const willFail =
     lawViolations > 0 || lawTensions > 0 || unanswered > 0 || turnoutShort;
@@ -72,7 +74,7 @@ export function CloseButton({
             : `${lawTensions} unanswered tension${lawTensions === 1 ? "" : "s"} with Universal Law`}
         </li>
         <li className={turnoutShort ? "text-alarm" : undefined}>
-          {hasRegister
+          {hasRegister && thresholds.participation !== null
             ? `${voters} of ${members} responded (${participation.toFixed(2)}), threshold ${thresholds.participation.toFixed(2)}${turnoutShort ? " — short" : ""}`
             : `${voters} ${voters === 1 ? "voice" : "voices"}, and this scale needs ${minVoices}${turnoutShort ? " — short" : ""}. There is no register of everyone here, so this is a count rather than a share.`}
         </li>
@@ -82,7 +84,9 @@ export function CloseButton({
             : `${unanswered} unanswered critical ${unanswered === 1 ? "flag" : "flags"} — this alone fails it`}
         </li>
         <li>
-          Mean alignment is checked against {thresholds.alignment.toFixed(2)}.
+          {thresholds.alignment !== null
+            ? `Mean alignment is checked against ${thresholds.alignment.toFixed(2)}. `
+            : "Its own conditions decide it, not the average of the responses. "}
           The numbers are hidden until the moment you close, including from you.
         </li>
       </ul>
