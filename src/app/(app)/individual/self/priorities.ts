@@ -24,6 +24,6 @@ export async function rateSphere(sphereId: string, rating: number | null) {
         : { error: { message: "A rating is 1 to 5." } };
   if (error) return { ok: false as const, error: error.message };
   revalidatePath("/home");
-  revalidatePath("/individual/self");
+  revalidatePath("/individual/self", "layout");
   return { ok: true as const };
 }

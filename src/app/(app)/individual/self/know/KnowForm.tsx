@@ -275,7 +275,7 @@ export function KnowForm() {
                 setError(null);
                 const r = await saveAssessment({ needs: scoreNeeds(answers), toward, away, beliefs, goals });
                 if (!r.ok) setError(r.error);
-                else router.push("/individual/self");
+                else router.push("/individual/self/findings");
               })
             }
           >

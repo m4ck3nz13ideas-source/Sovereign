@@ -15,7 +15,7 @@ export async function MattersSection() {
   const initial = Object.fromEntries(((data ?? []) as { sphere_id: string; rating: number }[]).map((r) => [r.sphere_id, r.rating]));
 
   return (
-    <Gutter className="pt-8">
+    <Gutter className="pt-4">
       <section id="matters" className="scroll-mt-20">
         <SectionLabel right={<Link href="/home?feed=foryou" className="text-gold">for you</Link>}>
           What matters to you

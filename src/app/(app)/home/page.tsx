@@ -352,7 +352,7 @@ export default async function HomePage({
                   <>
                     <div className="mb-3 flex items-baseline justify-between gap-3">
                       <p className="smallcaps text-[11px] text-paper-faint">What matters in {here}</p>
-                      <Link href="/individual/self#matters" className="text-xs text-gold">
+                      <Link href="/individual/self/matters" className="text-xs text-gold">
                         your ratings
                       </Link>
                     </div>

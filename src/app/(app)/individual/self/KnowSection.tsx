@@ -45,7 +45,7 @@ export async function KnowSection() {
   const goals = data.goals as Goal[];
 
   return (
-    <Gutter className="space-y-8 pt-6">
+    <Gutter className="space-y-8 pt-4">
       <div className="flex flex-col items-center text-center items-baseline justify-center">
         <h2 className="text-center display text-[1.75rem] text-paper">Know yourself</h2>
         <Link href="/individual/self/know" className="text-sm text-gold">

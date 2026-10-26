@@ -63,7 +63,7 @@ export async function RecordSection({ userId }: { userId: string }) {
   }));
 
   return (
-    <Gutter className="pt-8">
+    <Gutter className="pt-4">
       <section id="record" className="scroll-mt-20">
         <SectionLabel right={<Link href="/individual/vault" className="text-gold">vault</Link>}>Your record</SectionLabel>
         <StatGrid>

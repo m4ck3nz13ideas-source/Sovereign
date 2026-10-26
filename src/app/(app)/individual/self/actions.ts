@@ -62,6 +62,6 @@ export async function saveAssessment(input: {
     /* saved without a focus; the Self page offers to read it again */
   }
 
-  revalidatePath("/individual/self");
+  revalidatePath("/individual/self", "layout");
   return { ok: true };
 }
