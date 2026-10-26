@@ -4,11 +4,15 @@ import Link from "next/link";
 import { useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
-import { SPACES, STATUS_LABEL, type Space } from "@/lib/capabilities";
+import { SPACES, type Space } from "@/lib/capabilities";
 import { GLOSSARY, SPACE_TERMS } from "@/lib/glossary";
 
 /**
  * What each of the five tabs is for, what to try first, and the words it uses.
+ *
+ * 26 October (Mackenzie): cut to one line, up to three things that work
+ * today, and one "Coming soon" line in plain words. The main button does the
+ * first action; "Skip" puts it away. Build notes stay on the public roadmap.
  *
  * Since 23 October (Mackenzie) it is a pop-up the first time you open a tab,
  * not a note in the page. "Got it" puts it away for good on this device, and
@@ -83,7 +87,7 @@ export function TabIntro({ space }: { space: Space["id"]; className?: string }) 
 
   if (state !== "open") return null;
 
-  const testing = sp.can.filter((c) => c.status !== "current");
+  const { intro } = sp;
 
   // Portalled to the body: some tabs place this inside the sticky top bar,
   // whose backdrop blur would otherwise trap a fixed overlay inside it.
@@ -100,41 +104,44 @@ export function TabIntro({ space }: { space: Space["id"]; className?: string }) 
         className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-card border border-line bg-ink p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="smallcaps text-center text-[11px] font-semibold text-gold">Welcome to</p>
-        <h2 id={`intro-${space}`} className="display mt-1 text-center text-2xl text-paper">
+        <h2 id={`intro-${space}`} className="display text-center text-2xl text-paper">
           {sp.name}
         </h2>
-        <p className="mt-3 text-[0.95rem] leading-relaxed text-paper">{sp.purpose}</p>
+        <p className="mt-2 text-center text-[0.95rem] leading-relaxed text-paper">{intro.line}</p>
 
         <ul className="mt-4 space-y-2">
-          {sp.can.map((c) => (
-            <li key={c.title} className="flex gap-2.5 text-[0.9rem] leading-snug">
-              <span aria-hidden className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${c.status === "current" ? "bg-gold" : "bg-line"}`} />
-              <span>
-                <span className="text-paper">{c.title}</span>
-                {c.status !== "current" ? (
-                  <span className="text-paper-faint"> · {STATUS_LABEL[c.status].toLowerCase()}</span>
-                ) : null}
-              </span>
+          {intro.points.map((p) => (
+            <li key={p} className="flex gap-2.5 text-[0.9rem] leading-snug text-paper">
+              <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />
+              <span>{p}</span>
             </li>
           ))}
         </ul>
 
-        <p className="mt-4 rounded-lg bg-surface-soft px-3.5 py-3 text-[0.9rem] leading-relaxed text-paper-dim">
-          <span className="font-semibold text-paper">Try first: </span>
-          <Link href={sp.href} onClick={close} className="text-gold hover:underline">
-            {sp.firstAction}
-          </Link>
-        </p>
-
-        {testing.length ? (
+        {intro.soon ? (
           <p className="mt-3 text-[0.8125rem] leading-relaxed text-paper-faint">
-            {testing.map((c) => (c.note ? `${c.title}: ${c.note}` : `${c.title}: ${STATUS_LABEL[c.status].toLowerCase()}.`)).join(" ")}
+            <span className="font-semibold">Coming soon:</span> {intro.soon}
           </p>
         ) : null}
 
-        <details className="mt-3 text-[0.875rem]">
-          <summary className="cursor-pointer text-paper-dim hover:text-paper">Words used here</summary>
+        <Link
+          href={sp.href}
+          onClick={close}
+          ref={(el) => el?.focus()}
+          className="press mt-5 block w-full rounded-pill bg-gold py-3 text-center text-[0.95rem] font-semibold text-ink"
+        >
+          {intro.cta}
+        </Link>
+        <button
+          type="button"
+          onClick={close}
+          className="mt-2 w-full py-2 text-center text-[0.875rem] text-paper-dim hover:text-paper"
+        >
+          Skip
+        </button>
+
+        <details className="mt-1 text-[0.8125rem]">
+          <summary className="cursor-pointer text-center text-paper-faint hover:text-paper-dim">Words used here</summary>
           <dl className="mt-2 space-y-2">
             {SPACE_TERMS[space].map((t) => (
               <div key={t}>
@@ -145,15 +152,7 @@ export function TabIntro({ space }: { space: Space["id"]; className?: string }) 
           </dl>
         </details>
 
-        <button
-          type="button"
-          onClick={close}
-          autoFocus
-          className="press mt-5 w-full rounded-pill bg-gold py-3 text-[0.95rem] font-semibold text-ink"
-        >
-          Got it
-        </button>
-        <p className="mt-2 text-center text-xs text-paper-faint">
+        <p className="mt-3 text-center text-xs text-paper-faint">
           Find this again under <span className="font-semibold">i</span>, top right.
         </p>
       </section>

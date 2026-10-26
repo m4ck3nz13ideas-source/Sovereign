@@ -36,6 +36,17 @@ describe("capabilities", () => {
     }
   });
 
+  it("keeps each tab's pop-up short, and says when something is not ready", () => {
+    for (const s of SPACES) {
+      expect(s.intro.line.length, s.id).toBeLessThanOrEqual(90);
+      expect(s.intro.points.length, s.id).toBeGreaterThan(0);
+      expect(s.intro.points.length, s.id).toBeLessThanOrEqual(3);
+      expect(s.intro.cta.split(" ").length, s.id).toBeLessThanOrEqual(5);
+      const notReady = s.can.some((c) => c.status !== "current");
+      expect(Boolean(s.intro.soon), s.id).toBe(notReady);
+    }
+  });
+
   it("explains every word a tab's first-run note uses", () => {
     for (const terms of Object.values(SPACE_TERMS)) {
       for (const t of terms) expect(GLOSSARY[t], t).toBeTruthy();

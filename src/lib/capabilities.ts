@@ -36,6 +36,22 @@ export interface Capability {
   note?: string;
 }
 
+/**
+ * The first-visit pop-up for a tab: short, and only what works today.
+ * Everything not `current` is folded into one `soon` line, so the pop-up
+ * stays honest without listing build notes.
+ */
+export interface Intro {
+  /** One line under the tab name. */
+  line: string;
+  /** At most three things you can do today. */
+  points: string[];
+  /** The main button: the first thing to do. Goes to `href`. */
+  cta: string;
+  /** Plain words for everything in testing or planned. Required when any is. */
+  soon?: string;
+}
+
 /** The five spaces, as a first-time visitor would ask about them. */
 export interface Space {
   id: "individual" | "connection" | "search" | "market" | "collective";
@@ -46,6 +62,7 @@ export interface Space {
   firstAction: string;
   /** Where that first action lives in the app. */
   href: string;
+  intro: Intro;
   can: Capability[];
 }
 
@@ -56,6 +73,12 @@ export const SPACES: Space[] = [
     purpose: "Your private space: journal, ideas, to-dos, values and what you are learning. Readable by you alone.",
     firstAction: "Write one private note. Nobody else can read it.",
     href: "/write",
+    intro: {
+      line: "Your private space. Only you can read it.",
+      points: ["Journal, ideas and to-dos", "Know yourself, then learn", "SOV, a record of what you contribute"],
+      cta: "Write a private note",
+      soon: "Your private AI guardian.",
+    },
     can: [
       { title: "Private journal, ideas and to-dos", detail: "Owner-only, by database rule. You choose what, if anything, to share.", status: "current" },
       { title: "Know yourself and Learn", detail: "Needs, values, beliefs and goals, with lessons shaped by your answers. Optional.", status: "current" },
@@ -72,8 +95,13 @@ export const SPACES: Space[] = [
     id: "connection",
     name: "Connection",
     purpose: "The people you are joined to: friends, group chats, your groups, the proposals you back and businesses you follow.",
-    firstAction: "Start a chat with a friend, or open one of your groups.",
-    href: "/connection",
+    firstAction: "Find a friend by their handle, or open one of your groups.",
+    href: "/connection?show=people",
+    intro: {
+      line: "Everyone you're connected to, in one inbox.",
+      points: ["Friends and group chats", "Your groups and the proposals you back", "Businesses you follow"],
+      cta: "Find a friend",
+    },
     can: [
       { title: "Chats with friends and circles", detail: "One to one and small circles. No read receipts, no online status.", status: "current" },
       { title: "Group and proposal chats", detail: "Members of a group, or the author and backers of a proposal.", status: "current" },
@@ -89,6 +117,12 @@ export const SPACES: Space[] = [
     purpose: "Look things up, post, and see what people near you are proposing, deciding and saying — each item with the reason it is there.",
     firstAction: "Rate which Spheres matter to you, so For you fills with what touches them.",
     href: "/home?feed=foryou",
+    intro: {
+      line: "Find anything. See what people near you are saying and deciding.",
+      points: ["For you, Following and Discover feeds", "Post, like and comment", "Find a person by their handle"],
+      cta: "Pick what matters to you",
+      soon: "Answers from different ways of knowing.",
+    },
     can: [
       { title: "Three feeds", detail: "For you, Following and Discover. Time order; likes never rank anything.", status: "current" },
       { title: "Posts, likes and comments", detail: "You choose who each post is for, and it cannot be widened afterwards.", status: "current" },
@@ -104,11 +138,17 @@ export const SPACES: Space[] = [
   {
     id: "market",
     name: "Market",
-    purpose: "Businesses that proved their website is theirs and passed the ten laws, signed off by a person. Order, book and message them here; payment is settled between you for now.",
+    purpose: "Businesses that proved their website is theirs and passed the Universal Laws, signed off by a person. Order, book and message them here; payment is settled between you for now.",
     firstAction: "Browse the listed businesses, or apply to list your own.",
     href: "/market",
+    intro: {
+      line: "For people, not profit. Every business here is verified against the Universal Laws.",
+      points: ["Verified businesses only", "The top slot is the best fit for you, not the highest bidder", "Order, book and message them here"],
+      cta: "Browse businesses",
+      soon: "AI-read listings, and payment held until work is approved.",
+    },
     can: [
-      { title: "Verified listings", detail: "Website proven, read against the ten laws, signed off by a person.", status: "current" },
+      { title: "Verified listings", detail: "Website proven, read against the Universal Laws, signed off by a person.", status: "current" },
       {
         title: "Reviews of businesses by AI",
         detail: "Each listing is read against the laws before a person signs it off.",
@@ -129,6 +169,12 @@ export const SPACES: Space[] = [
     purpose: "Decide together: propose, align against the laws, respond in secret, act on what passes, and reflect on how it went.",
     firstAction: "Open a proposal and read it. You can respond only after reading.",
     href: "/collective/proposals",
+    intro: {
+      line: "Better decisions. Together. Propose, vote in secret, act on what passes.",
+      points: ["Each proposal sets its own conditions to pass", "Secret ballots, open tallies", "What passes becomes a project"],
+      cta: "Read a proposal",
+      soon: "AI readings against the Universal Laws, and proof of personhood for national votes.",
+    },
     can: [
       { title: "Proposals with their own conditions", detail: "How many voices, which groups must be reached, which questions answered — public, with reasons. Once they are met, it passes.", status: "current" },
       { title: "Secret ballots, open tallies", detail: "After close, every response's numbers without names. A split is reported as a split.", status: "current" },
