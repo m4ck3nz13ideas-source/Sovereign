@@ -12,7 +12,7 @@ describe("places", () => {
     expect(findPlaces("where do I delete my account")[0].path).toBe("/settings/data");
     expect(findPlaces("how do I add a friend")[0].path).toBe("/connection?show=people");
     expect(findPlaces("I want to make a proposal")[0].path).toBe("/collective/proposals/new");
-    expect(findPlaces("where's my journal")[0].path).toBe("/write");
+    expect(findPlaces("where's my journal")[0].path).toBe("/individual/vault/journal");
     expect(findPlaces("what's my SOV balance")[0].path).toBe("/individual/sov");
   });
 

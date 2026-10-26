@@ -97,6 +97,12 @@ export interface Entry {
   state: EntryState;
   examined_at: string | null;
   created_at: string;
+  /** 0063: journal filing — one of the five areas, or null for "Other". */
+  folder?: string | null;
+  labels?: string[];
+  filed_by?: "auto" | "you";
+  filed_at?: string | null;
+  edited_at?: string | null;
 }
 
 export interface Concept {
@@ -1022,8 +1028,8 @@ export const LAUNCH_MODES: {
     mode: "journal",
     label: "Journal",
     prompt: "What's alive in you right now? Don't edit, just write.",
-    filesTo: "Reflection",
-    filesToHref: "/individual/journal",
+    filesTo: "Journal",
+    filesToHref: "/individual/vault/journal",
   },
   {
     mode: "faith",

@@ -59,7 +59,7 @@ export default async function IndividualLayout({ children }: { children: React.R
             Edit profile
           </Link>
           <Link
-            href="/write"
+            href="/individual/vault/journal"
             className="press rounded-lg border border-line py-2 text-center text-sm text-paper active:bg-surface"
           >
             Journal

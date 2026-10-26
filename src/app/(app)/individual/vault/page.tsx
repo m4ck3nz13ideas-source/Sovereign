@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Card, Gutter, Screen, SectionLabel, Tag } from "@/components/ui";
+import { FOLDERS, folderName } from "@/lib/journal";
 import { requireSession } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 
@@ -33,6 +34,18 @@ export default async function VaultPage() {
       supabase.from("commitments").select("id", { count: "exact", head: true }).eq("profile_id", userId),
     ]);
 
+  const { data: journalRows } = await supabase
+    .from("entries")
+    .select("folder")
+    .eq("profile_id", userId)
+    .eq("mode", "journal");
+  const journal = (journalRows ?? []) as { folder: string | null }[];
+  const journalFolders = [...FOLDERS, null]
+    .map((f) => ({ name: folderName(f), n: journal.filter((j) => j.folder === f).length }))
+    .filter((f) => f.n)
+    .sort((a, b) => b.n - a.n)
+    .slice(0, 3);
+
   const { data: sovRows } = await supabase.rpc("my_sov");
   const sov = (Array.isArray(sovRows) ? sovRows[0] : sovRows) as { balance: number } | null;
 
@@ -53,6 +66,21 @@ export default async function VaultPage() {
           <span className="font-serif text-2xl tabular-nums text-paper">
             {sov ? Number(sov.balance).toLocaleString("en-GB", { maximumFractionDigits: 2 }) : "0"}
           </span>
+        </Link>
+
+        <Link
+          href="/individual/vault/journal"
+          className="press flex items-center gap-3 rounded-card border border-line bg-surface-soft px-4 py-3.5 active:bg-surface"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="font-serif text-lg text-paper">Journal</p>
+            <p className="mt-0.5 truncate text-sm text-paper-dim">
+              {journal.length
+                ? `${journal.length} ${journal.length === 1 ? "entry" : "entries"} · ${journalFolders.map((f) => `${f.name} ${f.n}`).join(" · ")}`
+                : "Write the first one. It files itself."}
+            </p>
+          </div>
+          <span aria-hidden className="text-paper-faint">→</span>
         </Link>
 
         {/* ------------------------------------------------------- WHAT IS HERE */}

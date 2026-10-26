@@ -11,11 +11,11 @@ import { usePathname } from "next/navigation";
  * lights the right tab.
  */
 const TABS = [
-  { href: "/individual/self", label: "Self", also: ["/individual/values", "/individual/profile", "/individual/journal"] },
+  { href: "/individual/self", label: "Self", also: ["/individual/values", "/individual/profile"] },
   { href: "/individual/ideas", label: "Ideas", also: ["/individual/drafts"] },
   { href: "/individual/todo", label: "To do", also: [] },
   { href: "/individual/learn", label: "Learn", also: [] },
-  { href: "/individual/vault", label: "Vault", also: ["/individual/sov"] },
+  { href: "/individual/vault", label: "Vault", also: ["/individual/sov", "/individual/journal"] },
 ];
 
 export function IndividualTabs() {

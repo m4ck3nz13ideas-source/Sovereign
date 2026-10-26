@@ -23,7 +23,7 @@ export const PLACES: Place[] = [
   { path: "/individual/self/matters", name: "What matters", what: "Rate how much each Sphere matters to you.", words: ["spheres", "matters", "ratings", "priorities"] },
   { path: "/individual/self/record", name: "Your record", what: "Your personal dashboard: notes, to dos, responses and proposals.", words: ["my record", "my stats", "dashboard", "my activity"] },
   { path: "/individual/self/know", name: "Know yourself", what: "The beliefs, values and goals test. Your AI builds on what it finds.", words: ["know yourself", "test", "beliefs", "goals", "needs", "quiz", "tony robbins", "assessment"] },
-  { path: "/write", name: "Journal", what: "Write a private note. Only you can read it.", words: ["journal", "write", "note", "diary", "entry"] },
+  { path: "/individual/vault/journal", name: "Journal", what: "Write a private note; it files itself into folders and labels in your Vault. Only you can read it.", words: ["journal", "write", "note", "diary", "entry", "entries", "my journal"] },
   { path: "/individual/ideas", name: "Ideas", what: "Your ideas and proposal drafts.", words: ["ideas", "idea", "drafts", "draft"] },
   { path: "/individual/todo", name: "To do", what: "Your private to-do list.", words: ["to do", "todo", "tasks", "task", "list"] },
   { path: "/individual/learn", name: "Learn", what: "The library, the Universal Laws, how Sovereign works, and lessons shaped by your answers.", words: ["learn", "lessons", "education", "library", "how sovereign works", "course"] },

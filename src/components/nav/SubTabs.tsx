@@ -28,7 +28,7 @@ export const INDIVIDUAL_TABS = [
   { href: "/individual/profile", label: "Profile" },
   { href: "/individual/ai", label: "AI" },
   { href: "/individual/values", label: "Values" },
-  { href: "/individual/journal", label: "Journal" },
+  { href: "/individual/vault/journal", label: "Journal" },
   { href: "/individual/ideas", label: "Ideas" },
   { href: "/individual/drafts", label: "Drafts" },
   { href: "/individual/vault", label: "Vault" },

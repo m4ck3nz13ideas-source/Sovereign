@@ -235,7 +235,7 @@ export function AskPanel({ mine }: { mine: MyInquiry[] }) {
                 {mine_.map((h) => (
                   <Link
                     key={`${h.kind}-${h.id}`}
-                    href={h.kind === "concept" ? `/individual/ideas/${h.id}` : "/individual/journal"}
+                    href={h.kind === "concept" ? `/individual/ideas/${h.id}` : `/individual/vault/journal/${h.id}`}
                     className="press block border-b border-line-soft py-3"
                   >
                     <p className="smallcaps text-[10px] text-paper-faint">
